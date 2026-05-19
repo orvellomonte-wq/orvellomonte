@@ -34,6 +34,14 @@ if (canUseAnalytics) {
 }
 
 const cartCounter = document.querySelector(".cart-link span");
+const cartButton = document.querySelector(".cart-link");
+const cartDrawer = document.querySelector(".cart-drawer");
+const cartItems = document.querySelector(".cart-items");
+const cartEmpty = document.querySelector(".cart-empty");
+const cartSummary = document.querySelector(".cart-summary");
+const cartSubtotal = document.querySelector(".cart-subtotal");
+const clearCartButton = document.querySelector(".clear-cart-button");
+const checkoutButton = document.querySelector(".checkout-button");
 const addButtons = document.querySelectorAll("[data-product]");
 const signupForm = document.querySelector(".signup-form");
 const accountButton = document.querySelector(".account-button");
@@ -52,18 +60,161 @@ const userName = document.querySelector(".user-name");
 const userEmail = document.querySelector(".user-email");
 const signOutButton = document.querySelector(".sign-out-button");
 
-let cartCount = 0;
+let cart = JSON.parse(localStorage.getItem("orvello-cart") || "[]");
 let authMode = "login";
+
+const formatPrice = (amount) =>
+  new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "TRY",
+    maximumFractionDigits: 0
+  }).format(amount);
+
+const saveCart = () => {
+  localStorage.setItem("orvello-cart", JSON.stringify(cart));
+};
+
+const getCartCount = () => cart.reduce((total, item) => total + item.quantity, 0);
+
+const getCartSubtotal = () => cart.reduce((total, item) => total + item.price * item.quantity, 0);
+
+const getProductTone = (id) => {
+  const tones = {
+    "shadow-logo-hoodie": "hoodie",
+    "night-cargo-pants": "cargo",
+    "rust-graphic-tee": "tee"
+  };
+
+  return tones[id] || "hoodie";
+};
+
+const renderCart = () => {
+  const itemCount = getCartCount();
+  cartCounter.textContent = itemCount;
+  cartButton.setAttribute("aria-label", `Sepeti aç, ${itemCount} ürün`);
+
+  cartEmpty.hidden = cart.length > 0;
+  cartItems.hidden = cart.length === 0;
+  cartSummary.hidden = cart.length === 0;
+  cartSubtotal.textContent = formatPrice(getCartSubtotal());
+
+  cartItems.innerHTML = cart
+    .map((item) => `
+      <article class="cart-item">
+        <div class="cart-item-visual ${getProductTone(item.id)}" aria-hidden="true"></div>
+        <div class="cart-item-main">
+          <div class="cart-item-top">
+            <div>
+              <h3>${item.name}</h3>
+              <p class="cart-item-price">${formatPrice(item.price)}</p>
+            </div>
+            <button class="remove-item-button" type="button" aria-label="${item.name} ürününü kaldır" data-remove-item="${item.id}">×</button>
+          </div>
+          <div class="cart-item-bottom">
+            <div class="quantity-control" aria-label="${item.name} adet">
+              <button class="quantity-button" type="button" aria-label="Adedi azalt" data-quantity-action="decrease" data-item-id="${item.id}">−</button>
+              <span class="quantity-value">${item.quantity}</span>
+              <button class="quantity-button" type="button" aria-label="Adedi artır" data-quantity-action="increase" data-item-id="${item.id}">+</button>
+            </div>
+            <span class="cart-line-total">${formatPrice(item.price * item.quantity)}</span>
+          </div>
+        </div>
+      </article>
+    `)
+    .join("");
+};
+
+const openCart = () => {
+  document.body.classList.add("cart-open");
+  cartDrawer.setAttribute("aria-hidden", "false");
+};
+
+const closeCart = () => {
+  document.body.classList.remove("cart-open");
+  cartDrawer.setAttribute("aria-hidden", "true");
+};
+
+const addToCart = (product) => {
+  const existingItem = cart.find((item) => item.id === product.id);
+
+  if (existingItem) {
+    existingItem.quantity += 1;
+  } else {
+    cart.push({ ...product, quantity: 1 });
+  }
+
+  saveCart();
+  renderCart();
+};
+
+const updateQuantity = (id, action) => {
+  cart = cart
+    .map((item) => {
+      if (item.id !== id) {
+        return item;
+      }
+
+      const quantity = action === "increase" ? item.quantity + 1 : item.quantity - 1;
+      return { ...item, quantity };
+    })
+    .filter((item) => item.quantity > 0);
+
+  saveCart();
+  renderCart();
+};
+
+const removeItem = (id) => {
+  cart = cart.filter((item) => item.id !== id);
+  saveCart();
+  renderCart();
+};
 
 addButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    cartCount += 1;
-    cartCounter.textContent = cartCount;
+    addToCart({
+      id: button.dataset.id,
+      name: button.dataset.product,
+      price: Number(button.dataset.price)
+    });
     button.textContent = "Eklendi";
+    openCart();
+
     window.setTimeout(() => {
       button.textContent = "Ekle";
     }, 1200);
   });
+});
+
+cartButton.addEventListener("click", openCart);
+
+document.querySelectorAll("[data-close-cart]").forEach((button) => {
+  button.addEventListener("click", closeCart);
+});
+
+cartItems.addEventListener("click", (event) => {
+  const quantityButton = event.target.closest("[data-quantity-action]");
+  const removeButton = event.target.closest("[data-remove-item]");
+
+  if (quantityButton) {
+    updateQuantity(quantityButton.dataset.itemId, quantityButton.dataset.quantityAction);
+  }
+
+  if (removeButton) {
+    removeItem(removeButton.dataset.removeItem);
+  }
+});
+
+clearCartButton.addEventListener("click", () => {
+  cart = [];
+  saveCart();
+  renderCart();
+});
+
+checkoutButton.addEventListener("click", () => {
+  checkoutButton.textContent = "Yakında";
+  window.setTimeout(() => {
+    checkoutButton.textContent = "Ödemeye Geç";
+  }, 1400);
 });
 
 signupForm.addEventListener("submit", (event) => {
@@ -169,5 +320,8 @@ onAuthStateChanged(auth, (user) => {
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     closeAuth();
+    closeCart();
   }
 });
+
+renderCart();

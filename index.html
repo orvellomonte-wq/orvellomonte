@@ -20,7 +20,7 @@
     </nav>
     <div class="header-actions">
       <button class="account-button" type="button" aria-haspopup="dialog">Hesabım</button>
-      <a class="cart-link" href="#drops" aria-label="Sepete git">Cart <span>0</span></a>
+      <button class="cart-link" type="button" aria-haspopup="dialog" aria-label="Sepeti aç">Cart <span>0</span></button>
     </div>
   </header>
 
@@ -60,7 +60,7 @@
             <p>520 GSM fleece, oversize kesim.</p>
             <div class="product-row">
               <span>₺1.499</span>
-              <button type="button" data-product="Shadow Logo Hoodie">Ekle</button>
+              <button type="button" data-product="Shadow Logo Hoodie" data-id="shadow-logo-hoodie" data-price="1499">Ekle</button>
             </div>
           </div>
         </article>
@@ -72,7 +72,7 @@
             <p>Çok cepli, geniş paça, metal zincir detay.</p>
             <div class="product-row">
               <span>₺1.799</span>
-              <button type="button" data-product="Night Cargo Pants">Ekle</button>
+              <button type="button" data-product="Night Cargo Pants" data-id="night-cargo-pants" data-price="1799">Ekle</button>
             </div>
           </div>
         </article>
@@ -84,7 +84,7 @@
             <p>Yıkamalı siyah kumaş, solgun baskı hissi.</p>
             <div class="product-row">
               <span>₺849</span>
-              <button type="button" data-product="Rust Graphic Tee">Ekle</button>
+              <button type="button" data-product="Rust Graphic Tee" data-id="rust-graphic-tee" data-price="849">Ekle</button>
             </div>
           </div>
         </article>
@@ -154,6 +154,37 @@
       </div>
     </section>
   </div>
+
+  <aside class="cart-drawer" aria-hidden="true">
+    <div class="cart-backdrop" data-close-cart></div>
+    <section class="cart-panel" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+      <div class="cart-head">
+        <div>
+          <p class="kicker">Your Bag</p>
+          <h2 id="cart-title">Sepet</h2>
+        </div>
+        <button class="cart-close" type="button" aria-label="Sepeti kapat" data-close-cart>×</button>
+      </div>
+
+      <div class="cart-empty">
+        <strong>Sepetin boş.</strong>
+        <p>Drop'tan favori parçalarını ekleyerek başlayabilirsin.</p>
+        <a class="button primary" href="#drops" data-close-cart>Ürünlere Dön</a>
+      </div>
+
+      <div class="cart-items" aria-live="polite"></div>
+
+      <footer class="cart-summary">
+        <div class="cart-summary-row">
+          <span>Ara toplam</span>
+          <strong class="cart-subtotal">₺0</strong>
+        </div>
+        <div class="cart-summary-note">Kargo ve ödeme bilgileri ödeme adımında hesaplanır.</div>
+        <button class="checkout-button" type="button">Ödemeye Geç</button>
+        <button class="clear-cart-button" type="button">Sepeti Temizle</button>
+      </footer>
+    </section>
+  </aside>
 
   <script type="module" src="script.js"></script>
 </body>
