@@ -75,10 +75,12 @@ const adminPanel = document.querySelector(".admin-product-panel");
 const adminToggleButton = document.querySelector(".admin-toggle-button");
 const adminForm = document.querySelector(".admin-product-form");
 const adminMessage = document.querySelector(".admin-message");
+const adminImagePreview = document.querySelector(".admin-image-preview");
 
 let cart = JSON.parse(localStorage.getItem("orvello-cart") || "[]");
 let authMode = "login";
 let currentUser = null;
+let adminPreviewUrls = [];
 
 const formatPrice = (amount) =>
   new Intl.NumberFormat("tr-TR", {
@@ -389,6 +391,65 @@ const setAdminMessage = (message, isError = false) => {
 
 const isAdminUser = (user) => user?.email?.toLowerCase() === ADMIN_EMAIL;
 
+const clearAdminImagePreview = () => {
+  adminPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+  adminPreviewUrls = [];
+
+  if (adminImagePreview) {
+    adminImagePreview.innerHTML = "";
+  }
+};
+
+const renderAdminImagePreview = (files) => {
+  if (!adminImagePreview) {
+    return;
+  }
+
+  clearAdminImagePreview();
+
+  if (files.length === 0) {
+    return;
+  }
+
+  adminPreviewUrls = files.map((file) => URL.createObjectURL(file));
+  adminImagePreview.innerHTML = adminPreviewUrls
+    .map((url, index) => `
+      <figure>
+        <img src="${url}" alt="Seçilen ürün görseli ${index + 1}">
+        <figcaption>${index + 1}</figcaption>
+      </figure>
+    `)
+    .join("");
+};
+
+const closeAdminForm = () => {
+  if (!adminForm) {
+    return;
+  }
+
+  adminForm.hidden = true;
+  document.body.classList.remove("admin-form-open");
+
+  if (adminToggleButton) {
+    adminToggleButton.textContent = "Ürün Ekle";
+  }
+};
+
+const openAdminForm = () => {
+  if (!adminForm) {
+    return;
+  }
+
+  adminForm.hidden = false;
+  document.body.classList.add("admin-form-open");
+
+  if (adminToggleButton) {
+    adminToggleButton.textContent = "Paneli Kapat";
+  }
+
+  setAdminMessage("");
+};
+
 const renderFirebaseProduct = (product) => {
   const imageUrl = getProductImage(product);
   const imageUrls = product.imageUrls || product.images || [];
@@ -463,13 +524,21 @@ const setupAdminPanel = () => {
   }
 
   adminToggleButton?.addEventListener("click", () => {
-    adminForm.hidden = !adminForm.hidden;
-      adminToggleButton.textContent = adminForm.hidden ? "Ürün Ekle" : "Paneli Kapat";
-      setAdminMessage("");
+    if (adminForm.hidden) {
+      openAdminForm();
+    } else {
+      closeAdminForm();
+    }
+  });
+
+  document.querySelectorAll("[data-admin-close]").forEach((button) => {
+    button.addEventListener("click", closeAdminForm);
   });
 
   adminForm.elements.images?.addEventListener("change", () => {
     const files = [...adminForm.elements.images.files];
+    renderAdminImagePreview(files);
+
     if (files.length > 0) {
       setAdminMessage(`${files.length} görsel seçildi. Yayınlarken sıkıştırılacak.`);
     }
@@ -545,10 +614,8 @@ const setupAdminPanel = () => {
       });
 
       adminForm.reset();
-      adminForm.hidden = true;
-      if (adminToggleButton) {
-        adminToggleButton.textContent = "Ürün Ekle";
-      }
+      clearAdminImagePreview();
+      closeAdminForm();
       setAdminMessage("Ürün yayınlandı.");
     } catch (error) {
       const message = error.code === "permission-denied"
@@ -650,10 +717,7 @@ onAuthStateChanged(auth, (user) => {
     setAdminMessage(isAdmin ? "Admin yetkisi aktif. Bu sayfaya ürün ekleyebilirsin." : "");
 
     if (!isAdmin && adminForm) {
-      adminForm.hidden = true;
-      if (adminToggleButton) {
-        adminToggleButton.textContent = "Ürün Ekle";
-      }
+      closeAdminForm();
     }
   }
 
@@ -665,6 +729,7 @@ onAuthStateChanged(auth, (user) => {
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
+    closeAdminForm();
     closeAuth();
     closeCart();
   }

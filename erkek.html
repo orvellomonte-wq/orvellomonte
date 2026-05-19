@@ -46,6 +46,13 @@
       <button class="admin-toggle-button" type="button">Ürün Ekle</button>
 
       <form class="admin-product-form" hidden>
+        <div class="admin-form-head">
+          <div>
+            <p class="kicker">Yeni ürün</p>
+            <h3>Drop'a ürün ekle</h3>
+          </div>
+          <button class="admin-close-button" type="button" aria-label="Ürün panelini kapat" data-admin-close>×</button>
+        </div>
         <label>
           <span>Ürün adı</span>
           <input name="name" type="text" placeholder="Oversize Zip Hoodie" required>
@@ -75,6 +82,7 @@
           <span>Ürün görselleri</span>
           <input name="images" type="file" accept="image/*" multiple required>
           <small>Birden fazla görsel seçebilirsin. Yüklemeden önce otomatik sıkıştırılır.</small>
+          <div class="admin-image-preview" aria-live="polite"></div>
         </label>
         <label>
           <span>Görsel tipi</span>
