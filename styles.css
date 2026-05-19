@@ -66,13 +66,32 @@ input {
   text-transform: uppercase;
 }
 
-.cart-link {
+.header-actions {
   justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cart-link,
+.account-button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  border: 0;
+  color: var(--ink);
+  background: transparent;
   font-weight: 800;
   text-transform: uppercase;
+}
+
+.account-button {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 12px;
+  cursor: pointer;
+  background: rgba(247, 241, 232, 0.08);
 }
 
 .cart-link span {
@@ -169,7 +188,9 @@ h2 {
 
 .button,
 .product-row button,
-.signup-form button {
+.signup-form button,
+.auth-submit,
+.sign-out-button {
   border: 0;
   border-radius: 6px;
   cursor: pointer;
@@ -188,7 +209,10 @@ h2 {
 
 .button:hover,
 .product-row button:hover,
-.signup-form button:hover {
+.signup-form button:hover,
+.auth-submit:hover,
+.sign-out-button:hover,
+.account-button:hover {
   transform: translateY(-2px);
 }
 
@@ -371,6 +395,168 @@ h2 {
   background: rgba(247, 241, 232, 0.08);
 }
 
+.auth-modal {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.auth-open .auth-modal {
+  display: flex;
+}
+
+.auth-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.auth-panel {
+  position: relative;
+  width: min(460px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 28px;
+  background: #121212;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+}
+
+.auth-panel h2 {
+  margin-bottom: 18px;
+  font-size: clamp(2rem, 8vw, 3.4rem);
+}
+
+.auth-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  cursor: pointer;
+  background: rgba(247, 241, 232, 0.08);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.auth-tabs button {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: pointer;
+  background: rgba(247, 241, 232, 0.06);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.auth-tabs button.active {
+  color: var(--bg);
+  background: var(--ink);
+}
+
+.auth-form {
+  display: grid;
+  gap: 14px;
+}
+
+.auth-field {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.auth-name-field {
+  display: none;
+}
+
+.auth-register .auth-name-field {
+  display: grid;
+}
+
+.auth-field input {
+  width: 100%;
+  min-height: 50px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 14px;
+  color: var(--ink);
+  outline: 0;
+  background: rgba(247, 241, 232, 0.08);
+}
+
+.auth-submit,
+.sign-out-button {
+  min-height: 48px;
+  padding: 0 18px;
+  color: var(--bg);
+  background: var(--accent-2);
+}
+
+.auth-message {
+  min-height: 22px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.auth-message.error {
+  color: #ff9b89;
+}
+
+.user-panel {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  background: rgba(247, 241, 232, 0.06);
+}
+
+.auth-form[hidden],
+.user-panel[hidden] {
+  display: none;
+}
+
+.user-badge {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: var(--bg);
+  background: var(--accent-2);
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.user-panel strong,
+.user-panel p {
+  margin: 0;
+}
+
+.user-panel p {
+  color: var(--muted);
+}
+
 .site-footer {
   display: flex;
   justify-content: space-between;
@@ -429,6 +615,12 @@ h2 {
 
   .cart-link {
     font-size: 0.82rem;
+  }
+
+  .account-button {
+    min-height: 34px;
+    padding: 0 10px;
+    font-size: 0.78rem;
   }
 
   h1 {
