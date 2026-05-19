@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Orvello Monte | Streetwear</title>
-  <meta name="description" content="Orvello Monte streetwear koleksiyonu: hoodie, cargo, tee ve aksesuarlar.">
+  <title>Erkek Koleksiyonu | Orvello Monte</title>
+  <meta name="description" content="Orvello Monte erkek streetwear koleksiyonu.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,11 +12,11 @@
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="#top" aria-label="Orvello Monte ana sayfa">ORVELLO MONTE</a>
+    <a class="brand" href="index.html" aria-label="Orvello Monte ana sayfa">ORVELLO MONTE</a>
     <nav class="nav-links" aria-label="Ana navigasyon">
       <a href="kadın.html">Kadın</a>
       <a href="erkek.html">Erkek</a>
-      <a href="#lookbook">Lookbook</a>
+      <a href="index.html#lookbook">Lookbook</a>
       <a href="#contact">İletişim</a>
     </nav>
     <div class="header-actions">
@@ -25,63 +25,64 @@
     </div>
   </header>
 
-  <main id="top">
-    <section class="hero" aria-label="Orvello Monte streetwear koleksiyonu">
-      <img src="assets/hero-streetwear.png" alt="Orvello Monte sokak giyim lookbook çekimi" class="hero-image">
-      <div class="hero-overlay"></div>
-      <div class="hero-content">
-        <p class="kicker">New Season / Limited Drop</p>
-        <h1>Underground Streetwear</h1>
-        <p class="hero-copy">Oversize siluetler, ağır pamuk hoodieler, bol cargo pantolonlar ve gece şehir enerjisi.</p>
-        <div class="hero-actions">
-          <a class="button primary" href="kadın.html">Kadın</a>
-          <a class="button secondary" href="erkek.html">Erkek</a>
-        </div>
+  <main>
+    <section class="page-hero">
+      <div class="page-hero-content">
+        <p class="kicker">Men / Drop 01</p>
+        <h1>Erkek Koleksiyonu</h1>
+        <p>Heavy cotton üstler, bol cargo formlar ve günlük kullanıma hazır koyu streetwear siluetleri.</p>
       </div>
     </section>
 
-    <section class="ticker" aria-label="Koleksiyon öne çıkanları">
-      <span>Heavy Cotton</span>
-      <span>Relaxed Fit</span>
-      <span>Black / Bone / Rust</span>
-      <span>Made for Night Moves</span>
-    </section>
-
-    <section class="section" id="categories">
+    <section class="section">
       <div class="section-heading">
-        <p class="kicker">Shop by Fit</p>
-        <h2>Koleksiyonlar</h2>
+        <p class="kicker">Shop Men</p>
+        <h2>Ürünler</h2>
       </div>
 
-      <div class="category-grid">
-        <a class="category-card women" href="kadın.html">
-          <span class="kicker">Women</span>
-          <h3>Kadın Koleksiyonu</h3>
-          <p>Oversize hoodie, crop tee ve bol paça parçalar.</p>
-          <span class="category-cta">Ürünlere Git</span>
-        </a>
+      <div class="product-grid">
+        <article class="product-card">
+          <div class="product-visual hoodie"></div>
+          <div class="product-info">
+            <h3>Shadow Logo Hoodie</h3>
+            <p>520 GSM fleece, oversize kesim.</p>
+            <div class="product-row">
+              <span>₺1.499</span>
+              <button type="button" data-product="Shadow Logo Hoodie" data-id="shadow-logo-hoodie" data-price="1499" data-tone="hoodie">Ekle</button>
+            </div>
+          </div>
+        </article>
 
-        <a class="category-card men" href="erkek.html">
-          <span class="kicker">Men</span>
-          <h3>Erkek Koleksiyonu</h3>
-          <p>Heavyweight hoodie, cargo pantolon ve graphic tee.</p>
-          <span class="category-cta">Ürünlere Git</span>
-        </a>
-      </div>
-    </section>
+        <article class="product-card">
+          <div class="product-visual cargo"></div>
+          <div class="product-info">
+            <h3>Night Cargo Pants</h3>
+            <p>Çok cepli, geniş paça, metal zincir detay.</p>
+            <div class="product-row">
+              <span>₺1.799</span>
+              <button type="button" data-product="Night Cargo Pants" data-id="night-cargo-pants" data-price="1799" data-tone="cargo">Ekle</button>
+            </div>
+          </div>
+        </article>
 
-    <section class="lookbook" id="lookbook">
-      <div>
-        <p class="kicker">Lookbook</p>
-        <h2>Şehirden çıkmadan sert bir siluet.</h2>
+        <article class="product-card">
+          <div class="product-visual tee"></div>
+          <div class="product-info">
+            <h3>Rust Graphic Tee</h3>
+            <p>Yıkamalı siyah kumaş, solgun baskı hissi.</p>
+            <div class="product-row">
+              <span>₺849</span>
+              <button type="button" data-product="Rust Graphic Tee" data-id="rust-graphic-tee" data-price="849" data-tone="tee">Ekle</button>
+            </div>
+          </div>
+        </article>
       </div>
-      <p>Orvello Monte; sakin renkler, geniş formlar ve gün boyu taşınan konforla kurulmuş ilk drop'unu sunar.</p>
     </section>
 
     <section class="newsletter" id="contact">
       <div>
         <p class="kicker">Early Access</p>
-        <h2>Yeni drop haberi ilk sana gelsin.</h2>
+        <h2>Yeni erkek drop haberi ilk sana gelsin.</h2>
       </div>
       <form class="signup-form">
         <label class="sr-only" for="email">E-posta</label>
@@ -93,7 +94,7 @@
 
   <footer class="site-footer">
     <span>© 2026 Orvello Monte</span>
-    <span>Streetwear / Istanbul</span>
+    <span>Men / Streetwear</span>
   </footer>
 
   <div class="auth-modal" aria-hidden="true">
@@ -102,29 +103,17 @@
       <button class="auth-close" type="button" aria-label="Paneli kapat" data-close-auth>×</button>
       <p class="kicker">Orvello Account</p>
       <h2 id="auth-title">Giriş Yap</h2>
-
       <div class="auth-tabs" role="tablist" aria-label="Hesap işlemleri">
         <button class="active" type="button" data-auth-mode="login">Giriş</button>
         <button type="button" data-auth-mode="register">Kayıt</button>
       </div>
-
       <form class="auth-form">
-        <label class="auth-field auth-name-field" for="auth-name">
-          <span>Ad Soyad</span>
-          <input id="auth-name" type="text" autocomplete="name" placeholder="Orvello Monte">
-        </label>
-        <label class="auth-field" for="auth-email">
-          <span>E-posta</span>
-          <input id="auth-email" type="email" autocomplete="email" placeholder="mail@ornek.com" required>
-        </label>
-        <label class="auth-field" for="auth-password">
-          <span>Şifre</span>
-          <input id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="En az 6 karakter" required>
-        </label>
+        <label class="auth-field auth-name-field" for="auth-name"><span>Ad Soyad</span><input id="auth-name" type="text" autocomplete="name" placeholder="Orvello Monte"></label>
+        <label class="auth-field" for="auth-email"><span>E-posta</span><input id="auth-email" type="email" autocomplete="email" placeholder="mail@ornek.com" required></label>
+        <label class="auth-field" for="auth-password"><span>Şifre</span><input id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="En az 6 karakter" required></label>
         <button class="auth-submit" type="submit">Giriş Yap</button>
         <p class="auth-message" role="status" aria-live="polite"></p>
       </form>
-
       <div class="user-panel" hidden>
         <span class="user-badge">Aktif hesap</span>
         <strong class="user-name"></strong>
@@ -138,26 +127,17 @@
     <div class="cart-backdrop" data-close-cart></div>
     <section class="cart-panel" role="dialog" aria-modal="true" aria-labelledby="cart-title">
       <div class="cart-head">
-        <div>
-          <p class="kicker">Your Bag</p>
-          <h2 id="cart-title">Sepet</h2>
-        </div>
+        <div><p class="kicker">Your Bag</p><h2 id="cart-title">Sepet</h2></div>
         <button class="cart-close" type="button" aria-label="Sepeti kapat" data-close-cart>×</button>
       </div>
-
       <div class="cart-empty">
         <strong>Sepetin boş.</strong>
         <p>Kadın veya erkek koleksiyonundan favori parçalarını ekleyerek başlayabilirsin.</p>
-        <a class="button primary" href="#categories" data-close-cart>Koleksiyonlara Dön</a>
+        <a class="button primary" href="index.html#categories" data-close-cart>Koleksiyonlara Dön</a>
       </div>
-
       <div class="cart-items" aria-live="polite"></div>
-
       <footer class="cart-summary">
-        <div class="cart-summary-row">
-          <span>Ara toplam</span>
-          <strong class="cart-subtotal">₺0</strong>
-        </div>
+        <div class="cart-summary-row"><span>Ara toplam</span><strong class="cart-subtotal">₺0</strong></div>
         <div class="cart-summary-note">Kargo ve ödeme bilgileri ödeme adımında hesaplanır.</div>
         <button class="checkout-button" type="button">Ödemeye Geç</button>
         <button class="clear-cart-button" type="button">Sepeti Temizle</button>

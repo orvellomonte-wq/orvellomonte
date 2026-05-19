@@ -101,7 +101,7 @@ const renderCart = () => {
   cartItems.innerHTML = cart
     .map((item) => `
       <article class="cart-item">
-        <div class="cart-item-visual ${getProductTone(item.id)}" aria-hidden="true"></div>
+        <div class="cart-item-visual ${item.tone || getProductTone(item.id)}" aria-hidden="true"></div>
         <div class="cart-item-main">
           <div class="cart-item-top">
             <div>
@@ -174,7 +174,8 @@ addButtons.forEach((button) => {
     addToCart({
       id: button.dataset.id,
       name: button.dataset.product,
-      price: Number(button.dataset.price)
+      price: Number(button.dataset.price),
+      tone: button.dataset.tone || getProductTone(button.dataset.id)
     });
     button.textContent = "Eklendi";
     openCart();
