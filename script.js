@@ -16,12 +16,6 @@ import {
   serverTimestamp,
   where
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
-import {
-  getDownloadURL,
-  getStorage,
-  ref,
-  uploadBytesResumable
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC0WEqRFErpLgk6WF0pSSIHfxZAGgRL4TY",
@@ -36,7 +30,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 const ADMIN_EMAIL = "orvellomonte@gmail.com";
 
 const canUseAnalytics = window.location.protocol === "https:" && !window.location.hostname.includes("localhost");
@@ -131,14 +124,6 @@ const slugify = (value) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 
-const withTimeout = (promise, timeoutMs, message) =>
-  Promise.race([
-    promise,
-    new Promise((_, reject) => {
-      window.setTimeout(() => reject(new Error(message)), timeoutMs);
-    })
-  ]);
-
 const readImage = (file) =>
   new Promise((resolve, reject) => {
     const image = new Image();
@@ -157,7 +142,7 @@ const readImage = (file) =>
 
 const compressImage = async (file) => {
   const image = await readImage(file);
-  const maxSide = 900;
+  const maxSide = 640;
   const ratio = Math.min(1, maxSide / Math.max(image.width, image.height));
   const width = Math.round(image.width * ratio);
   const height = Math.round(image.height * ratio);
@@ -171,7 +156,7 @@ const compressImage = async (file) => {
   context.drawImage(image, 0, 0, width, height);
 
   const blob = await new Promise((resolve) => {
-    canvas.toBlob(resolve, "image/jpeg", 0.62);
+    canvas.toBlob(resolve, "image/webp", 0.58);
   });
 
   if (!blob) {
@@ -179,7 +164,7 @@ const compressImage = async (file) => {
   }
 
   const baseName = slugify(file.name.replace(/\.[^.]+$/, "")) || "product-image";
-  return new File([blob], `${baseName}.jpg`, { type: "image/jpeg" });
+  return new File([blob], `${baseName}.webp`, { type: "image/webp" });
 };
 
 const fileToDataUrl = (file) =>
@@ -190,65 +175,22 @@ const fileToDataUrl = (file) =>
     reader.readAsDataURL(file);
   });
 
-const uploadImageWithProgress = (imageRef, file, onProgress) =>
-  new Promise((resolve, reject) => {
-    const task = uploadBytesResumable(imageRef, file, { contentType: "image/jpeg" });
-    const timeoutId = window.setTimeout(() => {
-      task.cancel();
-      reject(new Error("Görsel yükleme zaman aşımına uğradı. Firebase Storage'ın aktif olduğundan ve Storage Rules'un yayınlandığından emin ol."));
-    }, 180000);
-
-    task.on(
-      "state_changed",
-      (snapshot) => {
-        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-        onProgress(progress);
-      },
-      (error) => {
-        window.clearTimeout(timeoutId);
-        reject(error);
-      },
-      () => {
-        window.clearTimeout(timeoutId);
-        resolve(task.snapshot);
-      }
-    );
-  });
-
-const uploadProductImages = async (files, productSlug, createdAtMs, onStatus) => {
-  const compressedFiles = [];
+const prepareProductImages = async (files, onStatus) => {
+  const imageUrls = [];
 
   for (let index = 0; index < files.length; index += 1) {
     onStatus(`Görsel ${index + 1}/${files.length} sıkıştırılıyor...`);
-    compressedFiles.push(await compressImage(files[index]));
+    const compressedFile = await compressImage(files[index]);
+    imageUrls.push(await fileToDataUrl(compressedFile));
   }
 
-  try {
-    const imageUrls = [];
+  const totalBytes = imageUrls.reduce((sum, url) => sum + url.length, 0);
 
-    for (let index = 0; index < compressedFiles.length; index += 1) {
-      const imagePath = `products/${pageCategory}/${productSlug}-${createdAtMs}-${index}.jpg`;
-      const imageRef = ref(storage, imagePath);
-
-      onStatus(`Görsel ${index + 1}/${compressedFiles.length} Storage'a yükleniyor...`);
-      await uploadImageWithProgress(imageRef, compressedFiles[index], (progress) => {
-        onStatus(`Görsel ${index + 1}/${compressedFiles.length} Storage'a yükleniyor... %${progress}`);
-      });
-      imageUrls.push(await getDownloadURL(imageRef));
-    }
-
-    return { imageUrls, imageStorage: "storage" };
-  } catch (error) {
-    onStatus("Storage cevap vermedi. Sıkıştırılmış görseller Firestore kaydına ekleniyor...");
-    const imageUrls = await Promise.all(compressedFiles.map(fileToDataUrl));
-    const totalBytes = imageUrls.reduce((sum, url) => sum + url.length, 0);
-
-    if (totalBytes > 900000) {
-      throw new Error("Görseller Firestore için hâlâ büyük. Daha az görsel seç veya görselleri biraz küçült.");
-    }
-
-    return { imageUrls, imageStorage: "firestore-data-url", storageError: error.code || error.message };
+  if (totalBytes > 900000) {
+    throw new Error("Görseller Firestore için hâlâ büyük. Daha az görsel seç veya görselleri biraz küçült.");
   }
+
+  return imageUrls;
 };
 
 const renderCart = () => {
@@ -581,8 +523,7 @@ const setupAdminPanel = () => {
 
     try {
       const productSlug = slugify(name);
-      const createdAtMs = Date.now();
-      const imageResult = await uploadProductImages(imageFiles, productSlug, createdAtMs, setAdminMessage);
+      const imageUrls = await prepareProductImages(imageFiles, setAdminMessage);
 
       setAdminMessage("Ürün yayınlanıyor...");
 
@@ -593,9 +534,9 @@ const setupAdminPanel = () => {
         stock,
         sizes,
         tone,
-        imageUrls: imageResult.imageUrls,
-        imageStorage: imageResult.imageStorage,
-        storageError: imageResult.storageError || "",
+        imageUrls,
+        images: imageUrls,
+        imageStorage: "firestore-base64",
         category: pageCategory,
         active: true,
         slug: productSlug,
@@ -608,15 +549,9 @@ const setupAdminPanel = () => {
       if (adminToggleButton) {
         adminToggleButton.textContent = "Ürün Ekle";
       }
-      setAdminMessage(imageResult.imageStorage === "storage" ? "Ürün yayınlandı." : "Ürün yayınlandı. Not: Storage yerine Firestore görsel modu kullanıldı.");
+      setAdminMessage("Ürün yayınlandı.");
     } catch (error) {
-      const message = error.code === "storage/unauthorized"
-        ? "Görsel yüklenemedi: Firebase Storage Rules içinde admin yazma iznini yayınla."
-        : error.code === "storage/canceled"
-          ? "Görsel yükleme iptal edildi veya zaman aşımına uğradı. Firebase Storage'ın aktif olduğundan emin ol."
-          : error.code === "storage/retry-limit-exceeded"
-            ? "Görsel yükleme deneme limiti aşıldı. İnternet bağlantısı veya Firebase Storage ayarını kontrol et."
-        : error.code === "permission-denied"
+      const message = error.code === "permission-denied"
           ? "Ürün eklenemedi: Firestore Rules içinde admin yazma iznini yayınla."
           : error.message || "Ürün eklenemedi. Firebase ayarlarını kontrol et.";
       setAdminMessage(message, true);
