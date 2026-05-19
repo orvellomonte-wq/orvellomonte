@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orvello Monte | Streetwear</title>
+  <meta name="description" content="Orvello Monte streetwear koleksiyonu: hoodie, cargo, tee ve aksesuarlar.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="Orvello Monte ana sayfa">ORVELLO MONTE</a>
+    <nav class="nav-links" aria-label="Ana navigasyon">
+      <a href="#drops">Drop</a>
+      <a href="#lookbook">Lookbook</a>
+      <a href="#contact">İletişim</a>
+    </nav>
+    <a class="cart-link" href="#drops" aria-label="Sepete git">Cart <span>0</span></a>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-label="Orvello Monte streetwear koleksiyonu">
+      <img src="assets/hero-streetwear.png" alt="Orvello Monte sokak giyim lookbook çekimi" class="hero-image">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <p class="kicker">New Season / Limited Drop</p>
+        <h1>Underground Streetwear</h1>
+        <p class="hero-copy">Oversize siluetler, ağır pamuk hoodieler, bol cargo pantolonlar ve gece şehir enerjisi.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#drops">Drop'u İncele</a>
+          <a class="button secondary" href="#lookbook">Lookbook</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="ticker" aria-label="Koleksiyon öne çıkanları">
+      <span>Heavy Cotton</span>
+      <span>Relaxed Fit</span>
+      <span>Black / Bone / Rust</span>
+      <span>Made for Night Moves</span>
+    </section>
+
+    <section class="section" id="drops">
+      <div class="section-heading">
+        <p class="kicker">Drop 01</p>
+        <h2>Yeni Gelenler</h2>
+      </div>
+
+      <div class="product-grid">
+        <article class="product-card">
+          <div class="product-visual hoodie"></div>
+          <div class="product-info">
+            <h3>Shadow Logo Hoodie</h3>
+            <p>520 GSM fleece, oversize kesim.</p>
+            <div class="product-row">
+              <span>₺1.499</span>
+              <button type="button" data-product="Shadow Logo Hoodie">Ekle</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="product-card">
+          <div class="product-visual cargo"></div>
+          <div class="product-info">
+            <h3>Night Cargo Pants</h3>
+            <p>Çok cepli, geniş paça, metal zincir detay.</p>
+            <div class="product-row">
+              <span>₺1.799</span>
+              <button type="button" data-product="Night Cargo Pants">Ekle</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="product-card">
+          <div class="product-visual tee"></div>
+          <div class="product-info">
+            <h3>Rust Graphic Tee</h3>
+            <p>Yıkamalı siyah kumaş, solgun baskı hissi.</p>
+            <div class="product-row">
+              <span>₺849</span>
+              <button type="button" data-product="Rust Graphic Tee">Ekle</button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="lookbook" id="lookbook">
+      <div>
+        <p class="kicker">Lookbook</p>
+        <h2>Şehirden çıkmadan sert bir siluet.</h2>
+      </div>
+      <p>Orvello Monte; sakin renkler, geniş formlar ve gün boyu taşınan konforla kurulmuş ilk drop'unu sunar.</p>
+    </section>
+
+    <section class="newsletter" id="contact">
+      <div>
+        <p class="kicker">Early Access</p>
+        <h2>Yeni drop haberi ilk sana gelsin.</h2>
+      </div>
+      <form class="signup-form">
+        <label class="sr-only" for="email">E-posta</label>
+        <input id="email" type="email" placeholder="mail@ornek.com" required>
+        <button type="submit">Katıl</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>© 2026 Orvello Monte</span>
+    <span>Streetwear / Istanbul</span>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
