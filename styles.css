@@ -32,7 +32,8 @@ a {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -446,6 +447,58 @@ h2 {
   line-height: 1.5;
 }
 
+.product-meta {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.size-select {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 10px;
+  color: var(--ink);
+  outline: 0;
+  background: rgba(247, 241, 232, 0.08);
+}
+
+.about-button {
+  width: fit-content;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--accent-2);
+  cursor: pointer;
+  background: rgba(247, 241, 232, 0.06);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.product-about {
+  min-height: 0;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(247, 241, 232, 0.05);
+}
+
+.product-about[hidden] {
+  display: none;
+}
+
+.empty-products {
+  grid-column: 1 / -1;
+  margin: 0;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 28px;
+  color: var(--muted);
+  text-align: center;
+}
+
 .admin-product-panel {
   padding: 34px clamp(18px, 5vw, 72px);
   border-top: 1px solid var(--line);
@@ -472,11 +525,28 @@ h2 {
   text-transform: uppercase;
 }
 
+.admin-toggle-button {
+  min-height: 46px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 18px;
+  color: var(--bg);
+  cursor: pointer;
+  background: var(--accent-2);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
 .admin-product-form {
   display: grid;
-  grid-template-columns: 1.15fr 1.45fr 0.65fr 0.75fr auto;
+  grid-template-columns: 1.1fr 0.65fr 0.85fr 0.75fr auto;
   gap: 12px;
   align-items: end;
+  margin-top: 18px;
+}
+
+.admin-product-form[hidden] {
+  display: none;
 }
 
 .admin-product-form label {
@@ -489,7 +559,8 @@ h2 {
 }
 
 .admin-product-form input,
-.admin-product-form select {
+.admin-product-form select,
+.admin-product-form textarea {
   min-height: 46px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -497,6 +568,16 @@ h2 {
   color: var(--ink);
   outline: 0;
   background: rgba(247, 241, 232, 0.08);
+}
+
+.admin-product-form textarea {
+  min-height: 96px;
+  padding: 12px;
+  resize: vertical;
+}
+
+.admin-description-field {
+  grid-column: 1 / -1;
 }
 
 .admin-product-form button {

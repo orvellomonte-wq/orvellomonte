@@ -72,6 +72,7 @@ const signOutButton = document.querySelector(".sign-out-button");
 const pageCategory = document.body.dataset.category;
 const productGrid = document.querySelector("[data-product-grid]");
 const adminPanel = document.querySelector(".admin-product-panel");
+const adminToggleButton = document.querySelector(".admin-toggle-button");
 const adminForm = document.querySelector(".admin-product-form");
 const adminMessage = document.querySelector(".admin-message");
 
@@ -139,7 +140,7 @@ const renderCart = () => {
           <div class="cart-item-top">
             <div>
               <h3>${item.name}</h3>
-              <p class="cart-item-price">${formatPrice(item.price)}</p>
+              <p class="cart-item-price">${formatPrice(item.price)}${item.size ? ` / ${escapeHtml(item.size)}` : ""}</p>
             </div>
             <button class="remove-item-button" type="button" aria-label="${item.name} ürününü kaldır" data-remove-item="${item.id}">×</button>
           </div>
@@ -204,19 +205,35 @@ const removeItem = (id) => {
 
 document.addEventListener("click", (event) => {
   const productButton = event.target.closest("[data-product]");
+  const aboutButton = event.target.closest("[data-about-toggle]");
+
+  if (aboutButton) {
+    const aboutText = aboutButton.closest(".product-meta")?.querySelector(".product-about");
+
+    if (aboutText) {
+      aboutText.hidden = !aboutText.hidden;
+      aboutButton.textContent = aboutText.hidden ? "Hakkında" : "Kapat";
+    }
+  }
 
   if (productButton) {
+    const productCard = productButton.closest(".product-card");
+    const selectedSize = productCard?.querySelector("[data-size-select]")?.value || "Standart";
+    const baseId = productButton.dataset.id;
+    const originalText = productButton.textContent;
+
     addToCart({
-      id: productButton.dataset.id,
+      id: `${baseId}-${selectedSize.toLowerCase()}`,
       name: productButton.dataset.product,
       price: Number(productButton.dataset.price),
-      tone: productButton.dataset.tone || getProductTone(productButton.dataset.id)
+      tone: productButton.dataset.tone || getProductTone(baseId),
+      size: selectedSize
     });
     productButton.textContent = "Eklendi";
     openCart();
 
     window.setTimeout(() => {
-      productButton.textContent = "Ekle";
+      productButton.textContent = originalText;
     }, 1200);
   }
 });
@@ -281,10 +298,16 @@ const renderFirebaseProduct = (product) => `
     <div class="product-visual ${escapeHtml(product.tone)}"></div>
     <div class="product-info">
       <h3>${escapeHtml(product.name)}</h3>
-      <p>${escapeHtml(product.description)}</p>
+      <div class="product-meta">
+        <select class="size-select" aria-label="${escapeHtml(product.name)} beden seçimi" data-size-select>
+          ${(product.sizes?.length ? product.sizes : ["S", "M", "L"]).map((size) => `<option value="${escapeHtml(size)}">${escapeHtml(size)}</option>`).join("")}
+        </select>
+        <button class="about-button" type="button" data-about-toggle>Hakkında</button>
+        <p class="product-about" hidden>${escapeHtml(product.description)}</p>
+      </div>
       <div class="product-row">
         <span>${formatPrice(product.price)}</span>
-        <button type="button" data-product="${escapeHtml(product.name)}" data-id="${escapeHtml(product.id)}" data-price="${product.price}" data-tone="${escapeHtml(product.tone)}">Ekle</button>
+        <button type="button" data-product="${escapeHtml(product.name)}" data-id="${escapeHtml(product.id)}" data-price="${product.price}" data-tone="${escapeHtml(product.tone)}">Sepete Ekle</button>
       </div>
     </div>
   </article>
@@ -296,6 +319,7 @@ const renderFirestoreProducts = (products) => {
   }
 
   productGrid.querySelectorAll("[data-firestore-product]").forEach((card) => card.remove());
+  productGrid.querySelector(".empty-products")?.toggleAttribute("hidden", products.length > 0);
   productGrid.insertAdjacentHTML("beforeend", products.map(renderFirebaseProduct).join(""));
 };
 
@@ -327,6 +351,12 @@ const setupAdminPanel = () => {
     return;
   }
 
+  adminToggleButton?.addEventListener("click", () => {
+    adminForm.hidden = !adminForm.hidden;
+    adminToggleButton.textContent = adminForm.hidden ? "Ürün Ekle" : "Paneli Kapat";
+    setAdminMessage("");
+  });
+
   adminForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -339,10 +369,15 @@ const setupAdminPanel = () => {
     const name = formData.get("name").trim();
     const description = formData.get("description").trim();
     const price = Number(formData.get("price"));
+    const sizes = formData
+      .get("sizes")
+      .split(",")
+      .map((size) => size.trim().toUpperCase())
+      .filter(Boolean);
     const tone = formData.get("tone");
 
-    if (!name || !description || !price || price < 1) {
-      setAdminMessage("Ürün adı, açıklama ve fiyat alanlarını kontrol et.", true);
+    if (!name || !description || !price || price < 1 || sizes.length === 0) {
+      setAdminMessage("Ürün adı, fiyat, beden ve açıklama alanlarını kontrol et.", true);
       return;
     }
 
@@ -355,6 +390,7 @@ const setupAdminPanel = () => {
         name,
         description,
         price,
+        sizes,
         tone,
         category: pageCategory,
         active: true,
@@ -460,6 +496,13 @@ onAuthStateChanged(auth, (user) => {
   if (adminPanel) {
     adminPanel.hidden = !isAdmin;
     setAdminMessage(isAdmin ? "Admin yetkisi aktif. Bu sayfaya ürün ekleyebilirsin." : "");
+
+    if (!isAdmin && adminForm) {
+      adminForm.hidden = true;
+      if (adminToggleButton) {
+        adminToggleButton.textContent = "Ürün Ekle";
+      }
+    }
   }
 
   if (user) {

@@ -38,23 +38,25 @@
       <div class="section-heading">
         <div>
           <p class="kicker">Admin Panel</p>
-          <h2>Ürün Ekle</h2>
+          <h2>Ürün Yönetimi</h2>
         </div>
         <span class="admin-pill">orvellomonte@gmail.com</span>
       </div>
 
-      <form class="admin-product-form">
+      <button class="admin-toggle-button" type="button">Ürün Ekle</button>
+
+      <form class="admin-product-form" hidden>
         <label>
           <span>Ürün adı</span>
           <input name="name" type="text" placeholder="Oversize Zip Hoodie" required>
         </label>
         <label>
-          <span>Açıklama</span>
-          <input name="description" type="text" placeholder="Kumaş, kalıp ve detay bilgisi" required>
-        </label>
-        <label>
           <span>Fiyat</span>
           <input name="price" type="number" min="1" step="1" placeholder="1499" required>
+        </label>
+        <label>
+          <span>Bedenler</span>
+          <input name="sizes" type="text" placeholder="S, M, L, XL" required>
         </label>
         <label>
           <span>Görsel tipi</span>
@@ -63,6 +65,10 @@
             <option value="tee">Tee</option>
             <option value="cargo">Cargo</option>
           </select>
+        </label>
+        <label class="admin-description-field">
+          <span>Ürün açıklaması</span>
+          <textarea name="description" placeholder="Kumaş, kalıp, kullanım ve bakım bilgisi" required></textarea>
         </label>
         <button type="submit">Ürünü Yayınla</button>
         <p class="admin-message" role="status" aria-live="polite"></p>
@@ -76,41 +82,7 @@
       </div>
 
       <div class="product-grid" data-product-grid>
-        <article class="product-card">
-          <div class="product-visual hoodie"></div>
-          <div class="product-info">
-            <h3>Shadow Logo Hoodie</h3>
-            <p>520 GSM fleece, oversize kesim.</p>
-            <div class="product-row">
-              <span>₺1.499</span>
-              <button type="button" data-product="Shadow Logo Hoodie" data-id="shadow-logo-hoodie" data-price="1499" data-tone="hoodie">Ekle</button>
-            </div>
-          </div>
-        </article>
-
-        <article class="product-card">
-          <div class="product-visual cargo"></div>
-          <div class="product-info">
-            <h3>Night Cargo Pants</h3>
-            <p>Çok cepli, geniş paça, metal zincir detay.</p>
-            <div class="product-row">
-              <span>₺1.799</span>
-              <button type="button" data-product="Night Cargo Pants" data-id="night-cargo-pants" data-price="1799" data-tone="cargo">Ekle</button>
-            </div>
-          </div>
-        </article>
-
-        <article class="product-card">
-          <div class="product-visual tee"></div>
-          <div class="product-info">
-            <h3>Rust Graphic Tee</h3>
-            <p>Yıkamalı siyah kumaş, solgun baskı hissi.</p>
-            <div class="product-row">
-              <span>₺849</span>
-              <button type="button" data-product="Rust Graphic Tee" data-id="rust-graphic-tee" data-price="849" data-tone="tee">Ekle</button>
-            </div>
-          </div>
-        </article>
+        <p class="empty-products">Henüz ürün eklenmedi.</p>
       </div>
     </section>
 
