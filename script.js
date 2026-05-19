@@ -20,7 +20,7 @@ import {
   getDownloadURL,
   getStorage,
   ref,
-  uploadBytes
+  uploadBytesResumable
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -157,7 +157,7 @@ const readImage = (file) =>
 
 const compressImage = async (file) => {
   const image = await readImage(file);
-  const maxSide = 1600;
+  const maxSide = 1200;
   const ratio = Math.min(1, maxSide / Math.max(image.width, image.height));
   const width = Math.round(image.width * ratio);
   const height = Math.round(image.height * ratio);
@@ -171,7 +171,7 @@ const compressImage = async (file) => {
   context.drawImage(image, 0, 0, width, height);
 
   const blob = await new Promise((resolve) => {
-    canvas.toBlob(resolve, "image/jpeg", 0.78);
+    canvas.toBlob(resolve, "image/jpeg", 0.7);
   });
 
   if (!blob) {
@@ -181,6 +181,31 @@ const compressImage = async (file) => {
   const baseName = slugify(file.name.replace(/\.[^.]+$/, "")) || "product-image";
   return new File([blob], `${baseName}.jpg`, { type: "image/jpeg" });
 };
+
+const uploadImageWithProgress = (imageRef, file, onProgress) =>
+  new Promise((resolve, reject) => {
+    const task = uploadBytesResumable(imageRef, file, { contentType: "image/jpeg" });
+    const timeoutId = window.setTimeout(() => {
+      task.cancel();
+      reject(new Error("Görsel yükleme zaman aşımına uğradı. Firebase Storage'ın aktif olduğundan ve Storage Rules'un yayınlandığından emin ol."));
+    }, 180000);
+
+    task.on(
+      "state_changed",
+      (snapshot) => {
+        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        onProgress(progress);
+      },
+      (error) => {
+        window.clearTimeout(timeoutId);
+        reject(error);
+      },
+      () => {
+        window.clearTimeout(timeoutId);
+        resolve(task.snapshot);
+      }
+    );
+  });
 
 const renderCart = () => {
   const itemCount = getCartCount();
@@ -522,11 +547,9 @@ const setupAdminPanel = () => {
         const imageRef = ref(storage, imagePath);
 
         setAdminMessage(`Görsel ${index + 1}/${imageFiles.length} yükleniyor...`);
-        await withTimeout(
-          uploadBytes(imageRef, compressedFile, { contentType: "image/jpeg" }),
-          60000,
-          "Görsel yükleme zaman aşımına uğradı. Firebase Storage Rules ve internet bağlantısını kontrol et."
-        );
+        await uploadImageWithProgress(imageRef, compressedFile, (progress) => {
+          setAdminMessage(`Görsel ${index + 1}/${imageFiles.length} yükleniyor... %${progress}`);
+        });
         imageUrls.push(await getDownloadURL(imageRef));
       }
 
@@ -556,6 +579,10 @@ const setupAdminPanel = () => {
     } catch (error) {
       const message = error.code === "storage/unauthorized"
         ? "Görsel yüklenemedi: Firebase Storage Rules içinde admin yazma iznini yayınla."
+        : error.code === "storage/canceled"
+          ? "Görsel yükleme iptal edildi veya zaman aşımına uğradı. Firebase Storage'ın aktif olduğundan emin ol."
+          : error.code === "storage/retry-limit-exceeded"
+            ? "Görsel yükleme deneme limiti aşıldı. İnternet bağlantısı veya Firebase Storage ayarını kontrol et."
         : error.code === "permission-denied"
           ? "Ürün eklenemedi: Firestore Rules içinde admin yazma iznini yayınla."
           : error.message || "Ürün eklenemedi. Firebase ayarlarını kontrol et.";
