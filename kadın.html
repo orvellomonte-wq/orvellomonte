@@ -62,8 +62,8 @@
           <input name="price" type="number" min="1" step="1" placeholder="1499" required>
         </label>
         <label>
-          <span>Stok</span>
-          <input name="stock" type="number" min="0" step="1" placeholder="24" required>
+          <span>Toplam stok</span>
+          <input name="stock" type="number" min="0" step="1" placeholder="Otomatik" readonly>
         </label>
         <fieldset class="size-picker">
           <legend>Bedenler</legend>
@@ -78,6 +78,7 @@
           <span>Ek beden</span>
           <input name="customSizes" type="text" placeholder="34, 36 veya Oversize">
         </label>
+        <div class="admin-size-stocks" aria-live="polite"></div>
         <label class="admin-images-field">
           <span>Ürün görselleri</span>
           <input name="images" type="file" accept="image/*" multiple required>

@@ -10,10 +10,13 @@ import {
 import {
   addDoc,
   collection,
+  deleteDoc,
+  doc,
   getFirestore,
   onSnapshot,
   query,
   serverTimestamp,
+  updateDoc,
   where
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
@@ -76,11 +79,15 @@ const adminToggleButton = document.querySelector(".admin-toggle-button");
 const adminForm = document.querySelector(".admin-product-form");
 const adminMessage = document.querySelector(".admin-message");
 const adminImagePreview = document.querySelector(".admin-image-preview");
+const adminSizeStocks = document.querySelector(".admin-size-stocks");
 
 let cart = JSON.parse(localStorage.getItem("orvello-cart") || "[]");
 let authMode = "login";
 let currentUser = null;
 let adminPreviewUrls = [];
+let currentProducts = [];
+let currentEditId = null;
+let existingAdminImages = [];
 
 const formatPrice = (amount) =>
   new Intl.NumberFormat("tr-TR", {
@@ -243,17 +250,23 @@ const closeCart = () => {
   cartDrawer.setAttribute("aria-hidden", "true");
 };
 
-const addToCart = (product) => {
+const addToCart = (product, maxStock = Infinity) => {
   const existingItem = cart.find((item) => item.id === product.id);
 
   if (existingItem) {
+    if (existingItem.quantity >= maxStock) {
+      return false;
+    }
+
+    existingItem.maxStock = maxStock;
     existingItem.quantity += 1;
   } else {
-    cart.push({ ...product, quantity: 1 });
+    cart.push({ ...product, maxStock, quantity: 1 });
   }
 
   saveCart();
   renderCart();
+  return true;
 };
 
 const updateQuantity = (id, action) => {
@@ -263,7 +276,9 @@ const updateQuantity = (id, action) => {
         return item;
       }
 
-      const quantity = action === "increase" ? item.quantity + 1 : item.quantity - 1;
+      const nextQuantity = action === "increase" ? item.quantity + 1 : item.quantity - 1;
+      const maxStock = Number(item.maxStock || Infinity);
+      const quantity = action === "increase" ? Math.min(nextQuantity, maxStock) : nextQuantity;
       return { ...item, quantity };
     })
     .filter((item) => item.quantity > 0);
@@ -278,10 +293,30 @@ const removeItem = (id) => {
   renderCart();
 };
 
+const parseJsonData = (value, fallback = {}) => {
+  try {
+    return value ? JSON.parse(value) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 document.addEventListener("click", (event) => {
   const productButton = event.target.closest("[data-product]");
   const aboutButton = event.target.closest("[data-about-toggle]");
   const galleryButton = event.target.closest("[data-gallery-image]");
+  const editProductButton = event.target.closest("[data-admin-edit-product]");
+  const deleteProductButton = event.target.closest("[data-admin-delete-product]");
+
+  if (editProductButton) {
+    editProduct(editProductButton.dataset.adminEditProduct);
+    return;
+  }
+
+  if (deleteProductButton) {
+    deleteProduct(deleteProductButton.dataset.adminDeleteProduct);
+    return;
+  }
 
   if (aboutButton) {
     const aboutText = aboutButton.closest(".product-meta")?.querySelector(".product-about");
@@ -310,8 +345,10 @@ document.addEventListener("click", (event) => {
     const baseId = productButton.dataset.id;
     const originalText = productButton.textContent;
     const stock = Number(productButton.dataset.stock || 0);
+    const sizeStocks = parseJsonData(productButton.dataset.sizeStocks);
+    const stockForSelection = Number(sizeStocks[selectedSize] ?? stock);
 
-    if (stock <= 0) {
+    if (stock <= 0 || stockForSelection <= 0) {
       productButton.textContent = "Stok Yok";
       window.setTimeout(() => {
         productButton.textContent = originalText;
@@ -319,14 +356,22 @@ document.addEventListener("click", (event) => {
       return;
     }
 
-    addToCart({
+    const wasAdded = addToCart({
       id: `${baseId}-${selectedSize.toLowerCase()}`,
       name: productButton.dataset.product,
       price: Number(productButton.dataset.price),
       tone: productButton.dataset.tone || getProductTone(baseId),
       size: selectedSize,
       imageUrl: productButton.dataset.image || ""
-    });
+    }, stockForSelection);
+
+    if (!wasAdded) {
+      productButton.textContent = "Stok Limiti";
+      window.setTimeout(() => {
+        productButton.textContent = originalText;
+      }, 1200);
+      return;
+    }
     productButton.textContent = "Eklendi";
     openCart();
 
@@ -391,6 +436,82 @@ const setAdminMessage = (message, isError = false) => {
 
 const isAdminUser = (user) => user?.email?.toLowerCase() === ADMIN_EMAIL;
 
+const getFormSizes = () => {
+  if (!adminForm) {
+    return [];
+  }
+
+  const checkedSizes = [...adminForm.querySelectorAll('input[name="sizes"]:checked')].map((input) => input.value);
+  const customSizes = (adminForm.elements.customSizes?.value || "")
+    .split(",")
+    .map((size) => size.trim().toUpperCase())
+    .filter(Boolean);
+
+  return [...new Set([...checkedSizes, ...customSizes])];
+};
+
+const updateTotalStockInput = () => {
+  if (!adminForm) {
+    return 0;
+  }
+
+  const totalStock = [...adminForm.querySelectorAll("[data-size-stock]")].reduce((total, input) => {
+    const stock = Number(input.value);
+    return total + (Number.isFinite(stock) && stock > 0 ? stock : 0);
+  }, 0);
+
+  adminForm.elements.stock.value = String(totalStock);
+  return totalStock;
+};
+
+const renderAdminSizeStocks = (seedStocks = {}) => {
+  if (!adminSizeStocks || !adminForm) {
+    return;
+  }
+
+  const previousStocks = [...adminForm.querySelectorAll("[data-size-stock]")].reduce((stocks, input) => {
+    stocks[input.dataset.sizeStock] = input.value;
+    return stocks;
+  }, {});
+  const sizes = getFormSizes();
+
+  if (sizes.length === 0) {
+    adminSizeStocks.innerHTML = `
+      <div class="admin-size-stocks-empty">
+        Beden seçince her beden için stok kutusu burada açılır.
+      </div>
+    `;
+    updateTotalStockInput();
+    return;
+  }
+
+  adminSizeStocks.innerHTML = `
+    <div class="admin-size-stocks-title">Beden stokları</div>
+    ${sizes.map((size) => {
+      const stockValue = seedStocks[size] ?? previousStocks[size] ?? "";
+      return `
+        <label class="size-stock-field">
+          <span>${escapeHtml(size)}</span>
+          <input type="number" min="0" step="1" inputmode="numeric" data-size-stock="${escapeHtml(size)}" value="${escapeHtml(stockValue)}" placeholder="0">
+        </label>
+      `;
+    }).join("")}
+  `;
+  updateTotalStockInput();
+};
+
+const getSizeStocksFromForm = () => {
+  const sizeStocks = {};
+
+  adminForm.querySelectorAll("[data-size-stock]").forEach((input) => {
+    const size = input.dataset.sizeStock;
+    const stock = Number(input.value);
+    sizeStocks[size] = Number.isFinite(stock) && stock >= 0 ? stock : -1;
+  });
+
+  return sizeStocks;
+};
+
 const clearAdminImagePreview = () => {
   adminPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
   adminPreviewUrls = [];
@@ -420,6 +541,63 @@ const renderAdminImagePreview = (files) => {
       </figure>
     `)
     .join("");
+};
+
+const renderExistingAdminImagePreview = (imageUrls) => {
+  if (!adminImagePreview) {
+    return;
+  }
+
+  clearAdminImagePreview();
+
+  if (imageUrls.length === 0) {
+    return;
+  }
+
+  adminImagePreview.innerHTML = imageUrls
+    .map((url, index) => `
+      <figure>
+        <img src="${escapeHtml(url)}" alt="Mevcut ürün görseli ${index + 1}">
+        <figcaption>${index + 1}</figcaption>
+      </figure>
+    `)
+    .join("");
+};
+
+const setAdminMode = (mode, productName = "") => {
+  currentEditId = mode === "edit" ? currentEditId : null;
+  const heading = adminForm?.querySelector(".admin-form-head h3");
+  const submitButton = adminForm?.querySelector('button[type="submit"]');
+
+  if (heading) {
+    heading.textContent = mode === "edit" ? "Ürünü güncelle" : "Drop'a ürün ekle";
+  }
+
+  if (submitButton) {
+    submitButton.textContent = mode === "edit" ? "Ürünü Güncelle" : "Ürünü Yayınla";
+  }
+
+  if (adminForm?.elements.images) {
+    adminForm.elements.images.required = mode !== "edit";
+  }
+
+  if (mode === "edit" && productName) {
+    setAdminMessage(`${productName} düzenleniyor.`);
+  }
+};
+
+const resetAdminFormForCreate = () => {
+  if (!adminForm) {
+    return;
+  }
+
+  adminForm.reset();
+  currentEditId = null;
+  existingAdminImages = [];
+  clearAdminImagePreview();
+  renderAdminSizeStocks();
+  setAdminMode("create");
+  setAdminMessage("");
 };
 
 const closeAdminForm = () => {
@@ -453,11 +631,20 @@ const openAdminForm = () => {
 const renderFirebaseProduct = (product) => {
   const imageUrl = getProductImage(product);
   const imageUrls = product.imageUrls || product.images || [];
+  const sizeStocks = product.sizeStocks || {};
+  const sizes = product.sizes?.length ? product.sizes : Object.keys(sizeStocks).length ? Object.keys(sizeStocks) : ["S", "M", "L"];
   const stock = Number(product.stock || 0);
   const isOutOfStock = stock <= 0;
+  const isAdmin = isAdminUser(currentUser);
 
   return `
   <article class="product-card" data-firestore-product="${escapeHtml(product.id)}">
+    ${isAdmin ? `
+      <div class="product-admin-actions" aria-label="${escapeHtml(product.name)} admin işlemleri">
+        <button type="button" data-admin-edit-product="${escapeHtml(product.id)}">Düzenle</button>
+        <button type="button" data-admin-delete-product="${escapeHtml(product.id)}">Sil</button>
+      </div>
+    ` : ""}
     <div class="product-visual ${imageUrl ? "product-photo" : escapeHtml(product.tone)}">
       ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}">` : ""}
     </div>
@@ -470,7 +657,10 @@ const renderFirebaseProduct = (product) => {
       ` : ""}
       <div class="product-meta">
         <select class="size-select" aria-label="${escapeHtml(product.name)} beden seçimi" data-size-select>
-          ${(product.sizes?.length ? product.sizes : ["S", "M", "L"]).map((size) => `<option value="${escapeHtml(size)}">${escapeHtml(size)}</option>`).join("")}
+          ${sizes.map((size) => {
+            const sizeStock = Number(sizeStocks[size] ?? stock);
+            return `<option value="${escapeHtml(size)}" ${sizeStock <= 0 ? "disabled" : ""}>${escapeHtml(size)}${sizeStock <= 0 ? " - stok yok" : ""}</option>`;
+          }).join("")}
         </select>
         <span class="stock-badge ${isOutOfStock ? "out" : ""}">${isOutOfStock ? "Stok Yok" : `${stock} stok`}</span>
         <button class="about-button" type="button" data-about-toggle>Hakkında</button>
@@ -478,7 +668,7 @@ const renderFirebaseProduct = (product) => {
       </div>
       <div class="product-row">
         <span>${formatPrice(product.price)}</span>
-        <button type="button" data-product="${escapeHtml(product.name)}" data-id="${escapeHtml(product.id)}" data-price="${product.price}" data-tone="${escapeHtml(product.tone)}" data-stock="${stock}" data-image="${escapeHtml(imageUrl)}" ${isOutOfStock ? "disabled" : ""}>${isOutOfStock ? "Stok Yok" : "Sepete Ekle"}</button>
+        <button type="button" data-product="${escapeHtml(product.name)}" data-id="${escapeHtml(product.id)}" data-price="${product.price}" data-tone="${escapeHtml(product.tone)}" data-stock="${stock}" data-size-stocks="${escapeHtml(JSON.stringify(sizeStocks))}" data-image="${escapeHtml(imageUrl)}" ${isOutOfStock ? "disabled" : ""}>${isOutOfStock ? "Stok Yok" : "Sepete Ekle"}</button>
       </div>
     </div>
   </article>
@@ -510,12 +700,86 @@ const loadFirestoreProducts = () => {
         .filter((product) => product.active !== false)
         .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
+      currentProducts = products;
       renderFirestoreProducts(products);
     },
     () => {
       setAdminMessage("Firestore ürünleri okunamadı. Firebase Rules ayarlarını kontrol et.", true);
     }
   );
+};
+
+const editProduct = (productId) => {
+  if (!isAdminUser(currentUser)) {
+    setAdminMessage("Bu işlem için admin hesabıyla giriş yapmalısın.", true);
+    return;
+  }
+
+  const product = currentProducts.find((item) => item.id === productId);
+
+  if (!product || !adminForm) {
+    setAdminMessage("Ürün bulunamadı.", true);
+    return;
+  }
+
+  currentEditId = product.id;
+  existingAdminImages = product.imageUrls || product.images || [];
+  adminForm.reset();
+
+  adminForm.elements.name.value = product.name || "";
+  adminForm.elements.price.value = product.price || "";
+  adminForm.elements.stock.value = product.stock || 0;
+  adminForm.elements.description.value = product.description || "";
+  adminForm.elements.tone.value = product.tone || "hoodie";
+
+  const productSizes = product.sizes?.length ? product.sizes : Object.keys(product.sizeStocks || {});
+  const checkboxValues = [...adminForm.querySelectorAll('input[name="sizes"]')].map((input) => input.value);
+  const customSizes = [];
+
+  adminForm.querySelectorAll('input[name="sizes"]').forEach((input) => {
+    input.checked = productSizes.includes(input.value);
+  });
+
+  productSizes.forEach((size) => {
+    if (!checkboxValues.includes(size)) {
+      customSizes.push(size);
+    }
+  });
+
+  adminForm.elements.customSizes.value = customSizes.join(", ");
+  const editSizeStocks = product.sizeStocks || productSizes.reduce((stocks, size, index) => {
+    stocks[size] = index === 0 ? Number(product.stock || 0) : 0;
+    return stocks;
+  }, {});
+
+  renderAdminSizeStocks(editSizeStocks);
+  renderExistingAdminImagePreview(existingAdminImages);
+  setAdminMode("edit", product.name || "Ürün");
+  openAdminForm();
+  setAdminMessage(`${product.name || "Ürün"} düzenleniyor. Yeni görsel seçmezsen mevcut görseller korunur.`);
+};
+
+const deleteProduct = async (productId) => {
+  if (!isAdminUser(currentUser)) {
+    setAdminMessage("Bu işlem için admin hesabıyla giriş yapmalısın.", true);
+    return;
+  }
+
+  const product = currentProducts.find((item) => item.id === productId);
+  const productName = product?.name || "Bu ürün";
+
+  if (!window.confirm(`${productName} silinsin mi?`)) {
+    return;
+  }
+
+  try {
+    await deleteDoc(doc(db, "products", productId));
+    setAdminMessage("Ürün silindi.");
+  } catch (error) {
+    setAdminMessage(error.code === "permission-denied"
+      ? "Ürün silinemedi: Firestore Rules içinde admin silme iznini yayınla."
+      : error.message || "Ürün silinemedi. Firebase ayarlarını kontrol et.", true);
+  }
 };
 
 const setupAdminPanel = () => {
@@ -525,6 +789,7 @@ const setupAdminPanel = () => {
 
   adminToggleButton?.addEventListener("click", () => {
     if (adminForm.hidden) {
+      resetAdminFormForCreate();
       openAdminForm();
     } else {
       closeAdminForm();
@@ -544,6 +809,20 @@ const setupAdminPanel = () => {
     }
   });
 
+  adminForm.querySelectorAll('input[name="sizes"]').forEach((input) => {
+    input.addEventListener("change", () => renderAdminSizeStocks());
+  });
+
+  adminForm.elements.customSizes?.addEventListener("input", () => renderAdminSizeStocks());
+
+  adminSizeStocks?.addEventListener("input", (event) => {
+    if (event.target.matches("[data-size-stock]")) {
+      updateTotalStockInput();
+    }
+  });
+
+  renderAdminSizeStocks();
+
   adminForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -556,22 +835,19 @@ const setupAdminPanel = () => {
     const name = formData.get("name").trim();
     const description = formData.get("description").trim();
     const price = Number(formData.get("price"));
-    const stock = Number(formData.get("stock"));
-    const selectedSizes = formData.getAll("sizes");
-    const customSizes = (formData.get("customSizes") || "")
-      .split(",")
-      .map((size) => size.trim().toUpperCase())
-      .filter(Boolean);
-    const sizes = [...new Set([...selectedSizes, ...customSizes])];
+    const sizes = getFormSizes();
+    const sizeStocks = getSizeStocksFromForm();
+    const hasInvalidSizeStock = Object.values(sizeStocks).some((stock) => stock < 0);
+    const stock = Object.values(sizeStocks).reduce((total, sizeStock) => total + sizeStock, 0);
     const tone = formData.get("tone");
     const imageFiles = [...adminForm.elements.images.files];
 
-    if (!name || !description || !price || price < 1 || Number.isNaN(stock) || stock < 0 || sizes.length === 0) {
-      setAdminMessage("Ürün adı, fiyat, stok, beden ve açıklama alanlarını kontrol et.", true);
+    if (!name || !description || !price || price < 1 || sizes.length === 0 || hasInvalidSizeStock) {
+      setAdminMessage("Ürün adı, fiyat, beden stokları ve açıklama alanlarını kontrol et.", true);
       return;
     }
 
-    if (imageFiles.length === 0) {
+    if (!currentEditId && imageFiles.length === 0) {
       setAdminMessage("En az bir ürün görseli seçmelisin.", true);
       return;
     }
@@ -591,16 +867,20 @@ const setupAdminPanel = () => {
     setAdminMessage("Görseller hazırlanıyor...");
 
     try {
+      const isEditing = Boolean(currentEditId);
       const productSlug = slugify(name);
-      const imageUrls = await prepareProductImages(imageFiles, setAdminMessage);
+      const imageUrls = imageFiles.length > 0
+        ? await prepareProductImages(imageFiles, setAdminMessage)
+        : existingAdminImages;
 
-      setAdminMessage("Ürün yayınlanıyor...");
+      setAdminMessage(isEditing ? "Ürün güncelleniyor..." : "Ürün yayınlanıyor...");
 
-      await addDoc(collection(db, "products"), {
+      const productData = {
         name,
         description,
         price,
         stock,
+        sizeStocks,
         sizes,
         tone,
         imageUrls,
@@ -609,14 +889,27 @@ const setupAdminPanel = () => {
         category: pageCategory,
         active: true,
         slug: productSlug,
-        createdAt: serverTimestamp(),
-        createdBy: currentUser.email
-      });
+        updatedAt: serverTimestamp(),
+        updatedBy: currentUser.email
+      };
+
+      if (isEditing) {
+        await updateDoc(doc(db, "products", currentEditId), productData);
+      } else {
+        await addDoc(collection(db, "products"), {
+          ...productData,
+          createdAt: serverTimestamp(),
+          createdBy: currentUser.email
+        });
+      }
 
       adminForm.reset();
+      currentEditId = null;
+      existingAdminImages = [];
       clearAdminImagePreview();
+      renderAdminSizeStocks();
       closeAdminForm();
-      setAdminMessage("Ürün yayınlandı.");
+      setAdminMessage(isEditing ? "Ürün güncellendi." : "Ürün yayınlandı.");
     } catch (error) {
       const message = error.code === "permission-denied"
           ? "Ürün eklenemedi: Firestore Rules içinde admin yazma iznini yayınla."
@@ -724,6 +1017,10 @@ onAuthStateChanged(auth, (user) => {
   if (user) {
     userName.textContent = user.displayName || "Orvello Üyesi";
     userEmail.textContent = user.email;
+  }
+
+  if (currentProducts.length > 0) {
+    renderFirestoreProducts(currentProducts);
   }
 });
 

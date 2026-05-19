@@ -386,11 +386,39 @@ button:disabled {
 }
 
 .product-card {
+  position: relative;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel);
   box-shadow: 0 18px 50px var(--shadow);
+}
+
+.product-admin-actions {
+  position: absolute;
+  z-index: 4;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+}
+
+.product-admin-actions button {
+  min-height: 32px;
+  border: 1px solid rgba(247, 241, 232, 0.24);
+  border-radius: 6px;
+  padding: 0 10px;
+  color: var(--ink);
+  cursor: pointer;
+  background: rgba(13, 13, 13, 0.78);
+  backdrop-filter: blur(8px);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.product-admin-actions button:last-child {
+  color: #ffb0a2;
 }
 
 .product-visual {
@@ -694,6 +722,7 @@ button:disabled {
 .admin-product-form > label:nth-of-type(1),
 .admin-images-field,
 .admin-description-field,
+.admin-size-stocks,
 .size-picker {
   grid-column: span 6;
 }
@@ -738,6 +767,41 @@ button:disabled {
   min-height: auto;
   margin: 0 7px 0 0;
   accent-color: var(--accent-2);
+}
+
+.admin-size-stocks {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: start;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(247, 241, 232, 0.04);
+}
+
+.admin-size-stocks-title,
+.admin-size-stocks-empty {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.admin-size-stocks-empty {
+  text-transform: none;
+  font-weight: 700;
+}
+
+.size-stock-field {
+  gap: 6px;
+}
+
+.size-stock-field span {
+  color: var(--accent-2);
+  font-size: 0.72rem;
 }
 
 .admin-product-form input,
@@ -1381,6 +1445,7 @@ button:disabled {
   .admin-product-form > label:nth-of-type(6),
   .admin-images-field,
   .admin-description-field,
+  .admin-size-stocks,
   .size-picker {
     grid-column: 1 / -1;
   }
@@ -1450,6 +1515,7 @@ button:disabled {
   }
 
   .size-picker,
+  .admin-size-stocks,
   .admin-image-preview {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
