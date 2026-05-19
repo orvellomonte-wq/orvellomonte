@@ -131,6 +131,57 @@ const slugify = (value) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 
+const withTimeout = (promise, timeoutMs, message) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      window.setTimeout(() => reject(new Error(message)), timeoutMs);
+    })
+  ]);
+
+const readImage = (file) =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    const url = URL.createObjectURL(file);
+
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Görsel okunamadı."));
+    };
+    image.src = url;
+  });
+
+const compressImage = async (file) => {
+  const image = await readImage(file);
+  const maxSide = 1600;
+  const ratio = Math.min(1, maxSide / Math.max(image.width, image.height));
+  const width = Math.round(image.width * ratio);
+  const height = Math.round(image.height * ratio);
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+
+  canvas.width = width;
+  canvas.height = height;
+  context.fillStyle = "#111";
+  context.fillRect(0, 0, width, height);
+  context.drawImage(image, 0, 0, width, height);
+
+  const blob = await new Promise((resolve) => {
+    canvas.toBlob(resolve, "image/jpeg", 0.78);
+  });
+
+  if (!blob) {
+    return file;
+  }
+
+  const baseName = slugify(file.name.replace(/\.[^.]+$/, "")) || "product-image";
+  return new File([blob], `${baseName}.jpg`, { type: "image/jpeg" });
+};
+
 const renderCart = () => {
   const itemCount = getCartCount();
   cartCounter.textContent = itemCount;
@@ -402,8 +453,15 @@ const setupAdminPanel = () => {
 
   adminToggleButton?.addEventListener("click", () => {
     adminForm.hidden = !adminForm.hidden;
-    adminToggleButton.textContent = adminForm.hidden ? "Ürün Ekle" : "Paneli Kapat";
-    setAdminMessage("");
+      adminToggleButton.textContent = adminForm.hidden ? "Ürün Ekle" : "Paneli Kapat";
+      setAdminMessage("");
+  });
+
+  adminForm.elements.images?.addEventListener("change", () => {
+    const files = [...adminForm.elements.images.files];
+    if (files.length > 0) {
+      setAdminMessage(`${files.length} görsel seçildi. Yayınlarken sıkıştırılacak.`);
+    }
   });
 
   adminForm.addEventListener("submit", async (event) => {
@@ -419,11 +477,12 @@ const setupAdminPanel = () => {
     const description = formData.get("description").trim();
     const price = Number(formData.get("price"));
     const stock = Number(formData.get("stock"));
-    const sizes = formData
-      .get("sizes")
+    const selectedSizes = formData.getAll("sizes");
+    const customSizes = (formData.get("customSizes") || "")
       .split(",")
       .map((size) => size.trim().toUpperCase())
       .filter(Boolean);
+    const sizes = [...new Set([...selectedSizes, ...customSizes])];
     const tone = formData.get("tone");
     const imageFiles = [...adminForm.elements.images.files];
 
@@ -449,19 +508,27 @@ const setupAdminPanel = () => {
 
     const submitButton = adminForm.querySelector("button[type='submit']");
     submitButton.disabled = true;
-    setAdminMessage("Görseller yükleniyor...");
+    setAdminMessage("Görseller sıkıştırılıyor...");
 
     try {
       const productSlug = slugify(name);
-      const imageUrls = await Promise.all(
-        imageFiles.map(async (file, index) => {
-          const extension = file.name.split(".").pop() || "jpg";
-          const imagePath = `products/${pageCategory}/${productSlug}-${Date.now()}-${index}.${extension}`;
-          const imageRef = ref(storage, imagePath);
-          await uploadBytes(imageRef, file);
-          return getDownloadURL(imageRef);
-        })
-      );
+      const imageUrls = [];
+      const createdAtMs = Date.now();
+
+      for (let index = 0; index < imageFiles.length; index += 1) {
+        setAdminMessage(`Görsel ${index + 1}/${imageFiles.length} sıkıştırılıyor...`);
+        const compressedFile = await compressImage(imageFiles[index]);
+        const imagePath = `products/${pageCategory}/${productSlug}-${createdAtMs}-${index}.jpg`;
+        const imageRef = ref(storage, imagePath);
+
+        setAdminMessage(`Görsel ${index + 1}/${imageFiles.length} yükleniyor...`);
+        await withTimeout(
+          uploadBytes(imageRef, compressedFile, { contentType: "image/jpeg" }),
+          60000,
+          "Görsel yükleme zaman aşımına uğradı. Firebase Storage Rules ve internet bağlantısını kontrol et."
+        );
+        imageUrls.push(await getDownloadURL(imageRef));
+      }
 
       setAdminMessage("Ürün yayınlanıyor...");
 
@@ -481,9 +548,18 @@ const setupAdminPanel = () => {
       });
 
       adminForm.reset();
+      adminForm.hidden = true;
+      if (adminToggleButton) {
+        adminToggleButton.textContent = "Ürün Ekle";
+      }
       setAdminMessage("Ürün yayınlandı.");
     } catch (error) {
-      setAdminMessage("Ürün eklenemedi. Firestore izinlerini kontrol et.", true);
+      const message = error.code === "storage/unauthorized"
+        ? "Görsel yüklenemedi: Firebase Storage Rules içinde admin yazma iznini yayınla."
+        : error.code === "permission-denied"
+          ? "Ürün eklenemedi: Firestore Rules içinde admin yazma iznini yayınla."
+          : error.message || "Ürün eklenemedi. Firebase ayarlarını kontrol et.";
+      setAdminMessage(message, true);
     } finally {
       submitButton.disabled = false;
     }

@@ -15,7 +15,7 @@ Streetwear tarzında tek sayfalık vitrin sitesi.
 
 Admin hesabı: `orvellomonte@gmail.com`
 
-Kadın ve erkek ürün sayfalarında bu hesapla giriş yapınca ürün ekleme butonu görünür. Butona basınca ürün adı, fiyat, stok, bedenler, açıklama ve birden fazla görsel yükleme alanı açılır. Görseller Firebase Storage'a, ürün bilgisi Firebase Firestore `products` koleksiyonuna yazılır.
+Kadın ve erkek ürün sayfalarında bu hesapla giriş yapınca ürün ekleme butonu görünür. Butona basınca ürün adı, fiyat, stok, çoklu beden seçimi, açıklama ve birden fazla görsel yükleme alanı açılır. Görseller yüklenmeden önce tarayıcıda sıkıştırılır, Firebase Storage'a yüklenir; ürün bilgisi Firebase Firestore `products` koleksiyonuna yazılır.
 
 ## Yayına Alma
 

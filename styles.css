@@ -569,7 +569,9 @@ button:disabled {
   padding: 34px clamp(18px, 5vw, 72px);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  background: #10100f;
+  background:
+    linear-gradient(135deg, rgba(217, 79, 50, 0.12), transparent 38%),
+    #10100f;
 }
 
 .admin-product-panel[hidden] {
@@ -577,7 +579,11 @@ button:disabled {
 }
 
 .admin-product-panel .section-heading {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  background: rgba(247, 241, 232, 0.05);
 }
 
 .admin-pill {
@@ -601,27 +607,68 @@ button:disabled {
   background: var(--accent-2);
   font-weight: 900;
   text-transform: uppercase;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
 }
 
 .admin-product-form {
   display: grid;
-  grid-template-columns: 1.1fr 0.55fr 0.55fr 0.8fr 0.75fr auto;
-  gap: 12px;
-  align-items: end;
+  grid-template-columns: 1.1fr 0.55fr 0.55fr 0.9fr 0.8fr;
+  gap: 14px;
+  align-items: stretch;
   margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.22);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
 }
 
 .admin-product-form[hidden] {
   display: none;
 }
 
-.admin-product-form label {
+.admin-product-form label,
+.size-picker {
   display: grid;
   gap: 8px;
+  margin: 0;
+  border: 0;
+  padding: 0;
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.size-picker {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: start;
+}
+
+.size-picker legend {
+  grid-column: 1 / -1;
+  padding: 0;
+  color: var(--muted);
+}
+
+.size-picker label {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 9px;
+  color: var(--ink);
+  cursor: pointer;
+  background: rgba(247, 241, 232, 0.06);
+  font-size: 0.76rem;
+}
+
+.size-picker input {
+  width: auto;
+  min-height: auto;
+  margin: 0 7px 0 0;
+  accent-color: var(--accent-2);
 }
 
 .admin-product-form input,
@@ -643,11 +690,19 @@ button:disabled {
 }
 
 .admin-description-field {
-  grid-column: 1 / -1;
+  grid-column: span 3;
 }
 
 .admin-images-field {
-  grid-column: 1 / -2;
+  grid-column: span 2;
+}
+
+.admin-images-field small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-transform: none;
 }
 
 .admin-product-form input[type="file"] {
@@ -656,6 +711,7 @@ button:disabled {
 }
 
 .admin-product-form button {
+  grid-column: 1 / -1;
   min-height: 46px;
   border: 0;
   border-radius: 6px;

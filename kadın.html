@@ -58,13 +58,23 @@
           <span>Stok</span>
           <input name="stock" type="number" min="0" step="1" placeholder="24" required>
         </label>
+        <fieldset class="size-picker">
+          <legend>Bedenler</legend>
+          <label><input name="sizes" type="checkbox" value="XS"> XS</label>
+          <label><input name="sizes" type="checkbox" value="S"> S</label>
+          <label><input name="sizes" type="checkbox" value="M"> M</label>
+          <label><input name="sizes" type="checkbox" value="L"> L</label>
+          <label><input name="sizes" type="checkbox" value="XL"> XL</label>
+          <label><input name="sizes" type="checkbox" value="Standart"> Standart</label>
+        </fieldset>
         <label>
-          <span>Bedenler</span>
-          <input name="sizes" type="text" placeholder="XS, S, M, L" required>
+          <span>Ek beden</span>
+          <input name="customSizes" type="text" placeholder="34, 36 veya Oversize">
         </label>
         <label class="admin-images-field">
           <span>Ürün görselleri</span>
           <input name="images" type="file" accept="image/*" multiple required>
+          <small>Birden fazla görsel seçebilirsin. Yüklemeden önce otomatik sıkıştırılır.</small>
         </label>
         <label>
           <span>Görsel tipi</span>
