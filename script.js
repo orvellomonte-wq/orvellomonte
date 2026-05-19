@@ -157,7 +157,7 @@ const readImage = (file) =>
 
 const compressImage = async (file) => {
   const image = await readImage(file);
-  const maxSide = 1200;
+  const maxSide = 900;
   const ratio = Math.min(1, maxSide / Math.max(image.width, image.height));
   const width = Math.round(image.width * ratio);
   const height = Math.round(image.height * ratio);
@@ -171,7 +171,7 @@ const compressImage = async (file) => {
   context.drawImage(image, 0, 0, width, height);
 
   const blob = await new Promise((resolve) => {
-    canvas.toBlob(resolve, "image/jpeg", 0.7);
+    canvas.toBlob(resolve, "image/jpeg", 0.62);
   });
 
   if (!blob) {
@@ -181,6 +181,14 @@ const compressImage = async (file) => {
   const baseName = slugify(file.name.replace(/\.[^.]+$/, "")) || "product-image";
   return new File([blob], `${baseName}.jpg`, { type: "image/jpeg" });
 };
+
+const fileToDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Görsel dönüştürülemedi."));
+    reader.readAsDataURL(file);
+  });
 
 const uploadImageWithProgress = (imageRef, file, onProgress) =>
   new Promise((resolve, reject) => {
@@ -206,6 +214,42 @@ const uploadImageWithProgress = (imageRef, file, onProgress) =>
       }
     );
   });
+
+const uploadProductImages = async (files, productSlug, createdAtMs, onStatus) => {
+  const compressedFiles = [];
+
+  for (let index = 0; index < files.length; index += 1) {
+    onStatus(`Görsel ${index + 1}/${files.length} sıkıştırılıyor...`);
+    compressedFiles.push(await compressImage(files[index]));
+  }
+
+  try {
+    const imageUrls = [];
+
+    for (let index = 0; index < compressedFiles.length; index += 1) {
+      const imagePath = `products/${pageCategory}/${productSlug}-${createdAtMs}-${index}.jpg`;
+      const imageRef = ref(storage, imagePath);
+
+      onStatus(`Görsel ${index + 1}/${compressedFiles.length} Storage'a yükleniyor...`);
+      await uploadImageWithProgress(imageRef, compressedFiles[index], (progress) => {
+        onStatus(`Görsel ${index + 1}/${compressedFiles.length} Storage'a yükleniyor... %${progress}`);
+      });
+      imageUrls.push(await getDownloadURL(imageRef));
+    }
+
+    return { imageUrls, imageStorage: "storage" };
+  } catch (error) {
+    onStatus("Storage cevap vermedi. Sıkıştırılmış görseller Firestore kaydına ekleniyor...");
+    const imageUrls = await Promise.all(compressedFiles.map(fileToDataUrl));
+    const totalBytes = imageUrls.reduce((sum, url) => sum + url.length, 0);
+
+    if (totalBytes > 900000) {
+      throw new Error("Görseller Firestore için hâlâ büyük. Daha az görsel seç veya görselleri biraz küçült.");
+    }
+
+    return { imageUrls, imageStorage: "firestore-data-url", storageError: error.code || error.message };
+  }
+};
 
 const renderCart = () => {
   const itemCount = getCartCount();
@@ -533,25 +577,12 @@ const setupAdminPanel = () => {
 
     const submitButton = adminForm.querySelector("button[type='submit']");
     submitButton.disabled = true;
-    setAdminMessage("Görseller sıkıştırılıyor...");
+    setAdminMessage("Görseller hazırlanıyor...");
 
     try {
       const productSlug = slugify(name);
-      const imageUrls = [];
       const createdAtMs = Date.now();
-
-      for (let index = 0; index < imageFiles.length; index += 1) {
-        setAdminMessage(`Görsel ${index + 1}/${imageFiles.length} sıkıştırılıyor...`);
-        const compressedFile = await compressImage(imageFiles[index]);
-        const imagePath = `products/${pageCategory}/${productSlug}-${createdAtMs}-${index}.jpg`;
-        const imageRef = ref(storage, imagePath);
-
-        setAdminMessage(`Görsel ${index + 1}/${imageFiles.length} yükleniyor...`);
-        await uploadImageWithProgress(imageRef, compressedFile, (progress) => {
-          setAdminMessage(`Görsel ${index + 1}/${imageFiles.length} yükleniyor... %${progress}`);
-        });
-        imageUrls.push(await getDownloadURL(imageRef));
-      }
+      const imageResult = await uploadProductImages(imageFiles, productSlug, createdAtMs, setAdminMessage);
 
       setAdminMessage("Ürün yayınlanıyor...");
 
@@ -562,7 +593,9 @@ const setupAdminPanel = () => {
         stock,
         sizes,
         tone,
-        imageUrls,
+        imageUrls: imageResult.imageUrls,
+        imageStorage: imageResult.imageStorage,
+        storageError: imageResult.storageError || "",
         category: pageCategory,
         active: true,
         slug: productSlug,
@@ -575,7 +608,7 @@ const setupAdminPanel = () => {
       if (adminToggleButton) {
         adminToggleButton.textContent = "Ürün Ekle";
       }
-      setAdminMessage("Ürün yayınlandı.");
+      setAdminMessage(imageResult.imageStorage === "storage" ? "Ürün yayınlandı." : "Ürün yayınlandı. Not: Storage yerine Firestore görsel modu kullanıldı.");
     } catch (error) {
       const message = error.code === "storage/unauthorized"
         ? "Görsel yüklenemedi: Firebase Storage Rules içinde admin yazma iznini yayınla."
