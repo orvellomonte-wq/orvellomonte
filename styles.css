@@ -206,6 +206,11 @@ h2 {
   transition: transform 180ms ease, background 180ms ease, color 180ms ease;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .button {
   display: inline-flex;
   align-items: center;
@@ -394,6 +399,23 @@ h2 {
   background: radial-gradient(circle at 50% 24%, rgba(255, 255, 255, 0.16), transparent 34%), var(--panel-2);
 }
 
+.product-photo {
+  background: #0f0f0f;
+}
+
+.product-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-photo::before,
+.product-photo::after {
+  display: none;
+}
+
 .product-visual::before,
 .product-visual::after {
   content: "";
@@ -441,6 +463,34 @@ h2 {
   text-transform: uppercase;
 }
 
+.product-gallery {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+
+.product-gallery button {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0;
+  cursor: pointer;
+  background: #101010;
+}
+
+.product-gallery button.active {
+  border-color: var(--accent-2);
+}
+
+.product-gallery img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .product-info p {
   min-height: 48px;
   color: var(--muted);
@@ -474,6 +524,22 @@ h2 {
   font-size: 0.78rem;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.stock-badge {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: var(--bg);
+  background: var(--accent-2);
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.stock-badge.out {
+  color: var(--ink);
+  background: rgba(247, 241, 232, 0.12);
 }
 
 .product-about {
@@ -539,7 +605,7 @@ h2 {
 
 .admin-product-form {
   display: grid;
-  grid-template-columns: 1.1fr 0.65fr 0.85fr 0.75fr auto;
+  grid-template-columns: 1.1fr 0.55fr 0.55fr 0.8fr 0.75fr auto;
   gap: 12px;
   align-items: end;
   margin-top: 18px;
@@ -578,6 +644,15 @@ h2 {
 
 .admin-description-field {
   grid-column: 1 / -1;
+}
+
+.admin-images-field {
+  grid-column: 1 / -2;
+}
+
+.admin-product-form input[type="file"] {
+  min-height: auto;
+  padding: 11px 12px;
 }
 
 .admin-product-form button {
@@ -941,6 +1016,18 @@ h2 {
   border-radius: 18% 18% 10% 10%;
   background: var(--garment);
   transform: translateX(-50%);
+}
+
+.cart-item-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cart-item-photo::before {
+  display: none;
 }
 
 .cart-item-main {

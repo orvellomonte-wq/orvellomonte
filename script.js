@@ -16,6 +16,12 @@ import {
   serverTimestamp,
   where
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+import {
+  getDownloadURL,
+  getStorage,
+  ref,
+  uploadBytes
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC0WEqRFErpLgk6WF0pSSIHfxZAGgRL4TY",
@@ -30,6 +36,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 const ADMIN_EMAIL = "orvellomonte@gmail.com";
 
 const canUseAnalytics = window.location.protocol === "https:" && !window.location.hostname.includes("localhost");
@@ -105,6 +112,8 @@ const getProductTone = (id) => {
   return tones[id] || "hoodie";
 };
 
+const getProductImage = (product) => product.imageUrls?.[0] || product.images?.[0] || "";
+
 const escapeHtml = (value) =>
   String(value)
     .replaceAll("&", "&amp;")
@@ -135,7 +144,9 @@ const renderCart = () => {
   cartItems.innerHTML = cart
     .map((item) => `
       <article class="cart-item">
-        <div class="cart-item-visual ${item.tone || getProductTone(item.id)}" aria-hidden="true"></div>
+        <div class="cart-item-visual ${item.imageUrl ? "cart-item-photo" : item.tone || getProductTone(item.id)}" aria-hidden="true">
+          ${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="">` : ""}
+        </div>
         <div class="cart-item-main">
           <div class="cart-item-top">
             <div>
@@ -206,6 +217,7 @@ const removeItem = (id) => {
 document.addEventListener("click", (event) => {
   const productButton = event.target.closest("[data-product]");
   const aboutButton = event.target.closest("[data-about-toggle]");
+  const galleryButton = event.target.closest("[data-gallery-image]");
 
   if (aboutButton) {
     const aboutText = aboutButton.closest(".product-meta")?.querySelector(".product-about");
@@ -216,18 +228,40 @@ document.addEventListener("click", (event) => {
     }
   }
 
+  if (galleryButton) {
+    const productCard = galleryButton.closest(".product-card");
+    const mainImage = productCard?.querySelector(".product-photo img");
+
+    if (mainImage) {
+      mainImage.src = galleryButton.dataset.galleryImage;
+      productCard.querySelectorAll("[data-gallery-image]").forEach((button) => {
+        button.classList.toggle("active", button === galleryButton);
+      });
+    }
+  }
+
   if (productButton) {
     const productCard = productButton.closest(".product-card");
     const selectedSize = productCard?.querySelector("[data-size-select]")?.value || "Standart";
     const baseId = productButton.dataset.id;
     const originalText = productButton.textContent;
+    const stock = Number(productButton.dataset.stock || 0);
+
+    if (stock <= 0) {
+      productButton.textContent = "Stok Yok";
+      window.setTimeout(() => {
+        productButton.textContent = originalText;
+      }, 1200);
+      return;
+    }
 
     addToCart({
       id: `${baseId}-${selectedSize.toLowerCase()}`,
       name: productButton.dataset.product,
       price: Number(productButton.dataset.price),
       tone: productButton.dataset.tone || getProductTone(baseId),
-      size: selectedSize
+      size: selectedSize,
+      imageUrl: productButton.dataset.image || ""
     });
     productButton.textContent = "Eklendi";
     openCart();
@@ -293,25 +327,40 @@ const setAdminMessage = (message, isError = false) => {
 
 const isAdminUser = (user) => user?.email?.toLowerCase() === ADMIN_EMAIL;
 
-const renderFirebaseProduct = (product) => `
+const renderFirebaseProduct = (product) => {
+  const imageUrl = getProductImage(product);
+  const imageUrls = product.imageUrls || product.images || [];
+  const stock = Number(product.stock || 0);
+  const isOutOfStock = stock <= 0;
+
+  return `
   <article class="product-card" data-firestore-product="${escapeHtml(product.id)}">
-    <div class="product-visual ${escapeHtml(product.tone)}"></div>
+    <div class="product-visual ${imageUrl ? "product-photo" : escapeHtml(product.tone)}">
+      ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}">` : ""}
+    </div>
     <div class="product-info">
       <h3>${escapeHtml(product.name)}</h3>
+      ${imageUrls.length > 1 ? `
+        <div class="product-gallery" aria-label="${escapeHtml(product.name)} görselleri">
+          ${imageUrls.map((url, index) => `<button class="${index === 0 ? "active" : ""}" type="button" aria-label="Görsel ${index + 1}" data-gallery-image="${escapeHtml(url)}"><img src="${escapeHtml(url)}" alt=""></button>`).join("")}
+        </div>
+      ` : ""}
       <div class="product-meta">
         <select class="size-select" aria-label="${escapeHtml(product.name)} beden seçimi" data-size-select>
           ${(product.sizes?.length ? product.sizes : ["S", "M", "L"]).map((size) => `<option value="${escapeHtml(size)}">${escapeHtml(size)}</option>`).join("")}
         </select>
+        <span class="stock-badge ${isOutOfStock ? "out" : ""}">${isOutOfStock ? "Stok Yok" : `${stock} stok`}</span>
         <button class="about-button" type="button" data-about-toggle>Hakkında</button>
         <p class="product-about" hidden>${escapeHtml(product.description)}</p>
       </div>
       <div class="product-row">
         <span>${formatPrice(product.price)}</span>
-        <button type="button" data-product="${escapeHtml(product.name)}" data-id="${escapeHtml(product.id)}" data-price="${product.price}" data-tone="${escapeHtml(product.tone)}">Sepete Ekle</button>
+        <button type="button" data-product="${escapeHtml(product.name)}" data-id="${escapeHtml(product.id)}" data-price="${product.price}" data-tone="${escapeHtml(product.tone)}" data-stock="${stock}" data-image="${escapeHtml(imageUrl)}" ${isOutOfStock ? "disabled" : ""}>${isOutOfStock ? "Stok Yok" : "Sepete Ekle"}</button>
       </div>
     </div>
   </article>
 `;
+};
 
 const renderFirestoreProducts = (products) => {
   if (!productGrid) {
@@ -369,32 +418,64 @@ const setupAdminPanel = () => {
     const name = formData.get("name").trim();
     const description = formData.get("description").trim();
     const price = Number(formData.get("price"));
+    const stock = Number(formData.get("stock"));
     const sizes = formData
       .get("sizes")
       .split(",")
       .map((size) => size.trim().toUpperCase())
       .filter(Boolean);
     const tone = formData.get("tone");
+    const imageFiles = [...adminForm.elements.images.files];
 
-    if (!name || !description || !price || price < 1 || sizes.length === 0) {
-      setAdminMessage("Ürün adı, fiyat, beden ve açıklama alanlarını kontrol et.", true);
+    if (!name || !description || !price || price < 1 || Number.isNaN(stock) || stock < 0 || sizes.length === 0) {
+      setAdminMessage("Ürün adı, fiyat, stok, beden ve açıklama alanlarını kontrol et.", true);
       return;
     }
 
-    const submitButton = adminForm.querySelector("button");
+    if (imageFiles.length === 0) {
+      setAdminMessage("En az bir ürün görseli seçmelisin.", true);
+      return;
+    }
+
+    if (imageFiles.length > 8) {
+      setAdminMessage("Bir ürüne en fazla 8 görsel ekleyebilirsin.", true);
+      return;
+    }
+
+    if (imageFiles.some((file) => !file.type.startsWith("image/"))) {
+      setAdminMessage("Sadece görsel dosyaları yükleyebilirsin.", true);
+      return;
+    }
+
+    const submitButton = adminForm.querySelector("button[type='submit']");
     submitButton.disabled = true;
-    setAdminMessage("Ürün yayınlanıyor...");
+    setAdminMessage("Görseller yükleniyor...");
 
     try {
+      const productSlug = slugify(name);
+      const imageUrls = await Promise.all(
+        imageFiles.map(async (file, index) => {
+          const extension = file.name.split(".").pop() || "jpg";
+          const imagePath = `products/${pageCategory}/${productSlug}-${Date.now()}-${index}.${extension}`;
+          const imageRef = ref(storage, imagePath);
+          await uploadBytes(imageRef, file);
+          return getDownloadURL(imageRef);
+        })
+      );
+
+      setAdminMessage("Ürün yayınlanıyor...");
+
       await addDoc(collection(db, "products"), {
         name,
         description,
         price,
+        stock,
         sizes,
         tone,
+        imageUrls,
         category: pageCategory,
         active: true,
-        slug: slugify(name),
+        slug: productSlug,
         createdAt: serverTimestamp(),
         createdBy: currentUser.email
       });
