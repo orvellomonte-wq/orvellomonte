@@ -7,6 +7,15 @@ import {
   signOut,
   updateProfile
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+import {
+  addDoc,
+  collection,
+  getFirestore,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  where
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC0WEqRFErpLgk6WF0pSSIHfxZAGgRL4TY",
@@ -20,6 +29,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
+const ADMIN_EMAIL = "orvellomonte@gmail.com";
 
 const canUseAnalytics = window.location.protocol === "https:" && !window.location.hostname.includes("localhost");
 
@@ -42,7 +53,6 @@ const cartSummary = document.querySelector(".cart-summary");
 const cartSubtotal = document.querySelector(".cart-subtotal");
 const clearCartButton = document.querySelector(".clear-cart-button");
 const checkoutButton = document.querySelector(".checkout-button");
-const addButtons = document.querySelectorAll("[data-product]");
 const signupForm = document.querySelector(".signup-form");
 const accountButton = document.querySelector(".account-button");
 const authModal = document.querySelector(".auth-modal");
@@ -59,9 +69,15 @@ const userPanel = document.querySelector(".user-panel");
 const userName = document.querySelector(".user-name");
 const userEmail = document.querySelector(".user-email");
 const signOutButton = document.querySelector(".sign-out-button");
+const pageCategory = document.body.dataset.category;
+const productGrid = document.querySelector("[data-product-grid]");
+const adminPanel = document.querySelector(".admin-product-panel");
+const adminForm = document.querySelector(".admin-product-form");
+const adminMessage = document.querySelector(".admin-message");
 
 let cart = JSON.parse(localStorage.getItem("orvello-cart") || "[]");
 let authMode = "login";
+let currentUser = null;
 
 const formatPrice = (amount) =>
   new Intl.NumberFormat("tr-TR", {
@@ -87,6 +103,23 @@ const getProductTone = (id) => {
 
   return tones[id] || "hoodie";
 };
+
+const escapeHtml = (value) =>
+  String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+const slugify = (value) =>
+  value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 
 const renderCart = () => {
   const itemCount = getCartCount();
@@ -169,21 +202,23 @@ const removeItem = (id) => {
   renderCart();
 };
 
-addButtons.forEach((button) => {
-  button.addEventListener("click", () => {
+document.addEventListener("click", (event) => {
+  const productButton = event.target.closest("[data-product]");
+
+  if (productButton) {
     addToCart({
-      id: button.dataset.id,
-      name: button.dataset.product,
-      price: Number(button.dataset.price),
-      tone: button.dataset.tone || getProductTone(button.dataset.id)
+      id: productButton.dataset.id,
+      name: productButton.dataset.product,
+      price: Number(productButton.dataset.price),
+      tone: productButton.dataset.tone || getProductTone(productButton.dataset.id)
     });
-    button.textContent = "Eklendi";
+    productButton.textContent = "Eklendi";
     openCart();
 
     window.setTimeout(() => {
-      button.textContent = "Ekle";
+      productButton.textContent = "Ekle";
     }, 1200);
-  });
+  }
 });
 
 cartButton.addEventListener("click", openCart);
@@ -228,6 +263,114 @@ signupForm.addEventListener("submit", (event) => {
 const setMessage = (message, isError = false) => {
   authMessage.textContent = message;
   authMessage.classList.toggle("error", isError);
+};
+
+const setAdminMessage = (message, isError = false) => {
+  if (!adminMessage) {
+    return;
+  }
+
+  adminMessage.textContent = message;
+  adminMessage.classList.toggle("error", isError);
+};
+
+const isAdminUser = (user) => user?.email?.toLowerCase() === ADMIN_EMAIL;
+
+const renderFirebaseProduct = (product) => `
+  <article class="product-card" data-firestore-product="${escapeHtml(product.id)}">
+    <div class="product-visual ${escapeHtml(product.tone)}"></div>
+    <div class="product-info">
+      <h3>${escapeHtml(product.name)}</h3>
+      <p>${escapeHtml(product.description)}</p>
+      <div class="product-row">
+        <span>${formatPrice(product.price)}</span>
+        <button type="button" data-product="${escapeHtml(product.name)}" data-id="${escapeHtml(product.id)}" data-price="${product.price}" data-tone="${escapeHtml(product.tone)}">Ekle</button>
+      </div>
+    </div>
+  </article>
+`;
+
+const renderFirestoreProducts = (products) => {
+  if (!productGrid) {
+    return;
+  }
+
+  productGrid.querySelectorAll("[data-firestore-product]").forEach((card) => card.remove());
+  productGrid.insertAdjacentHTML("beforeend", products.map(renderFirebaseProduct).join(""));
+};
+
+const loadFirestoreProducts = () => {
+  if (!pageCategory || !productGrid) {
+    return;
+  }
+
+  const productQuery = query(collection(db, "products"), where("category", "==", pageCategory));
+
+  onSnapshot(
+    productQuery,
+    (snapshot) => {
+      const products = snapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter((product) => product.active !== false)
+        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+      renderFirestoreProducts(products);
+    },
+    () => {
+      setAdminMessage("Firestore ürünleri okunamadı. Firebase Rules ayarlarını kontrol et.", true);
+    }
+  );
+};
+
+const setupAdminPanel = () => {
+  if (!adminPanel || !adminForm || !pageCategory) {
+    return;
+  }
+
+  adminForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!isAdminUser(currentUser)) {
+      setAdminMessage("Bu işlem için admin hesabıyla giriş yapmalısın.", true);
+      return;
+    }
+
+    const formData = new FormData(adminForm);
+    const name = formData.get("name").trim();
+    const description = formData.get("description").trim();
+    const price = Number(formData.get("price"));
+    const tone = formData.get("tone");
+
+    if (!name || !description || !price || price < 1) {
+      setAdminMessage("Ürün adı, açıklama ve fiyat alanlarını kontrol et.", true);
+      return;
+    }
+
+    const submitButton = adminForm.querySelector("button");
+    submitButton.disabled = true;
+    setAdminMessage("Ürün yayınlanıyor...");
+
+    try {
+      await addDoc(collection(db, "products"), {
+        name,
+        description,
+        price,
+        tone,
+        category: pageCategory,
+        active: true,
+        slug: slugify(name),
+        createdAt: serverTimestamp(),
+        createdBy: currentUser.email
+      });
+
+      adminForm.reset();
+      setAdminMessage("Ürün yayınlandı.");
+    } catch (error) {
+      setAdminMessage("Ürün eklenemedi. Firestore izinlerini kontrol et.", true);
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
 };
 
 const setAuthMode = (mode) => {
@@ -306,11 +449,18 @@ signOutButton.addEventListener("click", async () => {
 });
 
 onAuthStateChanged(auth, (user) => {
+  currentUser = user;
   const isSignedIn = Boolean(user);
+  const isAdmin = isAdminUser(user);
 
   authForm.hidden = isSignedIn;
   userPanel.hidden = !isSignedIn;
-  accountButton.textContent = user ? "Hesabım" : "Giriş";
+  accountButton.textContent = isAdmin ? "Admin" : user ? "Hesabım" : "Giriş";
+
+  if (adminPanel) {
+    adminPanel.hidden = !isAdmin;
+    setAdminMessage(isAdmin ? "Admin yetkisi aktif. Bu sayfaya ürün ekleyebilirsin." : "");
+  }
 
   if (user) {
     userName.textContent = user.displayName || "Orvello Üyesi";
@@ -326,3 +476,5 @@ document.addEventListener("keydown", (event) => {
 });
 
 renderCart();
+setupAdminPanel();
+loadFirestoreProducts();

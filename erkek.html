@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body data-category="men">
   <header class="site-header">
     <a class="brand" href="index.html" aria-label="Orvello Monte ana sayfa">ORVELLO MONTE</a>
     <nav class="nav-links" aria-label="Ana navigasyon">
@@ -34,13 +34,48 @@
       </div>
     </section>
 
+    <section class="admin-product-panel" hidden>
+      <div class="section-heading">
+        <div>
+          <p class="kicker">Admin Panel</p>
+          <h2>Ürün Ekle</h2>
+        </div>
+        <span class="admin-pill">orvellomonte@gmail.com</span>
+      </div>
+
+      <form class="admin-product-form">
+        <label>
+          <span>Ürün adı</span>
+          <input name="name" type="text" placeholder="Oversize Zip Hoodie" required>
+        </label>
+        <label>
+          <span>Açıklama</span>
+          <input name="description" type="text" placeholder="Kumaş, kalıp ve detay bilgisi" required>
+        </label>
+        <label>
+          <span>Fiyat</span>
+          <input name="price" type="number" min="1" step="1" placeholder="1499" required>
+        </label>
+        <label>
+          <span>Görsel tipi</span>
+          <select name="tone" required>
+            <option value="hoodie">Hoodie</option>
+            <option value="tee">Tee</option>
+            <option value="cargo">Cargo</option>
+          </select>
+        </label>
+        <button type="submit">Ürünü Yayınla</button>
+        <p class="admin-message" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
     <section class="section">
       <div class="section-heading">
         <p class="kicker">Shop Men</p>
         <h2>Ürünler</h2>
       </div>
 
-      <div class="product-grid">
+      <div class="product-grid" data-product-grid>
         <article class="product-card">
           <div class="product-visual hoodie"></div>
           <div class="product-info">
