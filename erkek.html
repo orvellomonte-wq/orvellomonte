@@ -65,22 +65,24 @@
           <span>Toplam stok</span>
           <input name="stock" type="number" min="0" step="1" placeholder="Otomatik" readonly>
         </label>
-        <fieldset class="size-picker">
-          <legend>Bedenler</legend>
-          <label><input name="sizes" type="checkbox" value="S"> S</label>
-          <label><input name="sizes" type="checkbox" value="M"> M</label>
-          <label><input name="sizes" type="checkbox" value="L"> L</label>
-          <label><input name="sizes" type="checkbox" value="XL"> XL</label>
-          <label><input name="sizes" type="checkbox" value="XXL"> XXL</label>
-          <label><input name="sizes" type="checkbox" value="Standart"> Standart</label>
-        </fieldset>
-        <label>
-          <span>Ek beden</span>
-          <input name="customSizes" type="text" placeholder="3XL veya Oversize">
-        </label>
-        <div class="admin-size-stocks" aria-live="polite"></div>
+        <div class="admin-size-builder">
+          <div class="admin-size-builder-title">Beden ve stok</div>
+          <div class="admin-size-entry">
+            <label>
+              <span>Beden adı</span>
+              <input name="sizeName" type="text" placeholder="L, 3XL veya Oversize">
+            </label>
+            <label>
+              <span>Stok</span>
+              <input name="sizeStock" type="number" min="0" step="1" placeholder="12">
+            </label>
+            <button type="button" data-add-size-stock>Ekle</button>
+          </div>
+          <div class="admin-size-stocks" aria-live="polite"></div>
+        </div>
         <label class="admin-images-field">
           <span>Ürün görselleri</span>
+          <strong>Görselleri seç</strong>
           <input name="images" type="file" accept="image/*" multiple required>
           <small>Birden fazla görsel seçebilirsin. Yüklemeden önce otomatik sıkıştırılır.</small>
           <div class="admin-image-preview" aria-live="polite"></div>

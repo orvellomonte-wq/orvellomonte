@@ -88,6 +88,7 @@ let adminPreviewUrls = [];
 let currentProducts = [];
 let currentEditId = null;
 let existingAdminImages = [];
+let adminSizeRows = [];
 
 const formatPrice = (amount) =>
   new Intl.NumberFormat("tr-TR", {
@@ -436,49 +437,26 @@ const setAdminMessage = (message, isError = false) => {
 
 const isAdminUser = (user) => user?.email?.toLowerCase() === ADMIN_EMAIL;
 
-const getFormSizes = () => {
-  if (!adminForm) {
-    return [];
-  }
-
-  const checkedSizes = [...adminForm.querySelectorAll('input[name="sizes"]:checked')].map((input) => input.value);
-  const customSizes = (adminForm.elements.customSizes?.value || "")
-    .split(",")
-    .map((size) => size.trim().toUpperCase())
-    .filter(Boolean);
-
-  return [...new Set([...checkedSizes, ...customSizes])];
-};
-
 const updateTotalStockInput = () => {
   if (!adminForm) {
     return 0;
   }
 
-  const totalStock = [...adminForm.querySelectorAll("[data-size-stock]")].reduce((total, input) => {
-    const stock = Number(input.value);
-    return total + (Number.isFinite(stock) && stock > 0 ? stock : 0);
-  }, 0);
+  const totalStock = adminSizeRows.reduce((total, item) => total + item.stock, 0);
 
   adminForm.elements.stock.value = String(totalStock);
   return totalStock;
 };
 
-const renderAdminSizeStocks = (seedStocks = {}) => {
+const renderAdminSizeStocks = () => {
   if (!adminSizeStocks || !adminForm) {
     return;
   }
 
-  const previousStocks = [...adminForm.querySelectorAll("[data-size-stock]")].reduce((stocks, input) => {
-    stocks[input.dataset.sizeStock] = input.value;
-    return stocks;
-  }, {});
-  const sizes = getFormSizes();
-
-  if (sizes.length === 0) {
+  if (adminSizeRows.length === 0) {
     adminSizeStocks.innerHTML = `
       <div class="admin-size-stocks-empty">
-        Beden seçince her beden için stok kutusu burada açılır.
+        Henüz beden eklenmedi. Beden adını ve stoğunu yazıp ekle.
       </div>
     `;
     updateTotalStockInput();
@@ -487,26 +465,59 @@ const renderAdminSizeStocks = (seedStocks = {}) => {
 
   adminSizeStocks.innerHTML = `
     <div class="admin-size-stocks-title">Beden stokları</div>
-    ${sizes.map((size) => {
-      const stockValue = seedStocks[size] ?? previousStocks[size] ?? "";
+    ${adminSizeRows.map((item) => {
       return `
-        <label class="size-stock-field">
-          <span>${escapeHtml(size)}</span>
-          <input type="number" min="0" step="1" inputmode="numeric" data-size-stock="${escapeHtml(size)}" value="${escapeHtml(stockValue)}" placeholder="0">
-        </label>
+        <div class="size-stock-chip">
+          <span>${escapeHtml(item.size)}</span>
+          <strong>${item.stock} stok</strong>
+          <button type="button" aria-label="${escapeHtml(item.size)} bedenini kaldır" data-remove-size-stock="${escapeHtml(item.size)}">×</button>
+        </div>
       `;
     }).join("")}
   `;
   updateTotalStockInput();
 };
 
+const addAdminSizeStock = () => {
+  if (!adminForm) {
+    return;
+  }
+
+  const sizeInput = adminForm.elements.sizeName;
+  const stockInput = adminForm.elements.sizeStock;
+  const size = sizeInput.value.trim().toUpperCase();
+  const stock = Number(stockInput.value);
+
+  if (!size || !Number.isFinite(stock) || stock < 0) {
+    setAdminMessage("Beden adı ve geçerli stok sayısı gir.", true);
+    return;
+  }
+
+  const existingIndex = adminSizeRows.findIndex((item) => item.size === size);
+
+  if (existingIndex > -1) {
+    adminSizeRows[existingIndex].stock = stock;
+  } else {
+    adminSizeRows.push({ size, stock });
+  }
+
+  sizeInput.value = "";
+  stockInput.value = "";
+  sizeInput.focus();
+  renderAdminSizeStocks();
+  setAdminMessage(`${size} bedeni eklendi.`);
+};
+
+const removeAdminSizeStock = (size) => {
+  adminSizeRows = adminSizeRows.filter((item) => item.size !== size);
+  renderAdminSizeStocks();
+};
+
 const getSizeStocksFromForm = () => {
   const sizeStocks = {};
 
-  adminForm.querySelectorAll("[data-size-stock]").forEach((input) => {
-    const size = input.dataset.sizeStock;
-    const stock = Number(input.value);
-    sizeStocks[size] = Number.isFinite(stock) && stock >= 0 ? stock : -1;
+  adminSizeRows.forEach((item) => {
+    sizeStocks[item.size] = item.stock;
   });
 
   return sizeStocks;
@@ -594,6 +605,7 @@ const resetAdminFormForCreate = () => {
   adminForm.reset();
   currentEditId = null;
   existingAdminImages = [];
+  adminSizeRows = [];
   clearAdminImagePreview();
   renderAdminSizeStocks();
   setAdminMode("create");
@@ -733,26 +745,17 @@ const editProduct = (productId) => {
   adminForm.elements.tone.value = product.tone || "hoodie";
 
   const productSizes = product.sizes?.length ? product.sizes : Object.keys(product.sizeStocks || {});
-  const checkboxValues = [...adminForm.querySelectorAll('input[name="sizes"]')].map((input) => input.value);
-  const customSizes = [];
-
-  adminForm.querySelectorAll('input[name="sizes"]').forEach((input) => {
-    input.checked = productSizes.includes(input.value);
-  });
-
-  productSizes.forEach((size) => {
-    if (!checkboxValues.includes(size)) {
-      customSizes.push(size);
-    }
-  });
-
-  adminForm.elements.customSizes.value = customSizes.join(", ");
-  const editSizeStocks = product.sizeStocks || productSizes.reduce((stocks, size, index) => {
+  const normalizedProductSizes = productSizes.length ? productSizes : (Number(product.stock || 0) > 0 ? ["STANDART"] : []);
+  const editSizeStocks = product.sizeStocks || normalizedProductSizes.reduce((stocks, size, index) => {
     stocks[size] = index === 0 ? Number(product.stock || 0) : 0;
     return stocks;
   }, {});
 
-  renderAdminSizeStocks(editSizeStocks);
+  adminSizeRows = normalizedProductSizes.map((size) => ({
+    size,
+    stock: Number(editSizeStocks[size] || 0)
+  }));
+  renderAdminSizeStocks();
   renderExistingAdminImagePreview(existingAdminImages);
   setAdminMode("edit", product.name || "Ürün");
   openAdminForm();
@@ -809,15 +812,27 @@ const setupAdminPanel = () => {
     }
   });
 
-  adminForm.querySelectorAll('input[name="sizes"]').forEach((input) => {
-    input.addEventListener("change", () => renderAdminSizeStocks());
+  adminForm.querySelector("[data-add-size-stock]")?.addEventListener("click", addAdminSizeStock);
+
+  adminForm.elements.sizeName?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      addAdminSizeStock();
+    }
   });
 
-  adminForm.elements.customSizes?.addEventListener("input", () => renderAdminSizeStocks());
+  adminForm.elements.sizeStock?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      addAdminSizeStock();
+    }
+  });
 
-  adminSizeStocks?.addEventListener("input", (event) => {
-    if (event.target.matches("[data-size-stock]")) {
-      updateTotalStockInput();
+  adminSizeStocks?.addEventListener("click", (event) => {
+    const removeButton = event.target.closest("[data-remove-size-stock]");
+
+    if (removeButton) {
+      removeAdminSizeStock(removeButton.dataset.removeSizeStock);
     }
   });
 
@@ -835,9 +850,9 @@ const setupAdminPanel = () => {
     const name = formData.get("name").trim();
     const description = formData.get("description").trim();
     const price = Number(formData.get("price"));
-    const sizes = getFormSizes();
+    const sizes = adminSizeRows.map((item) => item.size);
     const sizeStocks = getSizeStocksFromForm();
-    const hasInvalidSizeStock = Object.values(sizeStocks).some((stock) => stock < 0);
+    const hasInvalidSizeStock = Object.values(sizeStocks).some((stock) => !Number.isFinite(stock) || stock < 0);
     const stock = Object.values(sizeStocks).reduce((total, sizeStock) => total + sizeStock, 0);
     const tone = formData.get("tone");
     const imageFiles = [...adminForm.elements.images.files];
