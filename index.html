@@ -175,22 +175,283 @@
         font-size: clamp(1.65rem, 9vw, 2.45rem);
       }
     }
+
+
+    /* Sol açılır menü + ortalanmış marka: PC ve telefon aynı düzen */
+    .site-header {
+      display: grid !important;
+      grid-template-columns: 48px 1fr auto !important;
+      align-items: center !important;
+      gap: 0 !important;
+      padding: 0.9rem clamp(0.85rem, 2.4vw, 1.6rem) !important;
+    }
+
+    .menu-toggle {
+      grid-column: 1;
+      grid-row: 1;
+      justify-self: start;
+      width: 42px;
+      height: 42px;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.22);
+      color: #fff;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 4;
+      transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .menu-toggle:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.34);
+    }
+
+    .menu-toggle span {
+      width: 18px;
+      height: 2px;
+      border-radius: 999px;
+      background: currentColor;
+      display: block;
+    }
+
+    .brand {
+      grid-column: 1 / 4 !important;
+      grid-row: 1 !important;
+      justify-self: center !important;
+      margin: 0 !important;
+      min-width: 0 !important;
+      width: max-content !important;
+      max-width: calc(100vw - 150px) !important;
+      text-align: center !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      font-size: clamp(1.05rem, 2.1vw, 1.55rem) !important;
+      letter-spacing: 0.08em !important;
+      line-height: 1 !important;
+      z-index: 2;
+    }
+
+    .nav-links {
+      display: none !important;
+    }
+
+    .header-actions {
+      grid-column: 3 !important;
+      grid-row: 1 !important;
+      justify-self: end !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 0 !important;
+      margin: 0 !important;
+      z-index: 4;
+    }
+
+    .cart-link {
+      min-height: 42px;
+      padding: 0.62rem 0.85rem;
+      white-space: nowrap;
+    }
+
+    .side-menu {
+      position: fixed;
+      inset: 0;
+      z-index: 3000;
+      pointer-events: none;
+    }
+
+    .side-menu.is-open {
+      pointer-events: auto;
+    }
+
+    .side-menu-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      opacity: 0;
+      transition: opacity 0.28s ease;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    .side-menu.is-open .side-menu-backdrop {
+      opacity: 1;
+    }
+
+    .side-menu-panel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: min(360px, 86vw);
+      height: 100%;
+      padding: 1.15rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      background: rgba(13, 13, 13, 0.96);
+      border-right: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 28px 0 70px rgba(0, 0, 0, 0.55);
+      transform: translateX(-105%);
+      transition: transform 0.32s cubic-bezier(.22,.75,.25,1);
+    }
+
+    .side-menu.is-open .side-menu-panel {
+      transform: translateX(0);
+    }
+
+    .side-menu-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.25rem 0 1.15rem;
+      margin-bottom: 0.45rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-family: Anton, Inter, sans-serif;
+      letter-spacing: 0.08em;
+      color: #fff;
+    }
+
+    .side-menu-close {
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+      font-size: 1.6rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .side-menu-link {
+      width: 100%;
+      min-height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.95rem 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.045);
+      color: #fff;
+      text-decoration: none;
+      font: inherit;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .side-menu-link::after {
+      content: '→';
+      opacity: 0.55;
+      font-weight: 800;
+    }
+
+    .side-menu-account::after {
+      content: '↗';
+    }
+
+    .side-menu-link:hover {
+      transform: translateX(4px);
+      background: rgba(255, 255, 255, 0.09);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    body.menu-open {
+      overflow: hidden;
+    }
+
+    @media (max-width: 700px) {
+      .site-header {
+        display: grid !important;
+        grid-template-columns: 44px 1fr auto !important;
+        align-items: center !important;
+        gap: 0 !important;
+        padding: 0.72rem 0.75rem !important;
+      }
+
+      .menu-toggle {
+        width: 38px;
+        height: 38px;
+      }
+
+      .brand {
+        flex: initial !important;
+        font-size: clamp(0.96rem, 4vw, 1.18rem) !important;
+        max-width: calc(100vw - 145px) !important;
+      }
+
+      .header-actions {
+        order: initial !important;
+      }
+
+      .cart-link {
+        min-height: 38px !important;
+        padding: 0.48rem 0.62rem !important;
+        font-size: 0.72rem !important;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .brand {
+        font-size: 0.92rem !important;
+        max-width: calc(100vw - 132px) !important;
+      }
+
+      .cart-link {
+        min-height: 34px !important;
+        padding: 0.42rem 0.5rem !important;
+        font-size: 0.66rem !important;
+      }
+
+      .menu-toggle {
+        width: 34px;
+        height: 34px;
+      }
+    }
   </style>
 </head>
 <body>
   <header class="site-header">
+    <button class="menu-toggle" type="button" aria-label="Menüyü aç" aria-controls="side-menu" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
     <a class="brand" href="#top" aria-label="Orvello Monte ana sayfa">ORVELLO MONTE</a>
-    <nav class="nav-links" aria-label="Ana navigasyon">
-      <a href="kadın.html">Kadın</a>
-      <a href="erkek.html">Erkek</a>
-      <a href="#lookbook">Lookbook</a>
-      <a href="#contact">İletişim</a>
-    </nav>
+
     <div class="header-actions">
-      <button class="account-button" type="button" aria-haspopup="dialog">Hesabım</button>
-      <button class="cart-link" type="button" aria-haspopup="dialog" aria-label="Sepeti aç">Cart <span>0</span></button>
+      <button class="cart-link" type="button" aria-haspopup="dialog" aria-label="Sepeti aç">SEPET <span>0</span></button>
     </div>
   </header>
+
+  <aside class="side-menu" id="side-menu" aria-hidden="true">
+    <div class="side-menu-backdrop" data-close-menu></div>
+    <nav class="side-menu-panel" aria-label="Orvello Monte menü">
+      <div class="side-menu-head">
+        <span>ORVELLO MONTE</span>
+        <button class="side-menu-close" type="button" aria-label="Menüyü kapat" data-close-menu>×</button>
+      </div>
+
+      <a class="side-menu-link" href="kadın.html">Kadın</a>
+      <a class="side-menu-link" href="erkek.html">Erkek</a>
+      <button class="side-menu-link side-menu-account account-button" type="button" aria-haspopup="dialog">Giriş / Hesabım</button>
+      <a class="side-menu-link" href="#lookbook">Lookbook</a>
+      <a class="side-menu-link" href="#contact">İletişim</a>
+    </nav>
+  </aside>
 
   <main id="top">
     <section class="hero" aria-label="Orvello Monte streetwear koleksiyonu">
@@ -334,6 +595,55 @@
       </footer>
     </section>
   </aside>
+
+
+  <script>
+    (() => {
+      const body = document.body;
+      const menu = document.querySelector('.side-menu');
+      const menuToggle = document.querySelector('.menu-toggle');
+      const menuCloseButtons = document.querySelectorAll('[data-close-menu]');
+      const menuLinks = document.querySelectorAll('.side-menu-link');
+      const accountButton = document.querySelector('.side-menu-account');
+
+      if (!menu || !menuToggle) return;
+
+      const openMenu = () => {
+        menu.classList.add('is-open');
+        body.classList.add('menu-open');
+        menu.setAttribute('aria-hidden', 'false');
+        menuToggle.setAttribute('aria-expanded', 'true');
+      };
+
+      const closeMenu = () => {
+        menu.classList.remove('is-open');
+        body.classList.remove('menu-open');
+        menu.setAttribute('aria-hidden', 'true');
+        menuToggle.setAttribute('aria-expanded', 'false');
+      };
+
+      menuToggle.addEventListener('click', openMenu);
+      menuCloseButtons.forEach((button) => button.addEventListener('click', closeMenu));
+      menuLinks.forEach((item) => item.addEventListener('click', () => {
+        if (!item.classList.contains('side-menu-account')) closeMenu();
+      }));
+
+      accountButton?.addEventListener('click', () => {
+        closeMenu();
+
+        const authModal = document.querySelector('.auth-modal');
+        if (authModal) {
+          authModal.setAttribute('aria-hidden', 'false');
+          authModal.classList.add('active', 'open', 'is-open');
+          body.classList.add('auth-open');
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeMenu();
+      });
+    })();
+  </script>
 
   <script type="module" src="script.js"></script>
 </body>
