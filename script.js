@@ -742,8 +742,6 @@ const editProduct = (productId) => {
   adminForm.elements.price.value = product.price || "";
   adminForm.elements.stock.value = product.stock || 0;
   adminForm.elements.description.value = product.description || "";
-  adminForm.elements.tone.value = product.tone || "hoodie";
-
   const productSizes = product.sizes?.length ? product.sizes : Object.keys(product.sizeStocks || {});
   const normalizedProductSizes = productSizes.length ? productSizes : (Number(product.stock || 0) > 0 ? ["STANDART"] : []);
   const editSizeStocks = product.sizeStocks || normalizedProductSizes.reduce((stocks, size, index) => {
@@ -854,7 +852,8 @@ const setupAdminPanel = () => {
     const sizeStocks = getSizeStocksFromForm();
     const hasInvalidSizeStock = Object.values(sizeStocks).some((stock) => !Number.isFinite(stock) || stock < 0);
     const stock = Object.values(sizeStocks).reduce((total, sizeStock) => total + sizeStock, 0);
-    const tone = formData.get("tone");
+    const existingProduct = currentEditId ? currentProducts.find((item) => item.id === currentEditId) : null;
+    const tone = existingProduct?.tone || "hoodie";
     const imageFiles = [...adminForm.elements.images.files];
 
     if (!name || !description || !price || price < 1 || sizes.length === 0 || hasInvalidSizeStock) {
