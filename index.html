@@ -7,7 +7,7 @@
   <meta name="description" content="Orvello Monte streetwear koleksiyonu: hoodie, cargo, tee ve aksesuarlar.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <style>
     .hero {
@@ -420,6 +420,125 @@
         height: 34px;
       }
     }
+
+
+    /* Orvello Monte özel logo yazısı */
+    .site-header {
+      min-height: clamp(78px, 8vw, 112px) !important;
+    }
+
+    .brand {
+      grid-column: 1 / 4 !important;
+      grid-row: 1 !important;
+      justify-self: center !important;
+      align-self: center !important;
+      width: auto !important;
+      max-width: calc(100vw - 160px) !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 0 !important;
+      text-decoration: none !important;
+      color: #fff !important;
+      line-height: 1 !important;
+      white-space: nowrap !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+      z-index: 2 !important;
+      filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.35));
+    }
+
+    .brand-top {
+      display: block;
+      font-family: "Cormorant Garamond", "Times New Roman", serif;
+      font-size: clamp(2.35rem, 5.4vw, 5.4rem);
+      font-weight: 700;
+      letter-spacing: 0.035em;
+      line-height: 0.78;
+      text-transform: uppercase;
+    }
+
+    .brand-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(0.42rem, 1.1vw, 1rem);
+      margin-top: clamp(0.12rem, 0.35vw, 0.3rem);
+      width: 100%;
+    }
+
+    .brand-sub {
+      display: block;
+      font-family: "Cormorant Garamond", "Times New Roman", serif;
+      font-size: clamp(0.72rem, 1.25vw, 1.3rem);
+      font-weight: 600;
+      letter-spacing: 0.52em;
+      line-height: 1;
+      text-transform: uppercase;
+      padding-left: 0.52em;
+    }
+
+    .brand-line {
+      display: block;
+      width: clamp(44px, 8.2vw, 145px);
+      height: 1px;
+      background: currentColor;
+      opacity: 0.92;
+      transform: translateY(1px);
+    }
+
+    @media (max-width: 700px) {
+      .site-header {
+        min-height: 76px !important;
+      }
+
+      .brand {
+        max-width: calc(100vw - 135px) !important;
+      }
+
+      .brand-top {
+        font-size: clamp(1.7rem, 7.2vw, 2.7rem) !important;
+        letter-spacing: 0.025em;
+      }
+
+      .brand-sub {
+        font-size: clamp(0.52rem, 2.15vw, 0.78rem) !important;
+        letter-spacing: 0.38em;
+        padding-left: 0.38em;
+      }
+
+      .brand-line {
+        width: clamp(24px, 8vw, 55px);
+      }
+    }
+
+    @media (max-width: 390px) {
+      .site-header {
+        min-height: 70px !important;
+      }
+
+      .brand {
+        max-width: calc(100vw - 124px) !important;
+      }
+
+      .brand-top {
+        font-size: clamp(1.45rem, 7vw, 2.15rem) !important;
+      }
+
+      .brand-sub {
+        font-size: 0.5rem !important;
+        letter-spacing: 0.32em;
+        padding-left: 0.32em;
+      }
+
+      .brand-line {
+        width: 22px;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -430,7 +549,14 @@
       <span></span>
     </button>
 
-    <a class="brand" href="#top" aria-label="Orvello Monte ana sayfa">ORVELLO MONTE</a>
+    <a class="brand" href="#top" aria-label="Orvello Monte ana sayfa">
+      <span class="brand-top">ORVELLO</span>
+      <span class="brand-bottom" aria-hidden="true">
+        <span class="brand-line"></span>
+        <span class="brand-sub">MONTE</span>
+        <span class="brand-line"></span>
+      </span>
+    </a>
 
     <div class="header-actions">
       <button class="cart-link" type="button" aria-haspopup="dialog" aria-label="Sepeti aç">SEPET <span>0</span></button>
