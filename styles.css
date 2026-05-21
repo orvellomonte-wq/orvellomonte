@@ -539,6 +539,142 @@ button:disabled {
   line-height: 1.6;
 }
 
+.policy-page {
+  display: grid;
+  gap: 20px;
+}
+
+.policy-edit-message {
+  min-height: 22px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 800;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.policy-edit-message.error {
+  color: #ff9b89;
+}
+
+.policy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.policy-card {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: clamp(18px, 3vw, 28px);
+  background:
+    linear-gradient(135deg, rgba(231, 216, 189, 0.08), transparent 46%),
+    rgba(247, 241, 232, 0.045);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+}
+
+.policy-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
+}
+
+.policy-card-head span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--accent-2);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.policy-card h3 {
+  margin: 0;
+  font-family: "Anton", Impact, sans-serif;
+  font-size: clamp(1.8rem, 3.6vw, 3rem);
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.policy-edit-button {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(231, 216, 189, 0.35);
+  border-radius: 999px;
+  color: var(--accent-2);
+  cursor: pointer;
+  background: rgba(247, 241, 232, 0.07);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.policy-content {
+  display: grid;
+  gap: 12px;
+  color: rgba(247, 241, 232, 0.78);
+  line-height: 1.65;
+}
+
+.policy-content p {
+  margin: 0;
+}
+
+.policy-edit-form {
+  display: grid;
+  gap: 12px;
+}
+
+.policy-edit-form textarea {
+  min-height: 260px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  color: var(--ink);
+  outline: 0;
+  background: rgba(247, 241, 232, 0.08);
+  font: inherit;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.policy-edit-form textarea:focus {
+  border-color: rgba(231, 216, 189, 0.8);
+  box-shadow: 0 0 0 3px rgba(231, 216, 189, 0.1);
+}
+
+.policy-edit-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.policy-edit-actions button {
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  cursor: pointer;
+  background: rgba(247, 241, 232, 0.08);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.policy-edit-actions button[type="submit"] {
+  border: 0;
+  color: var(--bg);
+  background: var(--accent-2);
+}
+
 .product-card {
   position: relative;
   overflow: hidden;
@@ -2422,6 +2558,7 @@ button:disabled {
 
   .product-grid,
   .category-grid,
+  .policy-grid,
   .admin-orders-list,
   .orders-page-list,
   .admin-product-form,
@@ -2432,6 +2569,11 @@ button:disabled {
 
   .section-heading {
     display: block;
+  }
+
+  .policy-edit-message {
+    margin-top: 10px;
+    text-align: left;
   }
 
   .section-heading h2 {
@@ -2553,6 +2695,24 @@ button:disabled {
 
   .discount-apply-button {
     width: 100%;
+  }
+
+  .policy-card {
+    padding: 18px;
+  }
+
+  .policy-card-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .policy-edit-button {
+    width: 100%;
+    border-radius: 6px;
+  }
+
+  .policy-edit-actions {
+    grid-template-columns: 1fr;
   }
 
   h1 {

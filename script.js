@@ -17,6 +17,7 @@ import {
   onSnapshot,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc,
   where
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
@@ -99,6 +100,8 @@ const adminImagePreview = document.querySelector(".admin-image-preview");
 const adminSizeStocks = document.querySelector(".admin-size-stocks");
 const adminOrdersList = document.querySelector("[data-admin-orders]");
 const adminOrdersCount = document.querySelector(".admin-orders-count");
+const policySections = document.querySelectorAll("[data-policy-section]");
+const policyMessage = document.querySelector(".policy-edit-message");
 
 let cart = [];
 let authMode = "login";
@@ -111,6 +114,7 @@ let adminSizeRows = [];
 let ordersUnsubscribe = null;
 let discountsUnsubscribe = null;
 let activeDiscount = null;
+let policiesUnsubscribe = null;
 
 const formatPrice = (amount) =>
   new Intl.NumberFormat("tr-TR", {
@@ -171,6 +175,30 @@ const escapeHtml = (value) =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+
+const renderPolicyText = (element, text) => {
+  if (!element) {
+    return;
+  }
+
+  const paragraphs = String(text || "")
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+
+  element.innerHTML = paragraphs.length
+    ? paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph).replaceAll("\n", "<br>")}</p>`).join("")
+    : "<p>Bu politika metni henüz eklenmedi.</p>";
+};
+
+const setPolicyMessage = (message, isError = false) => {
+  if (!policyMessage) {
+    return;
+  }
+
+  policyMessage.textContent = message;
+  policyMessage.classList.toggle("error", isError);
+};
 
 const slugify = (value) =>
   value
@@ -517,6 +545,88 @@ const parseJsonData = (value, fallback = {}) => {
   }
 };
 
+const openPolicyEditor = (policyId) => {
+  if (!isAdminUser(currentUser)) {
+    setPolicyMessage("Bu işlem için admin hesabıyla giriş yapmalısın.", true);
+    return;
+  }
+
+  const section = document.querySelector(`[data-policy-section="${policyId}"]`);
+  const textElement = section?.querySelector("[data-policy-text]");
+
+  if (!section || !textElement || section.querySelector(".policy-edit-form")) {
+    return;
+  }
+
+  const currentText = textElement.innerText.trim();
+  const form = document.createElement("form");
+  form.className = "policy-edit-form";
+  form.dataset.policyEditForm = policyId;
+  form.innerHTML = `
+    <textarea name="policyText" rows="10">${escapeHtml(currentText)}</textarea>
+    <div class="policy-edit-actions">
+      <button type="submit">Kaydet</button>
+      <button type="button" data-policy-cancel="${escapeHtml(policyId)}">Vazgeç</button>
+    </div>
+  `;
+
+  textElement.hidden = true;
+  section.appendChild(form);
+  form.elements.policyText.focus();
+};
+
+const closePolicyEditor = (policyId) => {
+  const section = document.querySelector(`[data-policy-section="${policyId}"]`);
+  const form = section?.querySelector(".policy-edit-form");
+  const textElement = section?.querySelector("[data-policy-text]");
+
+  form?.remove();
+
+  if (textElement) {
+    textElement.hidden = false;
+  }
+};
+
+const savePolicySection = async (form) => {
+  const policyId = form.dataset.policyEditForm;
+  const text = form.elements.policyText.value.trim();
+
+  if (!policyId || !text) {
+    setPolicyMessage("Politika metni boş bırakılamaz.", true);
+    return;
+  }
+
+  if (!isAdminUser(currentUser)) {
+    setPolicyMessage("Bu işlem için admin hesabıyla giriş yapmalısın.", true);
+    return;
+  }
+
+  const submitButton = form.querySelector("button[type='submit']");
+  submitButton.disabled = true;
+  setPolicyMessage("Politika metni kaydediliyor...");
+
+  try {
+    await setDoc(doc(db, "site_content", "policies"), {
+      sections: {
+        [policyId]: text
+      },
+      updatedAt: serverTimestamp(),
+      updatedBy: currentUser.email
+    }, { merge: true });
+
+    const textElement = form.closest("[data-policy-section]")?.querySelector("[data-policy-text]");
+    renderPolicyText(textElement, text);
+    closePolicyEditor(policyId);
+    setPolicyMessage("Politika metni güncellendi.");
+  } catch (error) {
+    setPolicyMessage(error.code === "permission-denied"
+      ? "Politika kaydedilemedi: Firestore Rules içinde site_content admin yazma iznini yayınla."
+      : "Politika kaydedilemedi. Firebase ayarlarını kontrol et.", true);
+  } finally {
+    submitButton.disabled = false;
+  }
+};
+
 document.addEventListener("click", (event) => {
   const productButton = event.target.closest("[data-product]");
   const aboutButton = event.target.closest("[data-about-toggle]");
@@ -526,6 +636,19 @@ document.addEventListener("click", (event) => {
   const deleteProductButton = event.target.closest("[data-admin-delete-product]");
   const orderStatusButton = event.target.closest("[data-order-status-toggle]");
   const deleteOrderButton = event.target.closest("[data-order-delete]");
+  const policyEditButton = event.target.closest("[data-policy-edit]");
+  const policyCancelButton = event.target.closest("[data-policy-cancel]");
+
+  if (policyEditButton) {
+    openPolicyEditor(policyEditButton.dataset.policyEdit);
+    return;
+  }
+
+  if (policyCancelButton) {
+    closePolicyEditor(policyCancelButton.dataset.policyCancel);
+    setPolicyMessage("");
+    return;
+  }
 
   if (orderStatusButton) {
     toggleOrderStatus(orderStatusButton.dataset.orderStatusToggle, orderStatusButton.dataset.nextStatus);
@@ -618,6 +741,17 @@ document.addEventListener("click", (event) => {
       productButton.textContent = originalText;
     }, 1200);
   }
+});
+
+document.addEventListener("submit", (event) => {
+  const policyForm = event.target.closest(".policy-edit-form");
+
+  if (!policyForm) {
+    return;
+  }
+
+  event.preventDefault();
+  savePolicySection(policyForm);
 });
 
 cartButton?.addEventListener("click", () => {
@@ -1290,6 +1424,38 @@ const loadAdminDiscounts = () => {
   );
 };
 
+const loadPolicyContent = () => {
+  if (policiesUnsubscribe) {
+    policiesUnsubscribe();
+    policiesUnsubscribe = null;
+  }
+
+  if (!policySections.length) {
+    return;
+  }
+
+  policiesUnsubscribe = onSnapshot(
+    doc(db, "site_content", "policies"),
+    (snapshot) => {
+      const sections = snapshot.exists() ? snapshot.data().sections || {} : {};
+
+      policySections.forEach((section) => {
+        const policyId = section.dataset.policySection;
+        const textElement = section.querySelector("[data-policy-text]");
+
+        if (sections[policyId]) {
+          renderPolicyText(textElement, sections[policyId]);
+        }
+      });
+    },
+    (error) => {
+      setPolicyMessage(error.code === "permission-denied"
+        ? "Politika metinleri okunamadı: Firestore Rules içinde site_content okuma iznini yayınla."
+        : "Politika metinleri okunamadı. Firebase ayarlarını kontrol et.", true);
+    }
+  );
+};
+
 const setupDiscountPanel = () => {
   if (!adminDiscountForm) {
     return;
@@ -1712,6 +1878,9 @@ document.addEventListener("keydown", (event) => {
     if (adminDiscountForm) {
       adminDiscountForm.hidden = true;
     }
+    document.querySelectorAll(".policy-edit-form").forEach((form) => {
+      closePolicyEditor(form.dataset.policyEditForm);
+    });
     closeAuth();
     closeCart();
     closeCheckout();
@@ -1722,4 +1891,5 @@ document.addEventListener("keydown", (event) => {
 renderCart();
 setupAdminPanel();
 setupDiscountPanel();
+loadPolicyContent();
 loadFirestoreProducts();

@@ -25,6 +25,8 @@ Sepetteki `Ödemeye Geç` butonu satın alma formunu açar. Müşteri ad soyad, 
 
 Admin panelindeki `İndirim Kodu` butonu `discounts` koleksiyonuna aktif/pasif indirim kodu yazar. Kullanıcı satın alma panelindeki indirim kodu alanına bu kodu girince sepet toplamına yüzde indirim uygulanır ve sipariş kaydına indirim kodu, indirim tutarı ve son toplam eklenir.
 
+`politikalar.html` sayfası side panelden açılır. Teslimat, iade, gizlilik ve mesafeli satış metinleri bu sayfada listelenir. Admin hesabıyla giriş yapıldığında her politika kartında düzenleme simgesi görünür; metinler aynı sayfada düzenlenip Firestore `site_content/policies` dökümanına kaydedilir.
+
 ## Yayına Alma
 
 Bu proje statik HTML/CSS/JS olduğu için GitHub Pages, Vercel veya Netlify ile doğrudan yayınlanabilir.
