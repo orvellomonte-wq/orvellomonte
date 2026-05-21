@@ -59,7 +59,7 @@ textarea {
   max-width: calc(100vw - 260px);
   overflow: hidden;
   font-family: "Anton", Impact, sans-serif;
-  font-size: clamp(1.25rem, 2vw, 2rem);
+  font-size: clamp(1.45rem, 2.45vw, 2.45rem);
   letter-spacing: 0;
   line-height: 1;
   text-align: center;
@@ -1381,15 +1381,65 @@ button:disabled {
 }
 
 .order-package {
+  position: relative;
   display: grid;
   gap: 14px;
   align-content: start;
   border: 1px solid rgba(247, 241, 232, 0.14);
   border-radius: 8px;
-  padding: 14px;
+  padding: 58px 14px 14px;
   background:
     linear-gradient(135deg, rgba(231, 216, 189, 0.08), transparent 42%),
     rgba(0, 0, 0, 0.22);
+}
+
+.order-package.is-done {
+  border-color: rgba(154, 214, 142, 0.42);
+  background:
+    linear-gradient(135deg, rgba(154, 214, 142, 0.1), transparent 42%),
+    rgba(0, 0, 0, 0.22);
+}
+
+.order-status-toggle {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(247, 241, 232, 0.18);
+  border-radius: 999px;
+  padding: 0 12px 0 9px;
+  color: var(--ink);
+  cursor: pointer;
+  background: rgba(247, 241, 232, 0.08);
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.order-status-toggle span {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 999px;
+  color: transparent;
+  background: rgba(247, 241, 232, 0.14);
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.order-status-toggle.is-done {
+  border-color: rgba(154, 214, 142, 0.58);
+  color: #dff5d8;
+  background: rgba(154, 214, 142, 0.14);
+}
+
+.order-status-toggle.is-done span {
+  color: #10220e;
+  background: #9ad68e;
 }
 
 .order-package-head {
@@ -2268,7 +2318,7 @@ button:disabled {
   .brand {
     grid-column: 2;
     max-width: 100%;
-    font-size: 0.92rem;
+    font-size: 1.05rem;
   }
 
   .header-actions {
@@ -2467,6 +2517,10 @@ button:disabled {
   .order-package,
   .order-customer {
     padding: 12px;
+  }
+
+  .order-package {
+    padding-top: 56px;
   }
 
   .order-package-head {

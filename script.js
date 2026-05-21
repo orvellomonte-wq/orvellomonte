@@ -433,6 +433,12 @@ document.addEventListener("click", (event) => {
   const sizeOptionButton = event.target.closest("[data-size-option]");
   const editProductButton = event.target.closest("[data-admin-edit-product]");
   const deleteProductButton = event.target.closest("[data-admin-delete-product]");
+  const orderStatusButton = event.target.closest("[data-order-status-toggle]");
+
+  if (orderStatusButton) {
+    toggleOrderStatus(orderStatusButton.dataset.orderStatusToggle, orderStatusButton.dataset.nextStatus);
+    return;
+  }
 
   if (editProductButton) {
     editProduct(editProductButton.dataset.adminEditProduct);
@@ -983,8 +989,14 @@ const renderAdminOrders = (orders) => {
     const phone = customer.phone || "Telefon yok";
     const address = customer.address || "Adres yok";
 
+    const isDone = order.status === "done";
+
     return `
-      <article class="order-package">
+      <article class="order-package ${isDone ? "is-done" : ""}">
+        <button class="order-status-toggle ${isDone ? "is-done" : ""}" type="button" data-order-status-toggle="${escapeHtml(order.id)}" data-next-status="${isDone ? "new" : "done"}" aria-pressed="${isDone ? "true" : "false"}">
+          <span aria-hidden="true">✓</span>
+          ${isDone ? "Yapıldı" : "Yapılmadı"}
+        </button>
         <div class="order-package-head">
           <div>
             <span class="order-badge">Paket</span>
@@ -1017,6 +1029,26 @@ const renderAdminOrders = (orders) => {
   }).join("");
 };
 
+const toggleOrderStatus = async (orderId, nextStatus) => {
+  if (!orderId || !isAdminUser(currentUser)) {
+    return;
+  }
+
+  const isDone = nextStatus === "done";
+
+  try {
+    await updateDoc(doc(db, "orders", orderId), {
+      status: isDone ? "done" : "new",
+      completedAt: isDone ? serverTimestamp() : null,
+      completedBy: isDone ? currentUser.email : ""
+    });
+  } catch (error) {
+    window.alert(error.code === "permission-denied"
+      ? "Sipariş durumu güncellenemedi: Firestore Rules içinde admin güncelleme iznini yayınla."
+      : "Sipariş durumu güncellenemedi. Firebase ayarlarını kontrol et.");
+  }
+};
+
 const loadAdminOrders = () => {
   if (ordersUnsubscribe) {
     ordersUnsubscribe();
@@ -1034,7 +1066,10 @@ const loadAdminOrders = () => {
     (snapshot) => {
       const orders = snapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+        .sort((a, b) => {
+          const statusSort = Number(a.status === "done") - Number(b.status === "done");
+          return statusSort || (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
+        });
 
       renderAdminOrders(orders);
     },
