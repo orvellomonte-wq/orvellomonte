@@ -7,6 +7,7 @@ Streetwear tarzında tek sayfalık vitrin sitesi.
 - `index.html`: Sayfa yapısı
 - `kadın.html`: Kadın ürün sayfası
 - `erkek.html`: Erkek ürün sayfası
+- `admin.html`: Ürün ve sipariş yönetimi
 - `styles.css`: Responsive tasarım ve ürün görselleri
 - `script.js`: Firebase Auth giriş/kayıt paneli, kalıcı sepet drawer'ı ve bülten formu
 - `assets/hero-streetwear.png`: Hero/lookbook görseli
@@ -15,11 +16,11 @@ Streetwear tarzında tek sayfalık vitrin sitesi.
 
 Admin hesabı: `orvellomonte@gmail.com`
 
-Kadın ve erkek ürün sayfalarında bu hesapla giriş yapınca ürün ekleme butonu görünür. Butona basınca ürün adı, fiyat, özel beden adı, beden bazlı stok, açıklama ve birden fazla görsel yükleme alanı açılır. Admin istediği kadar özel beden ekleyebilir, mevcut ürünleri kart üzerindeki düğmelerle düzenleyebilir veya silebilir. Görseller yayınlamadan önce tarayıcıda `webp` olarak sıkıştırılır ve QUAORA örneğindeki mantıkla direkt Firebase Firestore `products` koleksiyonundaki ürün dökümanına yazılır. Bu ürün yayınlama akışı Firebase Storage gerektirmez.
+`admin.html` sayfasında bu hesapla giriş yapınca ürün ekleme butonu görünür. Butona basınca ürünün kadın veya erkek sayfasında yayınlanacağı seçilir; ürün adı, fiyat, özel beden adı, beden bazlı stok, açıklama ve birden fazla görsel yükleme alanı açılır. Admin istediği kadar özel beden ekleyebilir, mevcut ürünleri admin sayfasındaki ürün kartları üzerinden düzenleyebilir veya silebilir. Görseller yayınlamadan önce tarayıcıda `webp` olarak sıkıştırılır ve QUAORA örneğindeki mantıkla direkt Firebase Firestore `products` koleksiyonundaki ürün dökümanına yazılır. Bu ürün yayınlama akışı Firebase Storage gerektirmez.
 
 ## Siparişler
 
-Sepetteki `Ödemeye Geç` butonu satın alma formunu açar. Müşteri ad soyad, telefon ve adres bilgisini girince sipariş `orders` koleksiyonuna yazılır, sepet temizlenir. Admin hesabıyla giriş yapıldığında ürün yönetimi panelinde `Sipariş Paketleri` bölümü görünür; burada ürün adı, beden, görsel, adet, müşteri adı, telefon ve adres listelenir.
+Sepetteki `Ödemeye Geç` butonu satın alma formunu açar. Müşteri ad soyad, telefon ve adres bilgisini girince sipariş `orders` koleksiyonuna yazılır, sepet temizlenir. Admin hesabıyla `admin.html` sayfasında giriş yapıldığında `Sipariş Paketleri` bölümü görünür; burada ürün adı, beden, görsel, adet, müşteri adı, telefon ve adres listelenir.
 
 ## Yayına Alma
 

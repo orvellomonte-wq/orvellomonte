@@ -34,6 +34,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const ADMIN_EMAIL = "orvellomonte@gmail.com";
+const isAdminPage = document.body.dataset.adminPage === "true";
 
 const canUseAnalytics = window.location.protocol === "https:" && !window.location.hostname.includes("localhost");
 
@@ -76,6 +77,10 @@ const userPanel = document.querySelector(".user-panel");
 const userName = document.querySelector(".user-name");
 const userEmail = document.querySelector(".user-email");
 const signOutButton = document.querySelector(".sign-out-button");
+const sideMenu = document.querySelector(".side-menu");
+const menuToggle = document.querySelector(".menu-toggle");
+const adminLock = document.querySelector("[data-admin-lock]");
+const adminOnlySections = document.querySelectorAll("[data-admin-only]");
 const pageCategory = document.body.dataset.category;
 const productGrid = document.querySelector("[data-product-grid]");
 const adminPanel = document.querySelector(".admin-product-panel");
@@ -347,6 +352,28 @@ const buildOrderItems = () => cart.map((item) => ({
   quantity: Number(item.quantity || 1)
 }));
 
+const openSideMenu = () => {
+  if (!sideMenu || !menuToggle) {
+    return;
+  }
+
+  sideMenu.classList.add("is-open");
+  document.body.classList.add("menu-open");
+  sideMenu.setAttribute("aria-hidden", "false");
+  menuToggle.setAttribute("aria-expanded", "true");
+};
+
+const closeSideMenu = () => {
+  if (!sideMenu || !menuToggle) {
+    return;
+  }
+
+  sideMenu.classList.remove("is-open");
+  document.body.classList.remove("menu-open");
+  sideMenu.setAttribute("aria-hidden", "true");
+  menuToggle.setAttribute("aria-expanded", "false");
+};
+
 const addToCart = (product, maxStock = Infinity) => {
   const existingItem = cart.find((item) => item.id === product.id);
 
@@ -489,7 +516,24 @@ document.addEventListener("click", (event) => {
   }
 });
 
-cartButton.addEventListener("click", openCart);
+cartButton?.addEventListener("click", () => {
+  closeSideMenu();
+  openCart();
+});
+
+menuToggle?.addEventListener("click", openSideMenu);
+
+document.querySelectorAll("[data-close-menu]").forEach((button) => {
+  button.addEventListener("click", closeSideMenu);
+});
+
+document.querySelectorAll(".side-menu-link").forEach((item) => {
+  item.addEventListener("click", () => {
+    if (!item.classList.contains("account-button") && !item.classList.contains("cart-link")) {
+      closeSideMenu();
+    }
+  });
+});
 
 document.querySelectorAll("[data-close-cart]").forEach((button) => {
   button.addEventListener("click", closeCart);
@@ -585,7 +629,7 @@ checkoutForm?.addEventListener("submit", async (event) => {
   }
 });
 
-signupForm.addEventListener("submit", (event) => {
+signupForm?.addEventListener("submit", (event) => {
   event.preventDefault();
   const button = signupForm.querySelector("button");
   button.textContent = "Alındı";
@@ -776,6 +820,9 @@ const resetAdminFormForCreate = () => {
   }
 
   adminForm.reset();
+  if (adminForm.elements.category) {
+    adminForm.elements.category.value = "women";
+  }
   currentEditId = null;
   existingAdminImages = [];
   adminSizeRows = [];
@@ -820,7 +867,7 @@ const renderFirebaseProduct = (product) => {
   const sizes = product.sizes?.length ? product.sizes : Object.keys(sizeStocks).length ? Object.keys(sizeStocks) : ["S", "M", "L"];
   const stock = Number(product.stock || 0);
   const isOutOfStock = stock <= 0;
-  const isAdmin = isAdminUser(currentUser);
+  const isAdmin = isAdminUser(currentUser) && isAdminPage;
   const firstAvailableSize = sizes.find((size) => Number(sizeStocks[size] ?? stock) > 0) || sizes[0];
 
   return `
@@ -873,18 +920,20 @@ const renderFirestoreProducts = (products) => {
 };
 
 const loadFirestoreProducts = () => {
-  if (!pageCategory || !productGrid) {
+  if (!productGrid || (!pageCategory && !isAdminPage)) {
     return;
   }
 
-  const productQuery = query(collection(db, "products"), where("category", "==", pageCategory));
+  const productQuery = pageCategory
+    ? query(collection(db, "products"), where("category", "==", pageCategory))
+    : collection(db, "products");
 
   onSnapshot(
     productQuery,
     (snapshot) => {
       const products = snapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .filter((product) => product.active !== false)
+        .filter((product) => isAdminPage || product.active !== false)
         .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
       currentProducts = products;
@@ -1018,6 +1067,11 @@ const editProduct = (productId) => {
   adminForm.elements.name.value = product.name || "";
   adminForm.elements.price.value = product.price || "";
   adminForm.elements.description.value = product.description || "";
+
+  if (adminForm.elements.category) {
+    adminForm.elements.category.value = product.category || "women";
+  }
+
   const productSizes = product.sizes?.length ? product.sizes : Object.keys(product.sizeStocks || {});
   const normalizedProductSizes = productSizes.length ? productSizes : (Number(product.stock || 0) > 0 ? ["STANDART"] : []);
   const editSizeStocks = product.sizeStocks || normalizedProductSizes.reduce((stocks, size, index) => {
@@ -1060,7 +1114,7 @@ const deleteProduct = async (productId) => {
 };
 
 const setupAdminPanel = () => {
-  if (!adminPanel || !adminForm || !pageCategory) {
+  if (!adminPanel || !adminForm || (!pageCategory && !isAdminPage)) {
     return;
   }
 
@@ -1124,6 +1178,7 @@ const setupAdminPanel = () => {
     const name = formData.get("name").trim();
     const description = formData.get("description").trim();
     const price = Number(formData.get("price"));
+    const targetCategory = pageCategory || formData.get("category");
     const sizes = adminSizeRows.map((item) => item.size);
     const sizeStocks = getSizeStocksFromForm();
     const hasInvalidSizeStock = Object.values(sizeStocks).some((stock) => !Number.isFinite(stock) || stock < 0);
@@ -1132,7 +1187,7 @@ const setupAdminPanel = () => {
     const tone = existingProduct?.tone || "hoodie";
     const imageFiles = [...adminForm.elements.images.files];
 
-    if (!name || !description || !price || price < 1 || sizes.length === 0 || hasInvalidSizeStock) {
+    if (!targetCategory || !name || !description || !price || price < 1 || sizes.length === 0 || hasInvalidSizeStock) {
       setAdminMessage("Ürün adı, fiyat, beden stokları ve açıklama alanlarını kontrol et.", true);
       return;
     }
@@ -1176,7 +1231,7 @@ const setupAdminPanel = () => {
         imageUrls,
         images: imageUrls,
         imageStorage: "firestore-base64",
-        category: pageCategory,
+        category: targetCategory,
         active: true,
         slug: productSlug,
         updatedAt: serverTimestamp(),
@@ -1242,7 +1297,10 @@ document.querySelectorAll("[data-close-auth]").forEach((button) => {
   button.addEventListener("click", closeAuth);
 });
 
-accountButton.addEventListener("click", openAuth);
+accountButton?.addEventListener("click", () => {
+  closeSideMenu();
+  openAuth();
+});
 
 authTabs.forEach((tab) => {
   tab.addEventListener("click", () => setAuthMode(tab.dataset.authMode));
@@ -1307,6 +1365,14 @@ onAuthStateChanged(auth, (user) => {
     }
   }
 
+  if (adminLock) {
+    adminLock.hidden = isAdmin;
+  }
+
+  adminOnlySections.forEach((section) => {
+    section.hidden = !isAdmin;
+  });
+
   loadAdminOrders();
 
   if (user) {
@@ -1325,6 +1391,7 @@ document.addEventListener("keydown", (event) => {
     closeAuth();
     closeCart();
     closeCheckout();
+    closeSideMenu();
   }
 });
 

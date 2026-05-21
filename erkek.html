@@ -12,18 +12,30 @@
 </head>
 <body data-category="men">
   <header class="site-header">
+    <button class="menu-toggle" type="button" aria-label="Menüyü aç" aria-controls="side-menu" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
     <a class="brand" href="index.html" aria-label="Orvello Monte ana sayfa">ORVELLO MONTE</a>
-    <nav class="nav-links" aria-label="Ana navigasyon">
-      <a href="kadın.html">Kadın</a>
-      <a href="erkek.html">Erkek</a>
-      <a href="index.html#lookbook">Lookbook</a>
-      <a href="#contact">İletişim</a>
-    </nav>
-    <div class="header-actions">
-      <button class="account-button" type="button" aria-haspopup="dialog">Hesabım</button>
-      <button class="cart-link" type="button" aria-haspopup="dialog" aria-label="Sepeti aç">Cart <span>0</span></button>
-    </div>
   </header>
+
+  <aside class="side-menu" id="side-menu" aria-hidden="true">
+    <div class="side-menu-backdrop" data-close-menu></div>
+    <nav class="side-menu-panel" aria-label="Orvello Monte menü">
+      <div class="side-menu-head">
+        <span>ORVELLO MONTE</span>
+        <button class="side-menu-close" type="button" aria-label="Menüyü kapat" data-close-menu>×</button>
+      </div>
+      <a class="side-menu-link" href="kadın.html">Kadın</a>
+      <a class="side-menu-link" href="erkek.html">Erkek</a>
+      <a class="side-menu-link" href="admin.html">Admin</a>
+      <button class="side-menu-link account-button" type="button" aria-haspopup="dialog">Giriş / Hesabım</button>
+      <button class="side-menu-link cart-link" type="button" aria-haspopup="dialog" aria-label="Sepeti aç">Sepet <span>0</span></button>
+      <a class="side-menu-link" href="index.html#lookbook">Lookbook</a>
+      <a class="side-menu-link" href="#contact">İletişim</a>
+    </nav>
+  </aside>
 
   <main>
     <section class="page-hero">
@@ -32,77 +44,6 @@
         <h1>Erkek Koleksiyonu</h1>
         <p>Heavy cotton üstler, bol cargo formlar ve günlük kullanıma hazır koyu streetwear siluetleri.</p>
       </div>
-    </section>
-
-    <section class="admin-product-panel" hidden>
-      <div class="section-heading">
-        <div>
-          <p class="kicker">Admin Panel</p>
-          <h2>Ürün Yönetimi</h2>
-        </div>
-        <span class="admin-pill">orvellomonte@gmail.com</span>
-      </div>
-
-      <button class="admin-toggle-button" type="button">Ürün Ekle</button>
-
-      <form class="admin-product-form" hidden>
-        <div class="admin-form-head">
-          <div>
-            <p class="kicker">Yeni ürün</p>
-            <h3>Drop'a ürün ekle</h3>
-          </div>
-          <button class="admin-close-button" type="button" aria-label="Ürün panelini kapat" data-admin-close>×</button>
-        </div>
-        <label>
-          <span>Ürün adı</span>
-          <input name="name" type="text" placeholder="Oversize Zip Hoodie" required>
-        </label>
-        <label>
-          <span>Fiyat</span>
-          <input name="price" type="number" min="1" step="1" placeholder="1499" required>
-        </label>
-        <div class="admin-size-builder">
-          <div class="admin-size-builder-title">Beden ve stok</div>
-          <div class="admin-size-entry">
-            <label>
-              <span>Beden adı</span>
-              <input name="sizeName" type="text" placeholder="L, 3XL veya Oversize">
-            </label>
-            <label>
-              <span>Stok</span>
-              <input name="sizeStock" type="number" min="0" step="1" placeholder="12">
-            </label>
-            <button type="button" data-add-size-stock>Ekle</button>
-          </div>
-          <div class="admin-size-stocks" aria-live="polite"></div>
-        </div>
-        <label class="admin-images-field">
-          <span>Ürün görselleri</span>
-          <strong>Görselleri seç</strong>
-          <input name="images" type="file" accept="image/*" multiple required>
-          <small>Birden fazla görsel seçebilirsin. Yüklemeden önce otomatik sıkıştırılır.</small>
-          <div class="admin-image-preview" aria-live="polite"></div>
-        </label>
-        <label class="admin-description-field">
-          <span>Ürün açıklaması</span>
-          <textarea name="description" placeholder="Kumaş, kalıp, kullanım ve bakım bilgisi" required></textarea>
-        </label>
-        <button type="submit">Ürünü Yayınla</button>
-        <p class="admin-message" role="status" aria-live="polite"></p>
-      </form>
-
-      <section class="admin-orders-panel">
-        <div class="admin-orders-head">
-          <div>
-            <p class="kicker">Siparişler</p>
-            <h3>Sipariş Paketleri</h3>
-          </div>
-          <span class="admin-orders-count">0 sipariş</span>
-        </div>
-        <div class="admin-orders-list" data-admin-orders>
-          <p class="empty-orders">Henüz sipariş yok.</p>
-        </div>
-      </section>
     </section>
 
     <section class="section">
