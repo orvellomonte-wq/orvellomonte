@@ -79,6 +79,7 @@ const userEmail = document.querySelector(".user-email");
 const signOutButton = document.querySelector(".sign-out-button");
 const sideMenu = document.querySelector(".side-menu");
 const menuToggle = document.querySelector(".menu-toggle");
+const adminSideLinks = document.querySelectorAll("[data-admin-link]");
 const adminLock = document.querySelector("[data-admin-lock]");
 const adminOnlySections = document.querySelectorAll("[data-admin-only]");
 const pageCategory = document.body.dataset.category;
@@ -1355,6 +1356,10 @@ onAuthStateChanged(auth, (user) => {
   authForm.hidden = isSignedIn;
   userPanel.hidden = !isSignedIn;
   accountButton.textContent = isAdmin ? "Admin" : user ? "Hesabım" : "Giriş";
+
+  adminSideLinks.forEach((link) => {
+    link.hidden = !isAdmin;
+  });
 
   if (adminPanel) {
     adminPanel.hidden = !isAdmin;
