@@ -423,6 +423,10 @@
 
     <a class="brand" href="#top" aria-label="Orvello Monte ana sayfa">ORVELLO MONTE</a>
 
+    <div class="header-actions">
+      <button class="account-button" type="button" aria-haspopup="dialog">Hesabım</button>
+      <button class="cart-link" type="button" aria-haspopup="dialog" aria-label="Sepeti aç">SEPET <span>0</span></button>
+    </div>
   </header>
 
   <aside class="side-menu" id="side-menu" aria-hidden="true">
@@ -436,8 +440,6 @@
       <a class="side-menu-link" href="kadın.html">Kadın</a>
       <a class="side-menu-link" href="erkek.html">Erkek</a>
       <a class="side-menu-link" href="admin.html">Admin</a>
-      <button class="side-menu-link side-menu-account account-button" type="button" aria-haspopup="dialog">Giriş / Hesabım</button>
-      <button class="side-menu-link cart-link" type="button" aria-haspopup="dialog" aria-label="Sepeti aç">Sepet <span>0</span></button>
       <a class="side-menu-link" href="#lookbook">Lookbook</a>
       <a class="side-menu-link" href="#contact">İletişim</a>
     </nav>
@@ -616,7 +618,6 @@
       const menuToggle = document.querySelector('.menu-toggle');
       const menuCloseButtons = document.querySelectorAll('[data-close-menu]');
       const menuLinks = document.querySelectorAll('.side-menu-link');
-      const accountButton = document.querySelector('.side-menu-account');
 
       if (!menu || !menuToggle) return;
 
@@ -636,20 +637,7 @@
 
       menuToggle.addEventListener('click', openMenu);
       menuCloseButtons.forEach((button) => button.addEventListener('click', closeMenu));
-      menuLinks.forEach((item) => item.addEventListener('click', () => {
-        if (!item.classList.contains('side-menu-account')) closeMenu();
-      }));
-
-      accountButton?.addEventListener('click', () => {
-        closeMenu();
-
-        const authModal = document.querySelector('.auth-modal');
-        if (authModal) {
-          authModal.setAttribute('aria-hidden', 'false');
-          authModal.classList.add('active', 'open', 'is-open');
-          body.classList.add('auth-open');
-        }
-      });
+      menuLinks.forEach((item) => item.addEventListener('click', closeMenu));
 
       document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') closeMenu();
