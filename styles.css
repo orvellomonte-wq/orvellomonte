@@ -1286,6 +1286,20 @@ button:disabled {
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
 }
 
+.admin-orders-page {
+  display: grid;
+  gap: 18px;
+  padding: 52px clamp(18px, 5vw, 72px);
+  border-top: 1px solid var(--line);
+  background:
+    linear-gradient(135deg, rgba(217, 79, 50, 0.08), transparent 42%),
+    #10100f;
+}
+
+.admin-orders-page[hidden] {
+  display: none;
+}
+
 .admin-orders-head {
   display: flex;
   align-items: flex-start;
@@ -1303,6 +1317,10 @@ button:disabled {
   text-transform: uppercase;
 }
 
+.admin-orders-head h2 {
+  font-size: clamp(2rem, 5vw, 4.2rem);
+}
+
 .admin-orders-count,
 .order-badge {
   width: fit-content;
@@ -1316,10 +1334,36 @@ button:disabled {
   white-space: nowrap;
 }
 
+.admin-orders-button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  padding: 0 16px;
+  color: var(--bg);
+  background: var(--accent-2);
+  font-weight: 900;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-orders-note {
+  max-width: 720px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
 .admin-orders-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
+}
+
+.orders-page-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .empty-orders {
@@ -1339,6 +1383,7 @@ button:disabled {
 .order-package {
   display: grid;
   gap: 14px;
+  align-content: start;
   border: 1px solid rgba(247, 241, 232, 0.14);
   border-radius: 8px;
   padding: 14px;
@@ -1352,6 +1397,7 @@ button:disabled {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  min-width: 0;
 }
 
 .order-package-head h4,
@@ -1363,6 +1409,7 @@ button:disabled {
 .order-package-head h4 {
   margin-top: 8px;
   color: var(--ink);
+  overflow-wrap: anywhere;
   font-size: 1.08rem;
   text-transform: uppercase;
 }
@@ -1392,6 +1439,7 @@ button:disabled {
 
 .order-customer p {
   color: var(--ink);
+  overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
 
@@ -1447,9 +1495,14 @@ button:disabled {
 .order-product strong {
   color: var(--ink);
   overflow: hidden;
+  overflow-wrap: anywhere;
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.order-product span {
+  overflow-wrap: anywhere;
 }
 
 .product-row {
@@ -2130,6 +2183,7 @@ button:disabled {
   .product-grid,
   .category-grid,
   .admin-orders-list,
+  .orders-page-list,
   .admin-product-form,
   .lookbook,
   .newsletter {
@@ -2192,6 +2246,10 @@ button:disabled {
 
   .admin-category-options {
     grid-template-columns: 1fr;
+  }
+
+  .admin-orders-page {
+    padding: 42px 18px;
   }
 }
 
@@ -2370,6 +2428,11 @@ button:disabled {
 
   .admin-orders-head {
     display: grid;
+    gap: 12px;
+  }
+
+  .admin-orders-button {
+    width: 100%;
   }
 
   .admin-pill {
@@ -2406,8 +2469,21 @@ button:disabled {
     padding: 12px;
   }
 
+  .order-package-head {
+    display: grid;
+  }
+
+  .order-package-head strong,
+  .admin-orders-count {
+    justify-self: start;
+  }
+
   .order-product {
     grid-template-columns: 58px minmax(0, 1fr);
+  }
+
+  .order-product strong {
+    white-space: normal;
   }
 
   .site-footer {

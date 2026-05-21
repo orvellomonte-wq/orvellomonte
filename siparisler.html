@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kadın Koleksiyonu | Orvello Monte</title>
-  <meta name="description" content="Orvello Monte kadın streetwear koleksiyonu.">
+  <title>Siparişler | Orvello Monte</title>
+  <meta name="description" content="Orvello Monte admin sipariş paketleri.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body data-category="women">
+<body data-admin-page="true">
   <header class="site-header">
     <button class="menu-toggle" type="button" aria-label="Menüyü aç" aria-controls="side-menu" aria-expanded="false">
       <span></span>
@@ -36,46 +36,42 @@
       <a class="side-menu-link" href="admin.html" data-admin-link hidden>Admin</a>
       <a class="side-menu-link" href="siparisler.html" data-admin-link hidden>Siparişler</a>
       <a class="side-menu-link" href="index.html#lookbook">Lookbook</a>
-      <a class="side-menu-link" href="#contact">İletişim</a>
+      <a class="side-menu-link" href="index.html#contact">İletişim</a>
     </nav>
   </aside>
 
   <main>
-    <section class="page-hero">
+    <section class="page-hero admin-hero">
       <div class="page-hero-content">
-        <p class="kicker">Women / Drop 01</p>
-        <h1>Kadın Koleksiyonu</h1>
-        <p>Crop formlar, oversize üstler ve şehir temposuna uyan rahat streetwear parçaları.</p>
+        <p class="kicker">Admin / Orders</p>
+        <h1>Siparişler</h1>
+        <p>Ürün görseli, beden, adres ve müşteri bilgilerini paket halinde takip et.</p>
       </div>
     </section>
 
-    <section class="section">
-      <div class="section-heading">
-        <p class="kicker">Shop Women</p>
-        <h2>Ürünler</h2>
-      </div>
-
-      <div class="product-grid" data-product-grid>
-        <p class="empty-products">Henüz ürün eklenmedi.</p>
-      </div>
+    <section class="admin-access-panel" data-admin-lock>
+      <p class="kicker">Yetkili Giriş</p>
+      <h2>Siparişleri görmek için admin girişi yap.</h2>
+      <p>Bu sayfa yalnızca <strong>orvellomonte@gmail.com</strong> hesabıyla açılır.</p>
     </section>
 
-    <section class="newsletter" id="contact">
-      <div>
-        <p class="kicker">Early Access</p>
-        <h2>Yeni kadın drop haberi ilk sana gelsin.</h2>
+    <section class="admin-orders-page" data-admin-only hidden>
+      <div class="admin-orders-head">
+        <div>
+          <p class="kicker">Sipariş Paketleri</p>
+          <h2>Gelen Siparişler</h2>
+        </div>
+        <span class="admin-orders-count">0 sipariş</span>
       </div>
-      <form class="signup-form">
-        <label class="sr-only" for="email">E-posta</label>
-        <input id="email" type="email" placeholder="mail@ornek.com" required>
-        <button type="submit">Katıl</button>
-      </form>
+      <div class="admin-orders-list orders-page-list" data-admin-orders>
+        <p class="empty-orders">Henüz sipariş yok.</p>
+      </div>
     </section>
   </main>
 
   <footer class="site-footer">
     <span>© 2026 Orvello Monte</span>
-    <span>Women / Streetwear</span>
+    <span>Admin / Siparişler</span>
   </footer>
 
   <div class="auth-modal" aria-hidden="true">

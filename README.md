@@ -8,6 +8,7 @@ Streetwear tarzında tek sayfalık vitrin sitesi.
 - `kadın.html`: Kadın ürün sayfası
 - `erkek.html`: Erkek ürün sayfası
 - `admin.html`: Ürün ve sipariş yönetimi
+- `siparisler.html`: Admin sipariş paketleri
 - `styles.css`: Responsive tasarım ve ürün görselleri
 - `script.js`: Firebase Auth giriş/kayıt paneli, kalıcı sepet drawer'ı ve bülten formu
 - `assets/hero-streetwear.png`: Hero/lookbook görseli
@@ -20,7 +21,7 @@ Side paneldeki Admin linki sadece bu hesapla giriş yapınca görünür. `admin.
 
 ## Siparişler
 
-Sepetteki `Ödemeye Geç` butonu satın alma formunu açar. Müşteri ad soyad, telefon ve adres bilgisini girince sipariş `orders` koleksiyonuna yazılır, sepet temizlenir. Admin hesabıyla `admin.html` sayfasında giriş yapıldığında `Sipariş Paketleri` bölümü görünür; burada ürün adı, beden, görsel, adet, müşteri adı, telefon ve adres listelenir.
+Sepetteki `Ödemeye Geç` butonu satın alma formunu açar. Müşteri ad soyad, telefon ve adres bilgisini girince sipariş `orders` koleksiyonuna yazılır, sepet temizlenir. Admin hesabıyla `admin.html` sayfasında giriş yapıldığında `Siparişler` butonu görünür; bu buton `siparisler.html` sayfasındaki sipariş paketlerine gider. Burada ürün adı, beden, görsel, adet, müşteri adı, telefon ve adres listelenir.
 
 ## Yayına Alma
 
