@@ -306,6 +306,7 @@ document.addEventListener("click", (event) => {
   const productButton = event.target.closest("[data-product]");
   const aboutButton = event.target.closest("[data-about-toggle]");
   const galleryButton = event.target.closest("[data-gallery-image]");
+  const sizeOptionButton = event.target.closest("[data-size-option]");
   const editProductButton = event.target.closest("[data-admin-edit-product]");
   const deleteProductButton = event.target.closest("[data-admin-delete-product]");
 
@@ -340,9 +341,18 @@ document.addEventListener("click", (event) => {
     }
   }
 
+  if (sizeOptionButton) {
+    const productCard = sizeOptionButton.closest(".product-card");
+
+    productCard?.querySelectorAll("[data-size-option]").forEach((button) => {
+      button.classList.toggle("active", button === sizeOptionButton);
+    });
+    return;
+  }
+
   if (productButton) {
     const productCard = productButton.closest(".product-card");
-    const selectedSize = productCard?.querySelector("[data-size-select]")?.value || "Standart";
+    const selectedSize = productCard?.querySelector("[data-size-option].active")?.dataset.sizeOption || "Standart";
     const baseId = productButton.dataset.id;
     const originalText = productButton.textContent;
     const stock = Number(productButton.dataset.stock || 0);
@@ -648,6 +658,7 @@ const renderFirebaseProduct = (product) => {
   const stock = Number(product.stock || 0);
   const isOutOfStock = stock <= 0;
   const isAdmin = isAdminUser(currentUser);
+  const firstAvailableSize = sizes.find((size) => Number(sizeStocks[size] ?? stock) > 0) || sizes[0];
 
   return `
   <article class="product-card" data-firestore-product="${escapeHtml(product.id)}">
@@ -668,12 +679,13 @@ const renderFirebaseProduct = (product) => {
         </div>
       ` : ""}
       <div class="product-meta">
-        <select class="size-select" aria-label="${escapeHtml(product.name)} beden seçimi" data-size-select>
+        <div class="size-options" aria-label="${escapeHtml(product.name)} beden seçimi">
           ${sizes.map((size) => {
             const sizeStock = Number(sizeStocks[size] ?? stock);
-            return `<option value="${escapeHtml(size)}" ${sizeStock <= 0 ? "disabled" : ""}>${escapeHtml(size)}${sizeStock <= 0 ? " - stok yok" : ""}</option>`;
+            const canSelect = sizeStock > 0;
+            return `<button class="size-option ${size === firstAvailableSize && canSelect ? "active" : ""} ${canSelect ? "" : "disabled"}" type="button" data-size-option="${escapeHtml(size)}" ${canSelect ? "" : "disabled"}>${escapeHtml(size)}</button>`;
           }).join("")}
-        </select>
+        </div>
         <span class="stock-badge ${isOutOfStock ? "out" : ""}">${isOutOfStock ? "Stok Yok" : `${stock} stok`}</span>
         <button class="about-button" type="button" data-about-toggle>Hakkında</button>
         <p class="product-about" hidden>${escapeHtml(product.description)}</p>

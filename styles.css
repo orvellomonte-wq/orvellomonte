@@ -531,14 +531,37 @@ button:disabled {
   margin: 14px 0;
 }
 
-.size-select {
-  min-height: 40px;
+.size-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.size-option {
+  min-width: 42px;
+  min-height: 38px;
   border: 1px solid var(--line);
   border-radius: 6px;
-  padding: 0 10px;
+  padding: 0 12px;
   color: var(--ink);
-  outline: 0;
+  cursor: pointer;
   background: rgba(247, 241, 232, 0.08);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.size-option.active {
+  border-color: var(--accent-2);
+  color: var(--bg);
+  background: var(--accent-2);
+}
+
+.size-option.disabled {
+  color: rgba(247, 241, 232, 0.34);
+  cursor: not-allowed;
+  text-decoration: line-through;
+  background: rgba(247, 241, 232, 0.04);
 }
 
 .about-button {
