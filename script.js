@@ -56,6 +56,10 @@ const cartSummary = document.querySelector(".cart-summary");
 const cartSubtotal = document.querySelector(".cart-subtotal");
 const clearCartButton = document.querySelector(".clear-cart-button");
 const checkoutButton = document.querySelector(".checkout-button");
+const checkoutModal = document.querySelector(".checkout-modal");
+const checkoutForm = document.querySelector(".checkout-form");
+const checkoutMessage = document.querySelector(".checkout-message");
+const checkoutOrderSummary = document.querySelector(".checkout-order-summary");
 const signupForm = document.querySelector(".signup-form");
 const accountButton = document.querySelector(".account-button");
 const authModal = document.querySelector(".auth-modal");
@@ -80,6 +84,8 @@ const adminForm = document.querySelector(".admin-product-form");
 const adminMessage = document.querySelector(".admin-message");
 const adminImagePreview = document.querySelector(".admin-image-preview");
 const adminSizeStocks = document.querySelector(".admin-size-stocks");
+const adminOrdersList = document.querySelector("[data-admin-orders]");
+const adminOrdersCount = document.querySelector(".admin-orders-count");
 
 let cart = [];
 let authMode = "login";
@@ -89,6 +95,7 @@ let currentProducts = [];
 let currentEditId = null;
 let existingAdminImages = [];
 let adminSizeRows = [];
+let ordersUnsubscribe = null;
 
 const formatPrice = (amount) =>
   new Intl.NumberFormat("tr-TR", {
@@ -254,6 +261,10 @@ const renderCart = () => {
       </article>
     `)
     .join("");
+
+  if (document.body.classList.contains("checkout-open")) {
+    renderCheckoutSummary();
+  }
 };
 
 const openCart = () => {
@@ -265,6 +276,76 @@ const closeCart = () => {
   document.body.classList.remove("cart-open");
   cartDrawer.setAttribute("aria-hidden", "true");
 };
+
+const setCheckoutMessage = (message, isError = false) => {
+  if (!checkoutMessage) {
+    return;
+  }
+
+  checkoutMessage.textContent = message;
+  checkoutMessage.classList.toggle("error", isError);
+};
+
+const renderCheckoutSummary = () => {
+  if (!checkoutOrderSummary) {
+    return;
+  }
+
+  if (cart.length === 0) {
+    checkoutOrderSummary.innerHTML = "<p>Sepetin boş.</p>";
+    return;
+  }
+
+  checkoutOrderSummary.innerHTML = `
+    <div class="checkout-summary-head">
+      <span>Sipariş Özeti</span>
+      <strong>${formatPrice(getCartSubtotal())}</strong>
+    </div>
+    <div class="checkout-summary-items">
+      ${cart.map((item) => `
+        <div class="checkout-summary-item">
+          <span>${escapeHtml(item.name)}</span>
+          <small>${escapeHtml(item.size || "Standart")} / ${item.quantity} adet</small>
+        </div>
+      `).join("")}
+    </div>
+  `;
+};
+
+const openCheckout = () => {
+  if (!checkoutModal || !checkoutForm) {
+    return;
+  }
+
+  if (cart.length === 0) {
+    return;
+  }
+
+  renderCheckoutSummary();
+  setCheckoutMessage("");
+  document.body.classList.add("checkout-open");
+  checkoutModal.setAttribute("aria-hidden", "false");
+  window.setTimeout(() => checkoutForm.elements.fullName?.focus(), 50);
+};
+
+const closeCheckout = () => {
+  if (!checkoutModal) {
+    return;
+  }
+
+  document.body.classList.remove("checkout-open");
+  checkoutModal.setAttribute("aria-hidden", "true");
+};
+
+const buildOrderItems = () => cart.map((item) => ({
+  cartItemId: item.id,
+  productId: item.productId || item.id,
+  name: item.name,
+  size: item.size || "Standart",
+  imageUrl: item.imageUrl || "",
+  price: Number(item.price || 0),
+  quantity: Number(item.quantity || 1)
+}));
 
 const addToCart = (product, maxStock = Infinity) => {
   const existingItem = cart.find((item) => item.id === product.id);
@@ -384,6 +465,7 @@ document.addEventListener("click", (event) => {
 
     const wasAdded = addToCart({
       id: `${baseId}-${selectedSize.toLowerCase()}`,
+      productId: baseId,
       name: productButton.dataset.product,
       price: Number(productButton.dataset.price),
       tone: productButton.dataset.tone || getProductTone(baseId),
@@ -433,10 +515,74 @@ clearCartButton.addEventListener("click", () => {
 });
 
 checkoutButton.addEventListener("click", () => {
-  checkoutButton.textContent = "Yakında";
-  window.setTimeout(() => {
-    checkoutButton.textContent = "Ödemeye Geç";
-  }, 1400);
+  if (cart.length === 0) {
+    return;
+  }
+
+  closeCart();
+  openCheckout();
+});
+
+document.querySelectorAll("[data-close-checkout]").forEach((button) => {
+  button.addEventListener("click", closeCheckout);
+});
+
+checkoutForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  if (cart.length === 0) {
+    setCheckoutMessage("Sepetin boş. Önce ürün ekle.", true);
+    return;
+  }
+
+  const formData = new FormData(checkoutForm);
+  const fullName = formData.get("fullName").trim();
+  const phone = formData.get("phone").trim();
+  const address = formData.get("address").trim();
+
+  if (!fullName || !phone || !address) {
+    setCheckoutMessage("Ad soyad, telefon ve adres alanlarını doldur.", true);
+    return;
+  }
+
+  const submitButton = checkoutForm.querySelector("button[type='submit']");
+  submitButton.disabled = true;
+  setCheckoutMessage("Sipariş kaydediliyor...");
+
+  try {
+    await addDoc(collection(db, "orders"), {
+      customer: {
+        fullName,
+        phone,
+        address,
+        email: currentUser?.email || ""
+      },
+      userId: currentUser?.uid || "",
+      items: buildOrderItems(),
+      subtotal: getCartSubtotal(),
+      status: "new",
+      source: pageCategory || "site",
+      createdAt: serverTimestamp()
+    });
+
+    cart = [];
+    saveCart();
+    renderCart();
+    checkoutForm.reset();
+    renderCheckoutSummary();
+    setCheckoutMessage("Sipariş alındı. Admin paneline düştü.");
+
+    window.setTimeout(() => {
+      closeCheckout();
+      setCheckoutMessage("");
+    }, 1600);
+  } catch (error) {
+    setCheckoutMessage(error.code === "permission-denied"
+      ? "Sipariş kaydedilemedi: Firestore Rules içinde orders yazma iznini yayınla."
+      : error.message || "Sipariş kaydedilemedi. Firebase ayarlarını kontrol et.", true);
+  } finally {
+    submitButton.disabled = false;
+  }
 });
 
 signupForm.addEventListener("submit", (event) => {
@@ -750,6 +896,108 @@ const loadFirestoreProducts = () => {
   );
 };
 
+const formatOrderDate = (createdAt) => {
+  const date = createdAt?.toDate?.() || (createdAt?.seconds ? new Date(createdAt.seconds * 1000) : null);
+
+  if (!date) {
+    return "Yeni sipariş";
+  }
+
+  return new Intl.DateTimeFormat("tr-TR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(date);
+};
+
+const renderAdminOrders = (orders) => {
+  if (!adminOrdersList) {
+    return;
+  }
+
+  if (adminOrdersCount) {
+    adminOrdersCount.textContent = `${orders.length} sipariş`;
+  }
+
+  if (orders.length === 0) {
+    adminOrdersList.innerHTML = `<p class="empty-orders">Henüz sipariş yok.</p>`;
+    return;
+  }
+
+  adminOrdersList.innerHTML = orders.map((order) => {
+    const customer = order.customer || {};
+    const items = Array.isArray(order.items) ? order.items : [];
+    const customerName = customer.fullName || "İsimsiz müşteri";
+    const phone = customer.phone || "Telefon yok";
+    const address = customer.address || "Adres yok";
+
+    return `
+      <article class="order-package">
+        <div class="order-package-head">
+          <div>
+            <span class="order-badge">Paket</span>
+            <h4>${escapeHtml(customerName)}</h4>
+            <p>${escapeHtml(formatOrderDate(order.createdAt))}</p>
+          </div>
+          <strong>${formatPrice(Number(order.subtotal || 0))}</strong>
+        </div>
+        <div class="order-customer">
+          <span>Telefon: ${escapeHtml(phone)}</span>
+          ${customer.email ? `<span>E-posta: ${escapeHtml(customer.email)}</span>` : ""}
+          <p>${escapeHtml(address)}</p>
+        </div>
+        <div class="order-products">
+          ${items.map((item) => `
+            <div class="order-product">
+              <div class="order-product-image ${item.imageUrl ? "has-image" : ""}">
+                ${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name || "Ürün")}">` : ""}
+              </div>
+              <div>
+                <strong>${escapeHtml(item.name || "Ürün")}</strong>
+                <span>Beden: ${escapeHtml(item.size || "Standart")}</span>
+                <span>Adet: ${Number(item.quantity || 1)} / ${formatPrice(Number(item.price || 0))}</span>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </article>
+    `;
+  }).join("");
+};
+
+const loadAdminOrders = () => {
+  if (ordersUnsubscribe) {
+    ordersUnsubscribe();
+    ordersUnsubscribe = null;
+  }
+
+  if (!adminOrdersList || !isAdminUser(currentUser)) {
+    return;
+  }
+
+  adminOrdersList.innerHTML = `<p class="empty-orders">Siparişler yükleniyor...</p>`;
+
+  ordersUnsubscribe = onSnapshot(
+    collection(db, "orders"),
+    (snapshot) => {
+      const orders = snapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+      renderAdminOrders(orders);
+    },
+    (error) => {
+      adminOrdersList.innerHTML = `<p class="empty-orders error">${
+        error.code === "permission-denied"
+          ? "Siparişler okunamadı: Firestore Rules içinde admin okuma iznini yayınla."
+          : "Siparişler okunamadı. Firebase ayarlarını kontrol et."
+      }</p>`;
+    }
+  );
+};
+
 const editProduct = (productId) => {
   if (!isAdminUser(currentUser)) {
     setAdminMessage("Bu işlem için admin hesabıyla giriş yapmalısın.", true);
@@ -1059,6 +1307,8 @@ onAuthStateChanged(auth, (user) => {
     }
   }
 
+  loadAdminOrders();
+
   if (user) {
     userName.textContent = user.displayName || "Orvello Üyesi";
     userEmail.textContent = user.email;
@@ -1074,6 +1324,7 @@ document.addEventListener("keydown", (event) => {
     closeAdminForm();
     closeAuth();
     closeCart();
+    closeCheckout();
   }
 });
 

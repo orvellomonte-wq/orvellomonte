@@ -17,6 +17,10 @@ Admin hesabı: `orvellomonte@gmail.com`
 
 Kadın ve erkek ürün sayfalarında bu hesapla giriş yapınca ürün ekleme butonu görünür. Butona basınca ürün adı, fiyat, özel beden adı, beden bazlı stok, açıklama ve birden fazla görsel yükleme alanı açılır. Admin istediği kadar özel beden ekleyebilir, mevcut ürünleri kart üzerindeki düğmelerle düzenleyebilir veya silebilir. Görseller yayınlamadan önce tarayıcıda `webp` olarak sıkıştırılır ve QUAORA örneğindeki mantıkla direkt Firebase Firestore `products` koleksiyonundaki ürün dökümanına yazılır. Bu ürün yayınlama akışı Firebase Storage gerektirmez.
 
+## Siparişler
+
+Sepetteki `Ödemeye Geç` butonu satın alma formunu açar. Müşteri ad soyad, telefon ve adres bilgisini girince sipariş `orders` koleksiyonuna yazılır, sepet temizlenir. Admin hesabıyla giriş yapıldığında ürün yönetimi panelinde `Sipariş Paketleri` bölümü görünür; burada ürün adı, beden, görsel, adet, müşteri adı, telefon ve adres listelenir.
+
 ## Yayına Alma
 
 Bu proje statik HTML/CSS/JS olduğu için GitHub Pages, Vercel veya Netlify ile doğrudan yayınlanabilir.

@@ -90,6 +90,19 @@
         <button type="submit">Ürünü Yayınla</button>
         <p class="admin-message" role="status" aria-live="polite"></p>
       </form>
+
+      <section class="admin-orders-panel">
+        <div class="admin-orders-head">
+          <div>
+            <p class="kicker">Siparişler</p>
+            <h3>Sipariş Paketleri</h3>
+          </div>
+          <span class="admin-orders-count">0 sipariş</span>
+        </div>
+        <div class="admin-orders-list" data-admin-orders>
+          <p class="empty-orders">Henüz sipariş yok.</p>
+        </div>
+      </section>
     </section>
 
     <section class="section">
@@ -168,6 +181,32 @@
       </footer>
     </section>
   </aside>
+
+  <div class="checkout-modal" aria-hidden="true">
+    <div class="checkout-backdrop" data-close-checkout></div>
+    <section class="checkout-panel" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+      <button class="checkout-close" type="button" aria-label="Satın alma panelini kapat" data-close-checkout>×</button>
+      <p class="kicker">Checkout</p>
+      <h2 id="checkout-title">Satın Al</h2>
+      <form class="checkout-form">
+        <label class="checkout-field">
+          <span>Ad Soyad</span>
+          <input name="fullName" type="text" autocomplete="name" placeholder="Adın ve soyadın" required>
+        </label>
+        <label class="checkout-field">
+          <span>Telefon</span>
+          <input name="phone" type="tel" autocomplete="tel" placeholder="05xx xxx xx xx" required>
+        </label>
+        <label class="checkout-field checkout-address-field">
+          <span>Adres</span>
+          <textarea name="address" autocomplete="street-address" placeholder="Açık adresini yaz" required></textarea>
+        </label>
+        <div class="checkout-order-summary" aria-live="polite"></div>
+        <button class="checkout-submit" type="submit">Siparişi Gönder</button>
+        <p class="checkout-message" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+  </div>
 
   <script type="module" src="script.js"></script>
 </body>
