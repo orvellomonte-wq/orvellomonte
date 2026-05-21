@@ -1400,10 +1400,19 @@ button:disabled {
     rgba(0, 0, 0, 0.22);
 }
 
-.order-status-toggle {
+.order-package-actions {
   position: absolute;
   top: 12px;
   left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.order-status-toggle,
+.order-delete-button {
   display: inline-flex;
   min-height: 34px;
   align-items: center;
@@ -1417,6 +1426,13 @@ button:disabled {
   font-size: 0.74rem;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.order-delete-button {
+  border-color: rgba(255, 155, 137, 0.38);
+  color: #ffb0a2;
+  background: rgba(255, 155, 137, 0.08);
+  padding: 0 12px;
 }
 
 .order-status-toggle span {

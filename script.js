@@ -434,9 +434,15 @@ document.addEventListener("click", (event) => {
   const editProductButton = event.target.closest("[data-admin-edit-product]");
   const deleteProductButton = event.target.closest("[data-admin-delete-product]");
   const orderStatusButton = event.target.closest("[data-order-status-toggle]");
+  const deleteOrderButton = event.target.closest("[data-order-delete]");
 
   if (orderStatusButton) {
     toggleOrderStatus(orderStatusButton.dataset.orderStatusToggle, orderStatusButton.dataset.nextStatus);
+    return;
+  }
+
+  if (deleteOrderButton) {
+    deleteOrder(deleteOrderButton.dataset.orderDelete);
     return;
   }
 
@@ -993,10 +999,13 @@ const renderAdminOrders = (orders) => {
 
     return `
       <article class="order-package ${isDone ? "is-done" : ""}">
-        <button class="order-status-toggle ${isDone ? "is-done" : ""}" type="button" data-order-status-toggle="${escapeHtml(order.id)}" data-next-status="${isDone ? "new" : "done"}" aria-pressed="${isDone ? "true" : "false"}">
-          <span aria-hidden="true">✓</span>
-          ${isDone ? "Yapıldı" : "Yapılmadı"}
-        </button>
+        <div class="order-package-actions">
+          <button class="order-status-toggle ${isDone ? "is-done" : ""}" type="button" data-order-status-toggle="${escapeHtml(order.id)}" data-next-status="${isDone ? "new" : "done"}" aria-pressed="${isDone ? "true" : "false"}">
+            <span aria-hidden="true">✓</span>
+            ${isDone ? "Yapıldı" : "Yapılmadı"}
+          </button>
+          <button class="order-delete-button" type="button" data-order-delete="${escapeHtml(order.id)}">Sil</button>
+        </div>
         <div class="order-package-head">
           <div>
             <span class="order-badge">Paket</span>
@@ -1046,6 +1055,26 @@ const toggleOrderStatus = async (orderId, nextStatus) => {
     window.alert(error.code === "permission-denied"
       ? "Sipariş durumu güncellenemedi: Firestore Rules içinde admin güncelleme iznini yayınla."
       : "Sipariş durumu güncellenemedi. Firebase ayarlarını kontrol et.");
+  }
+};
+
+const deleteOrder = async (orderId) => {
+  if (!orderId || !isAdminUser(currentUser)) {
+    return;
+  }
+
+  if (!window.confirm("Bu sipariş paketini silmek istediğine emin misin?")) {
+    window.alert("Sipariş silme işlemi iptal edildi.");
+    return;
+  }
+
+  try {
+    await deleteDoc(doc(db, "orders", orderId));
+    window.alert("Sipariş paketi silindi.");
+  } catch (error) {
+    window.alert(error.code === "permission-denied"
+      ? "Sipariş silinemedi: Firestore Rules içinde admin silme iznini yayınla."
+      : "Sipariş silinemedi. Firebase ayarlarını kontrol et.");
   }
 };
 
