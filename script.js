@@ -81,7 +81,7 @@ const adminMessage = document.querySelector(".admin-message");
 const adminImagePreview = document.querySelector(".admin-image-preview");
 const adminSizeStocks = document.querySelector(".admin-size-stocks");
 
-let cart = JSON.parse(localStorage.getItem("orvello-cart") || "[]");
+let cart = [];
 let authMode = "login";
 let currentUser = null;
 let adminPreviewUrls = [];
@@ -98,8 +98,23 @@ const formatPrice = (amount) =>
   }).format(amount);
 
 const saveCart = () => {
-  localStorage.setItem("orvello-cart", JSON.stringify(cart));
+  localStorage.setItem(getCartStorageKey(), JSON.stringify(cart));
 };
+
+const getCartStorageKey = (user = currentUser) => user?.uid ? `orvello-cart:${user.uid}` : "orvello-cart:guest";
+
+const loadCart = (user = currentUser) => {
+  const storageKey = getCartStorageKey(user);
+  const fallbackCart = user ? "[]" : localStorage.getItem("orvello-cart") || "[]";
+
+  try {
+    return JSON.parse(localStorage.getItem(storageKey) || fallbackCart);
+  } catch {
+    return [];
+  }
+};
+
+cart = loadCart();
 
 const getCartCount = () => cart.reduce((total, item) => total + item.quantity, 0);
 
@@ -454,7 +469,9 @@ const updateTotalStockInput = () => {
 
   const totalStock = adminSizeRows.reduce((total, item) => total + item.stock, 0);
 
-  adminForm.elements.stock.value = String(totalStock);
+  if (adminForm.elements.stock) {
+    adminForm.elements.stock.value = String(totalStock);
+  }
   return totalStock;
 };
 
@@ -752,7 +769,6 @@ const editProduct = (productId) => {
 
   adminForm.elements.name.value = product.name || "";
   adminForm.elements.price.value = product.price || "";
-  adminForm.elements.stock.value = product.stock || 0;
   adminForm.elements.description.value = product.description || "";
   const productSizes = product.sizes?.length ? product.sizes : Object.keys(product.sizeStocks || {});
   const normalizedProductSizes = productSizes.length ? productSizes : (Number(product.stock || 0) > 0 ? ["STANDART"] : []);
@@ -1024,6 +1040,9 @@ signOutButton.addEventListener("click", async () => {
 
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
+  cart = loadCart(user);
+  renderCart();
+
   const isSignedIn = Boolean(user);
   const isAdmin = isAdminUser(user);
 

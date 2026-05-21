@@ -742,15 +742,17 @@ button:disabled {
   text-transform: uppercase;
 }
 
-.admin-product-form > label:nth-of-type(1),
+.admin-product-form > label:nth-of-type(1) {
+  grid-column: span 8;
+}
+
+.admin-product-form > label:nth-of-type(2) {
+  grid-column: span 4;
+}
+
 .admin-images-field,
 .admin-size-builder {
   grid-column: span 6;
-}
-
-.admin-product-form > label:nth-of-type(2),
-.admin-product-form > label:nth-of-type(3) {
-  grid-column: span 3;
 }
 
 .admin-description-field {
