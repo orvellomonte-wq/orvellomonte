@@ -844,7 +844,14 @@ button:disabled {
   text-transform: uppercase;
 }
 
-.admin-toggle-button {
+.admin-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-toggle-button,
+.admin-discount-toggle-button {
   min-height: 46px;
   border: 0;
   border-radius: 6px;
@@ -855,6 +862,12 @@ button:disabled {
   font-weight: 900;
   text-transform: uppercase;
   box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+}
+
+.admin-discount-toggle-button {
+  border: 1px solid rgba(231, 216, 189, 0.42);
+  color: var(--ink);
+  background: rgba(247, 241, 232, 0.09);
 }
 
 .admin-product-form {
@@ -884,6 +897,110 @@ button:disabled {
 
 .admin-product-form[hidden] {
   display: none;
+}
+
+.admin-discount-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  gap: 14px;
+  width: min(620px, 100%);
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  background:
+    linear-gradient(135deg, rgba(231, 216, 189, 0.12), transparent 44%),
+    rgba(247, 241, 232, 0.045);
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.24);
+}
+
+.admin-discount-form[hidden] {
+  display: none;
+}
+
+.admin-discount-form .admin-form-head,
+.admin-discount-active,
+.admin-discount-message,
+.admin-discount-list {
+  grid-column: 1 / -1;
+}
+
+.admin-discount-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.admin-discount-active {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-discount-active input {
+  width: 18px;
+  height: 18px;
+  min-height: auto;
+  accent-color: var(--accent-2);
+}
+
+.admin-discount-list {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.admin-discount-empty,
+.admin-discount-message {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.admin-discount-empty.error,
+.admin-discount-message.error {
+  color: #ff9b89;
+}
+
+.discount-code-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(247, 241, 232, 0.14);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.discount-code-card strong,
+.discount-code-card span,
+.discount-code-card small {
+  display: block;
+}
+
+.discount-code-card strong {
+  color: var(--ink);
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+}
+
+.discount-code-card span,
+.discount-code-card small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.discount-code-card.is-passive {
+  opacity: 0.55;
 }
 
 .admin-form-open {
@@ -1135,7 +1252,8 @@ button:disabled {
 
 .admin-product-form input,
 .admin-product-form select,
-.admin-product-form textarea {
+.admin-product-form textarea,
+.admin-discount-form input {
   min-height: 46px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -1147,7 +1265,8 @@ button:disabled {
 
 .admin-product-form input:focus,
 .admin-product-form select:focus,
-.admin-product-form textarea:focus {
+.admin-product-form textarea:focus,
+.admin-discount-form input:focus {
   border-color: rgba(231, 216, 189, 0.8);
   box-shadow: 0 0 0 3px rgba(231, 216, 189, 0.1);
 }
@@ -1248,7 +1367,8 @@ button:disabled {
   font-weight: 900;
 }
 
-.admin-product-form button[type="submit"] {
+.admin-product-form button[type="submit"],
+.admin-discount-form button[type="submit"] {
   grid-column: 1 / -1;
   min-height: 54px;
   margin-top: 2px;
@@ -2123,6 +2243,30 @@ button:disabled {
   box-shadow: 0 0 0 3px rgba(231, 216, 189, 0.1);
 }
 
+.checkout-discount {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.discount-apply-button {
+  min-height: 50px;
+  border: 1px solid rgba(231, 216, 189, 0.42);
+  border-radius: 6px;
+  padding: 0 16px;
+  color: var(--ink);
+  cursor: pointer;
+  background: rgba(247, 241, 232, 0.08);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.discount-apply-button:hover {
+  border-color: rgba(231, 216, 189, 0.7);
+  background: rgba(247, 241, 232, 0.14);
+}
+
 .checkout-order-summary {
   display: grid;
   gap: 10px;
@@ -2162,6 +2306,36 @@ button:disabled {
 
 .checkout-summary-item small {
   flex: 0 0 auto;
+}
+
+.checkout-total-lines {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.checkout-total-lines > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.checkout-total-lines strong {
+  color: var(--ink);
+}
+
+.discount-line span,
+.discount-line strong {
+  color: var(--accent-2);
+}
+
+.checkout-grand-total {
+  color: var(--ink);
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .checkout-submit {
@@ -2295,6 +2469,21 @@ button:disabled {
     padding: 18px;
   }
 
+  .admin-action-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-toggle-button,
+  .admin-discount-toggle-button {
+    width: 100%;
+  }
+
+  .admin-discount-form {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
   .admin-form-head,
   .admin-category-picker,
   .admin-product-form > label:nth-of-type(1),
@@ -2356,6 +2545,14 @@ button:disabled {
     min-width: 20px;
     height: 20px;
     font-size: 0.68rem;
+  }
+
+  .checkout-discount {
+    grid-template-columns: 1fr;
+  }
+
+  .discount-apply-button {
+    width: 100%;
   }
 
   h1 {

@@ -64,7 +64,10 @@
         <span class="admin-pill">orvellomonte@gmail.com</span>
       </div>
 
-      <button class="admin-toggle-button" type="button">Ürün Ekle</button>
+      <div class="admin-action-row">
+        <button class="admin-toggle-button" type="button">Ürün Ekle</button>
+        <button class="admin-discount-toggle-button" type="button">&#304;ndirim Kodu</button>
+      </div>
 
       <form class="admin-product-form" hidden>
         <div class="admin-form-head">
@@ -129,6 +132,32 @@
         </label>
         <button type="submit">Ürünü Yayınla</button>
         <p class="admin-message" role="status" aria-live="polite"></p>
+      </form>
+
+      <form class="admin-discount-form" hidden>
+        <div class="admin-form-head">
+          <div>
+            <p class="kicker">Promo</p>
+            <h3>&#304;ndirim Kodu</h3>
+          </div>
+        </div>
+        <label>
+          <span>Kod</span>
+          <input name="code" type="text" placeholder="ORVELLO10" autocomplete="off" required>
+        </label>
+        <label>
+          <span>&#304;ndirim Y&#252;zdesi</span>
+          <input name="percent" type="number" min="1" max="90" step="1" placeholder="10" required>
+        </label>
+        <label class="admin-discount-active">
+          <input name="active" type="checkbox" checked>
+          <span>Aktif kod</span>
+        </label>
+        <button type="submit">Kodu Kaydet</button>
+        <p class="admin-discount-message" role="status" aria-live="polite"></p>
+        <div class="admin-discount-list" data-admin-discounts aria-live="polite">
+          <p class="admin-discount-empty">Hen&#252;z indirim kodu yok.</p>
+        </div>
       </form>
 
       <section class="admin-orders-panel">
@@ -226,6 +255,13 @@
           <span>Adres</span>
           <textarea name="address" autocomplete="street-address" placeholder="Açık adresini yaz" required></textarea>
         </label>
+        <div class="checkout-discount">
+          <label class="checkout-field">
+            <span>&#304;ndirim Kodu</span>
+            <input name="discountCode" type="text" autocomplete="off" placeholder="ORVELLO10">
+          </label>
+          <button class="discount-apply-button" type="button">Uygula</button>
+        </div>
         <div class="checkout-order-summary" aria-live="polite"></div>
         <button class="checkout-submit" type="submit">Siparişi Gönder</button>
         <p class="checkout-message" role="status" aria-live="polite"></p>

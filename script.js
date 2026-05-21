@@ -12,6 +12,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDocs,
   getFirestore,
   onSnapshot,
   query,
@@ -61,6 +62,8 @@ const checkoutModal = document.querySelector(".checkout-modal");
 const checkoutForm = document.querySelector(".checkout-form");
 const checkoutMessage = document.querySelector(".checkout-message");
 const checkoutOrderSummary = document.querySelector(".checkout-order-summary");
+const discountApplyButton = document.querySelector(".discount-apply-button");
+const discountCodeInput = document.querySelector("[name='discountCode']");
 const signupForm = document.querySelector(".signup-form");
 const accountButton = document.querySelector(".account-button");
 const authModal = document.querySelector(".auth-modal");
@@ -88,6 +91,10 @@ const adminPanel = document.querySelector(".admin-product-panel");
 const adminToggleButton = document.querySelector(".admin-toggle-button");
 const adminForm = document.querySelector(".admin-product-form");
 const adminMessage = document.querySelector(".admin-message");
+const adminDiscountToggleButton = document.querySelector(".admin-discount-toggle-button");
+const adminDiscountForm = document.querySelector(".admin-discount-form");
+const adminDiscountMessage = document.querySelector(".admin-discount-message");
+const adminDiscountList = document.querySelector("[data-admin-discounts]");
 const adminImagePreview = document.querySelector(".admin-image-preview");
 const adminSizeStocks = document.querySelector(".admin-size-stocks");
 const adminOrdersList = document.querySelector("[data-admin-orders]");
@@ -102,6 +109,8 @@ let currentEditId = null;
 let existingAdminImages = [];
 let adminSizeRows = [];
 let ordersUnsubscribe = null;
+let discountsUnsubscribe = null;
+let activeDiscount = null;
 
 const formatPrice = (amount) =>
   new Intl.NumberFormat("tr-TR", {
@@ -132,6 +141,16 @@ cart = loadCart();
 const getCartCount = () => cart.reduce((total, item) => total + item.quantity, 0);
 
 const getCartSubtotal = () => cart.reduce((total, item) => total + item.price * item.quantity, 0);
+
+const normalizeDiscountCode = (value) => String(value || "").trim().toUpperCase().replace(/\s+/g, "");
+
+const getDiscountAmount = () => {
+  const subtotal = getCartSubtotal();
+  const percent = Number(activeDiscount?.percent || 0);
+  return percent > 0 ? Math.round((subtotal * percent) / 100) : 0;
+};
+
+const getCartTotal = () => Math.max(0, getCartSubtotal() - getDiscountAmount());
 
 const getProductTone = (id) => {
   const tones = {
@@ -298,14 +317,19 @@ const renderCheckoutSummary = () => {
   }
 
   if (cart.length === 0) {
+    activeDiscount = null;
     checkoutOrderSummary.innerHTML = "<p>Sepetin boş.</p>";
     return;
   }
 
+  const subtotal = getCartSubtotal();
+  const discountAmount = getDiscountAmount();
+  const total = getCartTotal();
+
   checkoutOrderSummary.innerHTML = `
     <div class="checkout-summary-head">
       <span>Sipariş Özeti</span>
-      <strong>${formatPrice(getCartSubtotal())}</strong>
+      <strong>${formatPrice(total)}</strong>
     </div>
     <div class="checkout-summary-items">
       ${cart.map((item) => `
@@ -314,6 +338,16 @@ const renderCheckoutSummary = () => {
           <small>${escapeHtml(item.size || "Standart")} / ${item.quantity} adet</small>
         </div>
       `).join("")}
+    </div>
+    <div class="checkout-total-lines">
+      <div><span>Ara toplam</span><strong>${formatPrice(subtotal)}</strong></div>
+      ${activeDiscount ? `
+        <div class="discount-line">
+          <span>${escapeHtml(activeDiscount.code)} kodu (%${Number(activeDiscount.percent || 0)})</span>
+          <strong>-${formatPrice(discountAmount)}</strong>
+        </div>
+      ` : ""}
+      <div class="checkout-grand-total"><span>Toplam</span><strong>${formatPrice(total)}</strong></div>
     </div>
   `;
 };
@@ -341,6 +375,63 @@ const closeCheckout = () => {
 
   document.body.classList.remove("checkout-open");
   checkoutModal.setAttribute("aria-hidden", "true");
+};
+
+const applyDiscountCode = async () => {
+  if (!discountCodeInput) {
+    return;
+  }
+
+  const code = normalizeDiscountCode(discountCodeInput.value);
+
+  if (!code) {
+    activeDiscount = null;
+    renderCheckoutSummary();
+    setCheckoutMessage("Indirim kodunu yaz.", true);
+    return;
+  }
+
+  setCheckoutMessage("Indirim kodu kontrol ediliyor...");
+
+  try {
+    const discountSnapshot = await getDocs(query(
+      collection(db, "discounts"),
+      where("code", "==", code),
+      where("active", "==", true)
+    ));
+    const discountDoc = discountSnapshot.docs[0];
+
+    if (!discountDoc) {
+      activeDiscount = null;
+      renderCheckoutSummary();
+      setCheckoutMessage("Indirim kodu bulunamadi veya aktif degil.", true);
+      return;
+    }
+
+    const discount = { id: discountDoc.id, ...discountDoc.data() };
+    const percent = Number(discount.percent || 0);
+
+    if (!Number.isFinite(percent) || percent < 1) {
+      activeDiscount = null;
+      renderCheckoutSummary();
+      setCheckoutMessage("Indirim kodu gecersiz.", true);
+      return;
+    }
+
+    activeDiscount = {
+      id: discount.id,
+      code: discount.code || code,
+      percent
+    };
+    renderCheckoutSummary();
+    setCheckoutMessage(`${activeDiscount.code} kodu uygulandi.`);
+  } catch (error) {
+    activeDiscount = null;
+    renderCheckoutSummary();
+    setCheckoutMessage(error.code === "permission-denied"
+      ? "Indirim kodu okunamadi: Firestore Rules icinde discounts okuma iznini yayinla."
+      : "Indirim kodu kontrol edilemedi. Firebase ayarlarini kontrol et.", true);
+  }
 };
 
 const buildOrderItems = () => cart.map((item) => ({
@@ -567,6 +658,7 @@ cartItems.addEventListener("click", (event) => {
 
 clearCartButton.addEventListener("click", () => {
   cart = [];
+  activeDiscount = null;
   saveCart();
   renderCart();
 });
@@ -582,6 +674,15 @@ checkoutButton.addEventListener("click", () => {
 
 document.querySelectorAll("[data-close-checkout]").forEach((button) => {
   button.addEventListener("click", closeCheckout);
+});
+
+discountApplyButton?.addEventListener("click", applyDiscountCode);
+
+discountCodeInput?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    applyDiscountCode();
+  }
 });
 
 checkoutForm?.addEventListener("submit", async (event) => {
@@ -607,6 +708,10 @@ checkoutForm?.addEventListener("submit", async (event) => {
   setCheckoutMessage("Sipariş kaydediliyor...");
 
   try {
+    const subtotal = getCartSubtotal();
+    const discountAmount = getDiscountAmount();
+    const total = getCartTotal();
+
     await addDoc(collection(db, "orders"), {
       customer: {
         fullName,
@@ -616,13 +721,20 @@ checkoutForm?.addEventListener("submit", async (event) => {
       },
       userId: currentUser?.uid || "",
       items: buildOrderItems(),
-      subtotal: getCartSubtotal(),
+      subtotal,
+      discount: activeDiscount ? {
+        code: activeDiscount.code,
+        percent: Number(activeDiscount.percent || 0),
+        amount: discountAmount
+      } : null,
+      total,
       status: "new",
       source: pageCategory || "site",
       createdAt: serverTimestamp()
     });
 
     cart = [];
+    activeDiscount = null;
     saveCart();
     renderCart();
     checkoutForm.reset();
@@ -661,6 +773,15 @@ const setAdminMessage = (message, isError = false) => {
 
   adminMessage.textContent = message;
   adminMessage.classList.toggle("error", isError);
+};
+
+const setAdminDiscountMessage = (message, isError = false) => {
+  if (!adminDiscountMessage) {
+    return;
+  }
+
+  adminDiscountMessage.textContent = message;
+  adminDiscountMessage.classList.toggle("error", isError);
 };
 
 const isAdminUser = (user) => user?.email?.toLowerCase() === ADMIN_EMAIL;
@@ -863,6 +984,10 @@ const openAdminForm = () => {
     return;
   }
 
+  if (adminDiscountForm) {
+    adminDiscountForm.hidden = true;
+  }
+
   adminForm.hidden = false;
   document.body.classList.add("admin-form-open");
 
@@ -1012,11 +1137,12 @@ const renderAdminOrders = (orders) => {
             <h4>${escapeHtml(customerName)}</h4>
             <p>${escapeHtml(formatOrderDate(order.createdAt))}</p>
           </div>
-          <strong>${formatPrice(Number(order.subtotal || 0))}</strong>
+          <strong>${formatPrice(Number(order.total ?? order.subtotal ?? 0))}</strong>
         </div>
         <div class="order-customer">
           <span>Telefon: ${escapeHtml(phone)}</span>
           ${customer.email ? `<span>E-posta: ${escapeHtml(customer.email)}</span>` : ""}
+          ${order.discount?.code ? `<span>Indirim: ${escapeHtml(order.discount.code)} / -${formatPrice(Number(order.discount.amount || 0))}</span>` : ""}
           <p>${escapeHtml(address)}</p>
         </div>
         <div class="order-products">
@@ -1110,6 +1236,127 @@ const loadAdminOrders = () => {
       }</p>`;
     }
   );
+};
+
+const renderAdminDiscounts = (discounts) => {
+  if (!adminDiscountList) {
+    return;
+  }
+
+  if (discounts.length === 0) {
+    adminDiscountList.innerHTML = `<p class="admin-discount-empty">Henüz indirim kodu yok.</p>`;
+    return;
+  }
+
+  adminDiscountList.innerHTML = discounts.map((discount) => `
+    <article class="discount-code-card ${discount.active === false ? "is-passive" : ""}">
+      <div>
+        <strong>${escapeHtml(discount.code || "KOD")}</strong>
+        <span>%${Number(discount.percent || 0)} indirim</span>
+      </div>
+      <small>${discount.active === false ? "Pasif" : "Aktif"}</small>
+    </article>
+  `).join("");
+};
+
+const loadAdminDiscounts = () => {
+  if (discountsUnsubscribe) {
+    discountsUnsubscribe();
+    discountsUnsubscribe = null;
+  }
+
+  if (!adminDiscountList || !isAdminUser(currentUser)) {
+    return;
+  }
+
+  adminDiscountList.innerHTML = `<p class="admin-discount-empty">Indirim kodlari yukleniyor...</p>`;
+
+  discountsUnsubscribe = onSnapshot(
+    collection(db, "discounts"),
+    (snapshot) => {
+      const discounts = snapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+      renderAdminDiscounts(discounts);
+    },
+    (error) => {
+      adminDiscountList.innerHTML = `<p class="admin-discount-empty error">${
+        error.code === "permission-denied"
+          ? "Indirim kodlari okunamadi: Firestore Rules icinde discounts okuma iznini yayinla."
+          : "Indirim kodlari okunamadi. Firebase ayarlarini kontrol et."
+      }</p>`;
+    }
+  );
+};
+
+const setupDiscountPanel = () => {
+  if (!adminDiscountForm) {
+    return;
+  }
+
+  adminDiscountToggleButton?.addEventListener("click", () => {
+    adminDiscountForm.hidden = !adminDiscountForm.hidden;
+
+    if (!adminDiscountForm.hidden) {
+      closeAdminForm();
+      adminDiscountForm.elements.code?.focus();
+    }
+  });
+
+  adminDiscountForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!isAdminUser(currentUser)) {
+      setAdminDiscountMessage("Bu islem icin admin hesabi gerekir.", true);
+      return;
+    }
+
+    const formData = new FormData(adminDiscountForm);
+    const code = normalizeDiscountCode(formData.get("code"));
+    const percent = Number(formData.get("percent"));
+    const active = formData.get("active") === "on";
+
+    if (!code || !Number.isFinite(percent) || percent < 1 || percent > 90) {
+      setAdminDiscountMessage("Kod ve indirim yuzdesini kontrol et. Yuzde 1-90 arasi olmali.", true);
+      return;
+    }
+
+    const submitButton = adminDiscountForm.querySelector("button[type='submit']");
+    submitButton.disabled = true;
+    setAdminDiscountMessage("Indirim kodu kaydediliyor...");
+
+    try {
+      const existingSnapshot = await getDocs(query(collection(db, "discounts"), where("code", "==", code)));
+      const discountData = {
+        code,
+        percent,
+        active,
+        updatedAt: serverTimestamp(),
+        updatedBy: currentUser.email
+      };
+
+      if (existingSnapshot.empty) {
+        await addDoc(collection(db, "discounts"), {
+          ...discountData,
+          createdAt: serverTimestamp(),
+          createdBy: currentUser.email
+        });
+      } else {
+        await updateDoc(doc(db, "discounts", existingSnapshot.docs[0].id), discountData);
+      }
+
+      adminDiscountForm.reset();
+      adminDiscountForm.elements.active.checked = true;
+      setAdminDiscountMessage(`${code} indirim kodu kaydedildi.`);
+    } catch (error) {
+      setAdminDiscountMessage(error.code === "permission-denied"
+        ? "Indirim kodu kaydedilemedi: Firestore Rules icinde discounts admin yazma iznini yayinla."
+        : "Indirim kodu kaydedilemedi. Firebase ayarlarini kontrol et.", true);
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
 };
 
 const editProduct = (productId) => {
@@ -1432,6 +1679,10 @@ onAuthStateChanged(auth, (user) => {
     if (!isAdmin && adminForm) {
       closeAdminForm();
     }
+
+    if (!isAdmin && adminDiscountForm) {
+      adminDiscountForm.hidden = true;
+    }
   }
 
   if (adminLock) {
@@ -1443,6 +1694,7 @@ onAuthStateChanged(auth, (user) => {
   });
 
   loadAdminOrders();
+  loadAdminDiscounts();
 
   if (user) {
     userName.textContent = user.displayName || "Orvello Üyesi";
@@ -1457,6 +1709,9 @@ onAuthStateChanged(auth, (user) => {
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     closeAdminForm();
+    if (adminDiscountForm) {
+      adminDiscountForm.hidden = true;
+    }
     closeAuth();
     closeCart();
     closeCheckout();
@@ -1466,4 +1721,5 @@ document.addEventListener("keydown", (event) => {
 
 renderCart();
 setupAdminPanel();
+setupDiscountPanel();
 loadFirestoreProducts();

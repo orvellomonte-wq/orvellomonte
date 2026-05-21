@@ -23,6 +23,8 @@ Side paneldeki Admin linki sadece bu hesapla giriş yapınca görünür. `admin.
 
 Sepetteki `Ödemeye Geç` butonu satın alma formunu açar. Müşteri ad soyad, telefon ve adres bilgisini girince sipariş `orders` koleksiyonuna yazılır, sepet temizlenir. Admin hesabıyla `admin.html` sayfasında giriş yapıldığında `Siparişler` butonu görünür; bu buton `siparisler.html` sayfasındaki sipariş paketlerine gider. Burada ürün adı, beden, görsel, adet, müşteri adı, telefon ve adres listelenir.
 
+Admin panelindeki `İndirim Kodu` butonu `discounts` koleksiyonuna aktif/pasif indirim kodu yazar. Kullanıcı satın alma panelindeki indirim kodu alanına bu kodu girince sepet toplamına yüzde indirim uygulanır ve sipariş kaydına indirim kodu, indirim tutarı ve son toplam eklenir.
+
 ## Yayına Alma
 
 Bu proje statik HTML/CSS/JS olduğu için GitHub Pages, Vercel veya Netlify ile doğrudan yayınlanabilir.

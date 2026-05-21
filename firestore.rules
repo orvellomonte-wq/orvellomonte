@@ -16,5 +16,10 @@ service cloud.firestore {
       allow create: if true;
       allow read, update, delete: if isAdmin();
     }
+
+    match /discounts/{discountId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
   }
 }
