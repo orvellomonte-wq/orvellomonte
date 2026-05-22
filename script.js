@@ -1168,7 +1168,7 @@ const renderFirebaseProduct = (product) => {
             return `<button class="size-option ${size === firstAvailableSize && canSelect ? "active" : ""} ${canSelect ? "" : "disabled"}" type="button" data-size-option="${escapeHtml(size)}" ${canSelect ? "" : "disabled"}>${escapeHtml(size)}</button>`;
           }).join("")}
         </div>
-        <span class="stock-badge ${isOutOfStock ? "out" : ""}">${isOutOfStock ? "Stok Yok" : `${stock} stok`}</span>
+        ${isAdmin ? `<span class="stock-badge ${isOutOfStock ? "out" : ""}">${isOutOfStock ? "Stok Yok" : `${stock} stok`}</span>` : ""}
         <button class="about-button" type="button" data-about-toggle>Hakkında</button>
         <p class="product-about" hidden>${escapeHtml(product.description)}</p>
       </div>
