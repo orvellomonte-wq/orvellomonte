@@ -67,10 +67,9 @@ service cloud.firestore {
     }
 
     function validNewsletterCreate() {
-      return request.resource.data.keys().hasOnly(["email", "source", "createdAt"])
-        && validEmail(request.resource.data.email)
-        && validOptionalText(request.resource.data.source, 32)
-        && validCreatedAt();
+      return request.resource.data.keys().hasAll(["email"])
+        && request.resource.data.keys().size() <= 8
+        && validEmail(request.resource.data.email);
     }
 
     function validDiscountWrite() {
