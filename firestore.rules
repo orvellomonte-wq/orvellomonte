@@ -7,29 +7,137 @@ service cloud.firestore {
         && request.auth.token.email == "orvellomonte@gmail.com";
     }
 
+    function validCreatedAt() {
+      return request.resource.data.createdAt == request.time;
+    }
+
+    function validEmail(email) {
+      return email is string
+        && email.size() >= 6
+        && email.size() <= 160
+        && email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$');
+    }
+
+    function validShortText(value, maxLength) {
+      return value is string
+        && value.size() > 0
+        && value.size() <= maxLength;
+    }
+
+    function validOptionalText(value, maxLength) {
+      return value is string
+        && value.size() <= maxLength;
+    }
+
+    function validOrderCreate() {
+      return request.resource.data.keys().hasOnly([
+          "customer", "userId", "items", "subtotal", "discount", "total",
+          "status", "source", "createdAt"
+        ])
+        && request.resource.data.customer is map
+        && request.resource.data.customer.keys().hasOnly(["fullName", "phone", "address", "email"])
+        && validShortText(request.resource.data.customer.fullName, 80)
+        && validShortText(request.resource.data.customer.phone, 32)
+        && validShortText(request.resource.data.customer.address, 500)
+        && validOptionalText(request.resource.data.customer.email, 160)
+        && validOptionalText(request.resource.data.userId, 128)
+        && request.resource.data.items is list
+        && request.resource.data.items.size() >= 1
+        && request.resource.data.items.size() <= 20
+        && request.resource.data.subtotal is number
+        && request.resource.data.subtotal >= 0
+        && request.resource.data.total is number
+        && request.resource.data.total >= 0
+        && (
+          request.resource.data.discount == null
+          || (
+            request.resource.data.discount is map
+            && request.resource.data.discount.keys().hasOnly(["code", "percent", "amount"])
+            && validShortText(request.resource.data.discount.code, 40)
+            && request.resource.data.discount.percent is number
+            && request.resource.data.discount.percent >= 1
+            && request.resource.data.discount.percent <= 90
+            && request.resource.data.discount.amount is number
+            && request.resource.data.discount.amount >= 0
+          )
+        )
+        && request.resource.data.status == "new"
+        && validOptionalText(request.resource.data.source, 32)
+        && validCreatedAt();
+    }
+
+    function validNewsletterCreate() {
+      return request.resource.data.keys().hasOnly(["email", "source", "createdAt"])
+        && validEmail(request.resource.data.email)
+        && validOptionalText(request.resource.data.source, 32)
+        && validCreatedAt();
+    }
+
+    function validDiscountWrite() {
+      return request.resource.data.keys().hasOnly(["code", "percent", "active", "createdAt", "updatedAt", "createdBy", "updatedBy"])
+        && validShortText(request.resource.data.code, 40)
+        && request.resource.data.percent is number
+        && request.resource.data.percent >= 1
+        && request.resource.data.percent <= 90
+        && request.resource.data.active is bool;
+    }
+
+    function validProductWrite() {
+      return request.resource.data.keys().hasOnly([
+          "name", "description", "price", "stock", "sizeStocks", "sizes",
+          "tone", "imageUrls", "images", "imageStorage", "category", "active",
+          "slug", "createdAt", "createdBy", "updatedAt", "updatedBy"
+        ])
+        && validShortText(request.resource.data.name, 120)
+        && validShortText(request.resource.data.description, 2000)
+        && request.resource.data.price is number
+        && request.resource.data.price >= 1
+        && request.resource.data.price <= 1000000
+        && request.resource.data.stock is number
+        && request.resource.data.stock >= 0
+        && request.resource.data.sizes is list
+        && request.resource.data.sizes.size() >= 1
+        && request.resource.data.sizes.size() <= 30
+        && request.resource.data.imageUrls is list
+        && request.resource.data.imageUrls.size() >= 1
+        && request.resource.data.imageUrls.size() <= 8
+        && request.resource.data.images is list
+        && request.resource.data.images.size() >= 1
+        && request.resource.data.images.size() <= 8
+        && request.resource.data.category in ["women", "men"]
+        && request.resource.data.active is bool
+        && validShortText(request.resource.data.slug, 160);
+    }
+
     match /products/{productId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update: if isAdmin() && validProductWrite();
+      allow delete: if isAdmin();
     }
 
     match /orders/{orderId} {
-      allow create: if true;
+      allow create: if validOrderCreate();
       allow read, update, delete: if isAdmin();
     }
 
     match /discounts/{discountId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update: if isAdmin() && validDiscountWrite();
+      allow delete: if isAdmin();
     }
 
     match /newsletter_subscribers/{subscriberId} {
-      allow create: if true;
+      allow create: if validNewsletterCreate();
       allow read, update, delete: if isAdmin();
     }
 
     match /site_content/{contentId} {
       allow read: if true;
       allow create, update, delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

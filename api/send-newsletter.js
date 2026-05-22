@@ -4,6 +4,17 @@ const nodemailer = require("nodemailer");
 const ADMIN_EMAIL = "orvellomonte@gmail.com";
 const FIREBASE_PROJECT_ID = "orvellomonte-392cf";
 const RECIPIENT_CHUNK_SIZE = 40;
+const MAX_RECIPIENTS = 1000;
+const MAX_SUBJECT_LENGTH = 120;
+const MAX_MESSAGE_LENGTH = 8000;
+const ALLOWED_ORIGINS = new Set([
+  "https://www.orvellomonte.com",
+  "https://orvellomonte.com"
+]);
+
+if (process.env.VERCEL_URL) {
+  ALLOWED_ORIGINS.add(`https://${process.env.VERCEL_URL}`);
+}
 
 const escapeHtml = (value = "") =>
   String(value)
@@ -12,6 +23,20 @@ const escapeHtml = (value = "") =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+
+const isValidEmail = (email) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "")) && String(email || "").length <= 160;
+
+const sendJson = (res, status, payload) => {
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+  res.status(status).json(payload);
+};
+
+const isAllowedOrigin = (req) => {
+  const origin = req.headers.origin;
+  return !origin || ALLOWED_ORIGINS.has(origin);
+};
 
 const parseJsonBody = (req) => {
   if (req.body && typeof req.body === "object") {
@@ -27,7 +52,7 @@ const parseJsonBody = (req) => {
 
 const getServiceAccount = () => {
   if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-    throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON eksik.");
+    throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON missing.");
   }
 
   const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
@@ -57,7 +82,7 @@ const getTransport = () => {
   const pass = process.env.SMTP_PASS;
 
   if (!host || !user || !pass) {
-    throw new Error("SMTP_HOST, SMTP_USER veya SMTP_PASS eksik.");
+    throw new Error("SMTP env missing.");
   }
 
   return nodemailer.createTransport({
@@ -87,7 +112,7 @@ const sendWithBrevoApi = async ({ emails, subject, message, from }) => {
   const result = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(result.message || "Brevo API mesajı gönderemedi.");
+    throw new Error(result.message || "Brevo API could not send the message.");
   }
 };
 
@@ -98,7 +123,7 @@ const getSubscriberEmails = async () => {
   snapshot.forEach((doc) => {
     const email = String(doc.data().email || "").trim().toLowerCase();
 
-    if (email) {
+    if (isValidEmail(email)) {
       emails.add(email);
     }
   });
@@ -107,8 +132,21 @@ const getSubscriberEmails = async () => {
 };
 
 module.exports = async (req, res) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+
+  if (!isAllowedOrigin(req)) {
+    sendJson(res, 403, { error: "Gecersiz istek kaynagi." });
+    return;
+  }
+
+  if (req.method === "OPTIONS") {
+    sendJson(res, 204, {});
+    return;
+  }
+
   if (req.method !== "POST") {
-    res.status(405).json({ error: "Method not allowed." });
+    sendJson(res, 405, { error: "Method not allowed." });
     return;
   }
 
@@ -118,14 +156,14 @@ module.exports = async (req, res) => {
     const token = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
 
     if (!token) {
-      res.status(401).json({ error: "Admin oturumu bulunamadı." });
+      sendJson(res, 401, { error: "Admin oturumu bulunamadi." });
       return;
     }
 
-    const decodedToken = await admin.auth().verifyIdToken(token);
+    const decodedToken = await admin.auth().verifyIdToken(token, true);
 
     if (decodedToken.email?.toLowerCase() !== ADMIN_EMAIL) {
-      res.status(403).json({ error: "Bu işlem için admin hesabı gerekir." });
+      sendJson(res, 403, { error: "Bu islem icin admin hesabi gerekir." });
       return;
     }
 
@@ -134,18 +172,34 @@ module.exports = async (req, res) => {
     const normalizedMessage = String(message || "").trim();
 
     if (!normalizedSubject || !normalizedMessage) {
-      res.status(400).json({ error: "Konu ve mesaj alanları zorunlu." });
+      sendJson(res, 400, { error: "Konu ve mesaj alanlari zorunlu." });
+      return;
+    }
+
+    if (normalizedSubject.length > MAX_SUBJECT_LENGTH || normalizedMessage.length > MAX_MESSAGE_LENGTH) {
+      sendJson(res, 400, { error: "Konu veya mesaj cok uzun." });
       return;
     }
 
     const emails = await getSubscriberEmails();
 
     if (!emails.length) {
-      res.status(400).json({ error: "Kayıtlı e-posta yok." });
+      sendJson(res, 400, { error: "Kayitli e-posta yok." });
+      return;
+    }
+
+    if (emails.length > MAX_RECIPIENTS) {
+      sendJson(res, 400, { error: "Tek gonderimde cok fazla alici var." });
       return;
     }
 
     const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+
+    if (!isValidEmail(from)) {
+      sendJson(res, 500, { error: "Gonderen e-posta ayari gecersiz." });
+      return;
+    }
+
     const transport = process.env.BREVO_API_KEY ? null : getTransport();
 
     for (let index = 0; index < emails.length; index += RECIPIENT_CHUNK_SIZE) {
@@ -170,8 +224,9 @@ module.exports = async (req, res) => {
       }
     }
 
-    res.status(200).json({ sent: emails.length });
+    sendJson(res, 200, { sent: emails.length });
   } catch (error) {
-    res.status(500).json({ error: error.message || "Mesaj gönderilemedi." });
+    console.error("[send-newsletter]", error);
+    sendJson(res, 500, { error: "Mesaj gonderilemedi. Mail servis ayarlarini kontrol et." });
   }
 };
