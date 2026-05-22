@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/fireba
 import {
   createUserWithEmailAndPassword,
   getAuth,
+  getIdToken,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
@@ -1714,27 +1715,28 @@ const setupSubscriberMessagePanel = () => {
 
     const submitButton = adminSubscriberForm.querySelector("button[type='submit']");
     submitButton.disabled = true;
-    setAdminSubscriberMessage(`${emails.length} e-posta gönderim kuyruğuna alınıyor...`);
+    setAdminSubscriberMessage(`${emails.length} e-postaya mesaj gönderiliyor...`);
 
     try {
-      await Promise.all(emails.map((email) => addDoc(collection(db, "mail"), {
-        to: email,
-        message: {
-          subject,
-          text: body,
-          html: body.replaceAll("\n", "<br>")
+      const token = await getIdToken(currentUser, true);
+      const response = await fetch("/api/send-newsletter", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
         },
-        createdAt: serverTimestamp(),
-        createdBy: currentUser.email,
-        source: "admin_newsletter"
-      })));
+        body: JSON.stringify({ subject, message: body })
+      });
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result.error || "Mesaj gönderilemedi.");
+      }
 
       adminSubscriberForm.reset();
-      setAdminSubscriberMessage(`${emails.length} e-posta gönderim kuyruğuna alındı.`);
+      setAdminSubscriberMessage(`${result.sent || emails.length} e-postaya mesaj gönderildi.`);
     } catch (error) {
-      setAdminSubscriberMessage(error.code === "permission-denied"
-        ? "Mesaj gönderilemedi: Firestore Rules içinde mail admin yazma iznini yayınla."
-        : "Mesaj gönderilemedi. Firebase e-posta ayarlarını kontrol et.", true);
+      setAdminSubscriberMessage(error.message || "Mesaj gönderilemedi. Vercel SMTP ayarlarını kontrol et.", true);
     } finally {
       submitButton.disabled = false;
     }

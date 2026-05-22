@@ -27,7 +27,7 @@ Admin panelindeki `İndirim Kodu` butonu `discounts` koleksiyonuna aktif/pasif i
 
 `politikalar.html` sayfası side panelden açılır. Teslimat, değişim, gizlilik ve mesafeli satış metinleri bu sayfada listelenir. Admin hesabıyla giriş yapıldığında her politika kartında düzenleme simgesi görünür; metinler aynı sayfada düzenlenip Firestore `site_content/policies` dökümanına kaydedilir.
 
-`iletisim.html` sayfası Early Access e-posta kayıt formunu ve Instagram linkini içerir. Kayıtlar Firestore `newsletter_subscribers` koleksiyonuna yazılır; admin panelindeki e-posta mesaj alanı kayıtlı adresler için Firestore `mail` koleksiyonuna gönderim kayıtları oluşturur. Doğrudan e-posta çıkışı için Firebase Trigger Email extension veya eşdeğer bir mail worker `mail` koleksiyonunu dinlemelidir.
+`iletisim.html` sayfası Early Access e-posta kayıt formunu ve Instagram linkini içerir. Kayıtlar Firestore `newsletter_subscribers` koleksiyonuna yazılır; admin panelindeki e-posta mesaj alanı `/api/send-newsletter` Vercel Function üzerinden kayıtlı adreslere SMTP ile mesaj gönderir. Vercel environment variables içinde `FIREBASE_SERVICE_ACCOUNT_JSON`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` ve `SMTP_FROM` tanımlı olmalıdır.
 
 ## Yayına Alma
 
