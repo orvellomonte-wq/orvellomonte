@@ -221,7 +221,8 @@ textarea {
 }
 
 .side-menu-link[hidden],
-[data-admin-link][hidden] {
+[data-admin-link][hidden],
+[data-admin-only][hidden] {
   display: none !important;
 }
 
