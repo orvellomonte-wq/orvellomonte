@@ -1534,7 +1534,7 @@ const renderAdminSubscribers = (subscribers) => {
         <strong>${escapeHtml(subscriber.email || "mail@ornek.com")}</strong>
         <span>${formatOrderDate(subscriber.createdAt)}</span>
       </div>
-      <a href="mailto:${encodeURIComponent(subscriber.email || "")}">Yaz</a>
+      <span class="subscriber-tag">Kayıtlı</span>
     </article>
   `).join("");
 };
@@ -1689,7 +1689,7 @@ const setupSubscriberMessagePanel = () => {
     return;
   }
 
-  adminSubscriberForm.addEventListener("submit", (event) => {
+  adminSubscriberForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     if (!isAdminUser(currentUser)) {
@@ -1712,9 +1712,32 @@ const setupSubscriberMessagePanel = () => {
       return;
     }
 
-    const mailto = `mailto:?bcc=${encodeURIComponent(emails.join(","))}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailto;
-    setAdminSubscriberMessage(`${emails.length} e-posta için mesaj hazırlandı.`);
+    const submitButton = adminSubscriberForm.querySelector("button[type='submit']");
+    submitButton.disabled = true;
+    setAdminSubscriberMessage(`${emails.length} e-posta gönderim kuyruğuna alınıyor...`);
+
+    try {
+      await Promise.all(emails.map((email) => addDoc(collection(db, "mail"), {
+        to: email,
+        message: {
+          subject,
+          text: body,
+          html: body.replaceAll("\n", "<br>")
+        },
+        createdAt: serverTimestamp(),
+        createdBy: currentUser.email,
+        source: "admin_newsletter"
+      })));
+
+      adminSubscriberForm.reset();
+      setAdminSubscriberMessage(`${emails.length} e-posta gönderim kuyruğuna alındı.`);
+    } catch (error) {
+      setAdminSubscriberMessage(error.code === "permission-denied"
+        ? "Mesaj gönderilemedi: Firestore Rules içinde mail admin yazma iznini yayınla."
+        : "Mesaj gönderilemedi. Firebase e-posta ayarlarını kontrol et.", true);
+    } finally {
+      submitButton.disabled = false;
+    }
   });
 };
 
