@@ -619,6 +619,10 @@ button:disabled {
   font-weight: 900;
 }
 
+.policy-edit-button[hidden] {
+  display: none !important;
+}
+
 .policy-content {
   display: grid;
   gap: 12px;
