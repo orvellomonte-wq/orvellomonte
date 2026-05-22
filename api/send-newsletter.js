@@ -68,6 +68,29 @@ const getTransport = () => {
   });
 };
 
+const sendWithBrevoApi = async ({ emails, subject, message, from }) => {
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": process.env.BREVO_API_KEY
+    },
+    body: JSON.stringify({
+      sender: { email: from },
+      to: [{ email: from }],
+      bcc: emails.map((email) => ({ email })),
+      subject,
+      textContent: message,
+      htmlContent: `<div style="font-family:Arial,sans-serif;line-height:1.6">${escapeHtml(message).replaceAll("\n", "<br>")}</div>`
+    })
+  });
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(result.message || "Brevo API mesajı gönderemedi.");
+  }
+};
+
 const getSubscriberEmails = async () => {
   const snapshot = await admin.firestore().collection("newsletter_subscribers").get();
   const emails = new Set();
@@ -122,20 +145,29 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const transport = getTransport();
     const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+    const transport = process.env.BREVO_API_KEY ? null : getTransport();
 
     for (let index = 0; index < emails.length; index += RECIPIENT_CHUNK_SIZE) {
       const chunk = emails.slice(index, index + RECIPIENT_CHUNK_SIZE);
 
-      await transport.sendMail({
-        from,
-        to: from,
-        bcc: chunk,
-        subject: normalizedSubject,
-        text: normalizedMessage,
-        html: `<div style="font-family:Arial,sans-serif;line-height:1.6">${escapeHtml(normalizedMessage).replaceAll("\n", "<br>")}</div>`
-      });
+      if (process.env.BREVO_API_KEY) {
+        await sendWithBrevoApi({
+          emails: chunk,
+          subject: normalizedSubject,
+          message: normalizedMessage,
+          from
+        });
+      } else {
+        await transport.sendMail({
+          from,
+          to: from,
+          bcc: chunk,
+          subject: normalizedSubject,
+          text: normalizedMessage,
+          html: `<div style="font-family:Arial,sans-serif;line-height:1.6">${escapeHtml(normalizedMessage).replaceAll("\n", "<br>")}</div>`
+        });
+      }
     }
 
     res.status(200).json({ sent: emails.length });
