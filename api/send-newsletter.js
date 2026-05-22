@@ -27,6 +27,16 @@ const escapeHtml = (value = "") =>
 const isValidEmail = (email) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "")) && String(email || "").length <= 160;
 
+const getSenderEmail = () => {
+  const candidates = [
+    process.env.SMTP_FROM,
+    process.env.SMTP_USER,
+    ADMIN_EMAIL
+  ];
+
+  return candidates.find(isValidEmail) || ADMIN_EMAIL;
+};
+
 const sendJson = (res, status, payload) => {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
@@ -193,12 +203,7 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const from = process.env.SMTP_FROM || process.env.SMTP_USER;
-
-    if (!isValidEmail(from)) {
-      sendJson(res, 500, { error: "Gonderen e-posta ayari gecersiz." });
-      return;
-    }
+    const from = getSenderEmail();
 
     const transport = process.env.BREVO_API_KEY ? null : getTransport();
 
