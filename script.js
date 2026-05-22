@@ -247,7 +247,7 @@ const startProductGalleryRotation = () => {
       const nextButton = buttons[(activeIndex + 1) % buttons.length];
       setProductGalleryImage(nextButton);
     });
-  }, 1000);
+  }, 5000);
 };
 
 const slugify = (value) =>
