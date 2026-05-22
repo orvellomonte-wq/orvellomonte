@@ -1553,6 +1553,126 @@ button:disabled {
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
 }
 
+.admin-subscriber-panel {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  background:
+    linear-gradient(135deg, rgba(231, 216, 189, 0.11), transparent 44%),
+    rgba(247, 241, 232, 0.045);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+}
+
+.admin-subscriber-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+.admin-subscriber-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.admin-subscriber-form input,
+.admin-subscriber-form textarea {
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 12px;
+  color: var(--ink);
+  outline: 0;
+  background: rgba(247, 241, 232, 0.08);
+}
+
+.admin-subscriber-form textarea {
+  min-height: 110px;
+  padding: 12px;
+  resize: vertical;
+}
+
+.admin-subscriber-message-field,
+.admin-subscriber-message {
+  grid-column: 1 / -1;
+}
+
+.admin-subscriber-form button {
+  align-self: end;
+  min-height: 46px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 18px;
+  color: var(--bg);
+  cursor: pointer;
+  background: var(--accent-2);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.admin-subscriber-message,
+.admin-subscriber-empty {
+  min-height: 22px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.admin-subscriber-message.error,
+.admin-subscriber-empty.error {
+  color: #ff9b89;
+}
+
+.admin-subscriber-list {
+  display: grid;
+  gap: 8px;
+}
+
+.subscriber-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(247, 241, 232, 0.14);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.subscriber-card strong,
+.subscriber-card span {
+  display: block;
+}
+
+.subscriber-card strong {
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+
+.subscriber-card span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.subscriber-card a {
+  border: 1px solid rgba(231, 216, 189, 0.44);
+  border-radius: 999px;
+  padding: 8px 10px;
+  color: var(--accent-2);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
 .admin-orders-page {
   display: grid;
   gap: 18px;
@@ -1881,6 +2001,70 @@ button:disabled {
 
 .newsletter {
   background: #0f0f0f;
+}
+
+.contact-page {
+  display: grid;
+  gap: 22px;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+  gap: 18px;
+}
+
+.contact-panel {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: clamp(18px, 4vw, 28px);
+  background:
+    linear-gradient(135deg, rgba(217, 79, 50, 0.11), transparent 44%),
+    rgba(247, 241, 232, 0.045);
+}
+
+.contact-panel h2,
+.contact-panel h3,
+.contact-panel p {
+  margin: 0;
+}
+
+.contact-panel h2,
+.contact-panel h3 {
+  font-family: "Anton", Impact, sans-serif;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.contact-panel p {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.instagram-link {
+  width: fit-content;
+  border: 1px solid rgba(231, 216, 189, 0.42);
+  border-radius: 999px;
+  padding: 12px 14px;
+  color: var(--accent-2);
+  font-weight: 900;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.signup-message {
+  min-height: 22px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.signup-message.error {
+  color: #ff9b89;
 }
 
 .signup-form {
@@ -2575,6 +2759,10 @@ button:disabled {
   .admin-product-form,
   .lookbook,
   .newsletter {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-grid {
     grid-template-columns: 1fr;
   }
 

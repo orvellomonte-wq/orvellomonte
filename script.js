@@ -100,6 +100,10 @@ const adminImagePreview = document.querySelector(".admin-image-preview");
 const adminSizeStocks = document.querySelector(".admin-size-stocks");
 const adminOrdersList = document.querySelector("[data-admin-orders]");
 const adminOrdersCount = document.querySelector(".admin-orders-count");
+const signupMessage = document.querySelector(".signup-message");
+const adminSubscriberForm = document.querySelector(".admin-subscriber-form");
+const adminSubscriberMessage = document.querySelector(".admin-subscriber-message");
+const adminSubscriberList = document.querySelector("[data-admin-subscribers]");
 const policySections = document.querySelectorAll("[data-policy-section]");
 const policyMessage = document.querySelector(".policy-edit-message");
 
@@ -116,6 +120,8 @@ let discountsUnsubscribe = null;
 let activeDiscount = null;
 let policiesUnsubscribe = null;
 let productGalleryTimer = null;
+let subscribersUnsubscribe = null;
+let newsletterSubscribers = [];
 
 const formatPrice = (amount) =>
   new Intl.NumberFormat("tr-TR", {
@@ -199,6 +205,24 @@ const setPolicyMessage = (message, isError = false) => {
 
   policyMessage.textContent = message;
   policyMessage.classList.toggle("error", isError);
+};
+
+const setSignupMessage = (message, isError = false) => {
+  if (!signupMessage) {
+    return;
+  }
+
+  signupMessage.textContent = message;
+  signupMessage.classList.toggle("error", isError);
+};
+
+const setAdminSubscriberMessage = (message, isError = false) => {
+  if (!adminSubscriberMessage) {
+    return;
+  }
+
+  adminSubscriberMessage.textContent = message;
+  adminSubscriberMessage.classList.toggle("error", isError);
 };
 
 const setProductGalleryImage = (galleryButton) => {
@@ -930,11 +954,38 @@ checkoutForm?.addEventListener("submit", async (event) => {
   }
 });
 
-signupForm?.addEventListener("submit", (event) => {
+signupForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
   const button = signupForm.querySelector("button");
-  button.textContent = "Alındı";
-  signupForm.reset();
+  const emailInput = signupForm.querySelector("input[type='email']");
+  const email = emailInput?.value.trim().toLowerCase();
+
+  if (!email || !emailInput.checkValidity()) {
+    setSignupMessage("E-posta adresini kontrol et.", true);
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Kaydediliyor";
+  setSignupMessage("E-posta kaydediliyor...");
+
+  try {
+    await addDoc(collection(db, "newsletter_subscribers"), {
+      email,
+      source: signupForm.dataset.signupSource || pageCategory || "contact",
+      createdAt: serverTimestamp()
+    });
+
+    signupForm.reset();
+    setSignupMessage("Kaydın alındı. Yeni drop haberleri buraya gelecek.");
+  } catch (error) {
+    setSignupMessage(error.code === "permission-denied"
+      ? "E-posta kaydedilemedi: Firestore Rules içinde newsletter_subscribers yazma iznini yayınla."
+      : "E-posta kaydedilemedi. Firebase ayarlarını kontrol et.", true);
+  } finally {
+    button.disabled = false;
+    button.textContent = "Katıl";
+  }
 });
 
 const setMessage = (message, isError = false) => {
@@ -1467,6 +1518,71 @@ const loadAdminDiscounts = () => {
   );
 };
 
+const renderAdminSubscribers = (subscribers) => {
+  if (!adminSubscriberList) {
+    return;
+  }
+
+  if (subscribers.length === 0) {
+    adminSubscriberList.innerHTML = `<p class="admin-subscriber-empty">Henüz e-posta kaydı yok.</p>`;
+    return;
+  }
+
+  adminSubscriberList.innerHTML = subscribers.map((subscriber) => `
+    <article class="subscriber-card">
+      <div>
+        <strong>${escapeHtml(subscriber.email || "mail@ornek.com")}</strong>
+        <span>${formatOrderDate(subscriber.createdAt)}</span>
+      </div>
+      <a href="mailto:${encodeURIComponent(subscriber.email || "")}">Yaz</a>
+    </article>
+  `).join("");
+};
+
+const loadAdminSubscribers = () => {
+  if (subscribersUnsubscribe) {
+    subscribersUnsubscribe();
+    subscribersUnsubscribe = null;
+  }
+
+  newsletterSubscribers = [];
+
+  if (!adminSubscriberList || !isAdminUser(currentUser)) {
+    renderAdminSubscribers([]);
+    return;
+  }
+
+  adminSubscriberList.innerHTML = `<p class="admin-subscriber-empty">E-posta kayıtları yükleniyor...</p>`;
+
+  subscribersUnsubscribe = onSnapshot(
+    collection(db, "newsletter_subscribers"),
+    (snapshot) => {
+      const uniqueSubscribers = new Map();
+
+      snapshot.docs.forEach((entry) => {
+        const subscriber = { id: entry.id, ...entry.data() };
+        const email = String(subscriber.email || "").trim().toLowerCase();
+
+        if (email && !uniqueSubscribers.has(email)) {
+          uniqueSubscribers.set(email, { ...subscriber, email });
+        }
+      });
+
+      newsletterSubscribers = Array.from(uniqueSubscribers.values())
+        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+      renderAdminSubscribers(newsletterSubscribers);
+    },
+    (error) => {
+      adminSubscriberList.innerHTML = `<p class="admin-subscriber-empty error">${
+        error.code === "permission-denied"
+          ? "E-posta kayıtları okunamadı: Firestore Rules içinde newsletter_subscribers admin okuma iznini yayınla."
+          : "E-posta kayıtları okunamadı. Firebase ayarlarını kontrol et."
+      }</p>`;
+    }
+  );
+};
+
 const loadPolicyContent = () => {
   if (policiesUnsubscribe) {
     policiesUnsubscribe();
@@ -1565,6 +1681,40 @@ const setupDiscountPanel = () => {
     } finally {
       submitButton.disabled = false;
     }
+  });
+};
+
+const setupSubscriberMessagePanel = () => {
+  if (!adminSubscriberForm) {
+    return;
+  }
+
+  adminSubscriberForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    if (!isAdminUser(currentUser)) {
+      setAdminSubscriberMessage("Bu işlem için admin hesabı gerekir.", true);
+      return;
+    }
+
+    const formData = new FormData(adminSubscriberForm);
+    const subject = String(formData.get("subject") || "").trim();
+    const body = String(formData.get("message") || "").trim();
+    const emails = [...new Set(newsletterSubscribers.map((subscriber) => subscriber.email).filter(Boolean))];
+
+    if (!subject || !body) {
+      setAdminSubscriberMessage("Konu ve mesaj alanlarını doldur.", true);
+      return;
+    }
+
+    if (emails.length === 0) {
+      setAdminSubscriberMessage("Mesaj göndermek için kayıtlı e-posta yok.", true);
+      return;
+    }
+
+    const mailto = `mailto:?bcc=${encodeURIComponent(emails.join(","))}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailto;
+    setAdminSubscriberMessage(`${emails.length} e-posta için mesaj hazırlandı.`);
   });
 };
 
@@ -1904,6 +2054,7 @@ onAuthStateChanged(auth, (user) => {
 
   loadAdminOrders();
   loadAdminDiscounts();
+  loadAdminSubscribers();
 
   if (user) {
     userName.textContent = user.displayName || "Orvello Üyesi";
@@ -1921,6 +2072,9 @@ document.addEventListener("keydown", (event) => {
     if (adminDiscountForm) {
       adminDiscountForm.hidden = true;
     }
+    if (adminSubscriberForm) {
+      adminSubscriberForm.reset();
+    }
     document.querySelectorAll(".policy-edit-form").forEach((form) => {
       closePolicyEditor(form.dataset.policyEditForm);
     });
@@ -1934,5 +2088,6 @@ document.addEventListener("keydown", (event) => {
 renderCart();
 setupAdminPanel();
 setupDiscountPanel();
+setupSubscriberMessagePanel();
 loadPolicyContent();
 loadFirestoreProducts();

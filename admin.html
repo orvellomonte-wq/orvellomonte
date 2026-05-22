@@ -37,7 +37,7 @@
       <a class="side-menu-link" href="admin.html" data-admin-link hidden>Admin</a>
       <a class="side-menu-link" href="siparisler.html" data-admin-link hidden>Siparişler</a>
       <a class="side-menu-link" href="index.html#lookbook">Lookbook</a>
-      <a class="side-menu-link" href="index.html#contact">İletişim</a>
+      <a class="side-menu-link" href="iletisim.html">İletişim</a>
     </nav>
   </aside>
 
@@ -170,6 +170,31 @@
           <a class="admin-orders-button" href="siparisler.html">Siparişler</a>
         </div>
         <p class="admin-orders-note">Müşteri bilgileri, adres, ürün görseli ve beden detaylarını siparişlere özel sayfada takip et.</p>
+      </section>
+
+      <section class="admin-subscriber-panel">
+        <div class="admin-orders-head">
+          <div>
+            <p class="kicker">Early Access</p>
+            <h3>E-posta Mesajları</h3>
+          </div>
+          <span class="admin-pill">Newsletter</span>
+        </div>
+        <form class="admin-subscriber-form">
+          <label>
+            <span>Konu</span>
+            <input name="subject" type="text" placeholder="Yeni drop yayında" required>
+          </label>
+          <label class="admin-subscriber-message-field">
+            <span>Mesaj</span>
+            <textarea name="message" placeholder="Yeni drop detaylarını yaz..." required></textarea>
+          </label>
+          <button type="submit">Mesajı Hazırla</button>
+          <p class="admin-subscriber-message" role="status" aria-live="polite"></p>
+        </form>
+        <div class="admin-subscriber-list" data-admin-subscribers aria-live="polite">
+          <p class="admin-subscriber-empty">Henüz e-posta kaydı yok.</p>
+        </div>
       </section>
     </section>
 

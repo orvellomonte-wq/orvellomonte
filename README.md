@@ -27,6 +27,8 @@ Admin panelindeki `İndirim Kodu` butonu `discounts` koleksiyonuna aktif/pasif i
 
 `politikalar.html` sayfası side panelden açılır. Teslimat, değişim, gizlilik ve mesafeli satış metinleri bu sayfada listelenir. Admin hesabıyla giriş yapıldığında her politika kartında düzenleme simgesi görünür; metinler aynı sayfada düzenlenip Firestore `site_content/policies` dökümanına kaydedilir.
 
+`iletisim.html` sayfası Early Access e-posta kayıt formunu ve Instagram linkini içerir. Kayıtlar Firestore `newsletter_subscribers` koleksiyonuna yazılır; admin panelindeki e-posta mesaj alanı kayıtlı adreslerle e-posta uygulamasında toplu mesaj hazırlar.
+
 ## Yayına Alma
 
 Bu proje statik HTML/CSS/JS olduğu için GitHub Pages, Vercel veya Netlify ile doğrudan yayınlanabilir.

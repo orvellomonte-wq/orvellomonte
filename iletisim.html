@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Siparişler | Orvello Monte</title>
-  <meta name="description" content="Orvello Monte admin sipariş paketleri.">
+  <title>İletişim | Orvello Monte</title>
+  <meta name="description" content="Orvello Monte iletişim, Instagram ve yeni drop e-posta kayıt sayfası.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body data-admin-page="true">
+<body>
   <header class="site-header">
     <button class="menu-toggle" type="button" aria-label="Menüyü aç" aria-controls="side-menu" aria-expanded="false">
       <span></span>
@@ -42,37 +42,51 @@
   </aside>
 
   <main>
-    <section class="page-hero admin-hero">
+    <section class="page-hero">
       <div class="page-hero-content">
-        <p class="kicker">Admin / Orders</p>
-        <h1>Siparişler</h1>
-        <p>Ürün görseli, beden, adres ve müşteri bilgilerini paket halinde takip et.</p>
+        <p class="kicker">Contact / Early Access</p>
+        <h1>İletişim</h1>
+        <p>Yeni drop haberleri, sosyal medya ve Orvello Monte duyuruları tek yerde.</p>
       </div>
     </section>
 
-    <section class="admin-access-panel" data-admin-lock>
-      <p class="kicker">Yetkili Giriş</p>
-      <h2>Siparişleri görmek için admin girişi yap.</h2>
-      <p>Bu sayfa yalnızca <strong>orvellomonte@gmail.com</strong> hesabıyla açılır.</p>
-    </section>
-
-    <section class="admin-orders-page" data-admin-only hidden>
-      <div class="admin-orders-head">
+    <section class="section contact-page">
+      <div class="section-heading">
         <div>
-          <p class="kicker">Sipariş Paketleri</p>
-          <h2>Gelen Siparişler</h2>
+          <p class="kicker">Orvello Monte</p>
+          <h2>Drop Haberleri</h2>
         </div>
-        <span class="admin-orders-count">0 sipariş</span>
       </div>
-      <div class="admin-orders-list orders-page-list" data-admin-orders>
-        <p class="empty-orders">Henüz sipariş yok.</p>
+
+      <div class="contact-grid">
+        <section class="contact-panel">
+          <div>
+            <p class="kicker">Early Access</p>
+            <h2>Yeni drop haberi ilk sana gelsin.</h2>
+          </div>
+          <form class="signup-form" data-signup-source="contact">
+            <label class="sr-only" for="contact-email">E-posta</label>
+            <input id="contact-email" type="email" placeholder="mail@ornek.com" required>
+            <button type="submit">Katıl</button>
+          </form>
+          <p class="signup-message" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="contact-panel">
+          <div>
+            <p class="kicker">Instagram</p>
+            <h3>@orvellomonte</h3>
+          </div>
+          <p>Drop duyuruları, ürün detayları ve güncel paylaşımlar için Instagram hesabına geç.</p>
+          <a class="instagram-link" href="https://www.instagram.com/orvellomonte/" target="_blank" rel="noopener">Instagram'a Git</a>
+        </section>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
     <span>© 2026 Orvello Monte</span>
-    <span>Admin / Siparişler</span>
+    <span>İletişim</span>
   </footer>
 
   <div class="auth-modal" aria-hidden="true">
@@ -144,7 +158,7 @@
         </label>
         <div class="checkout-discount">
           <label class="checkout-field">
-            <span>&#304;ndirim Kodu</span>
+            <span>İndirim Kodu</span>
             <input name="discountCode" type="text" autocomplete="off" placeholder="ORVELLO10">
           </label>
           <button class="discount-apply-button" type="button">Uygula</button>
