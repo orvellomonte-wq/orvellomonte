@@ -115,6 +115,7 @@ let ordersUnsubscribe = null;
 let discountsUnsubscribe = null;
 let activeDiscount = null;
 let policiesUnsubscribe = null;
+let productGalleryTimer = null;
 
 const formatPrice = (amount) =>
   new Intl.NumberFormat("tr-TR", {
@@ -198,6 +199,55 @@ const setPolicyMessage = (message, isError = false) => {
 
   policyMessage.textContent = message;
   policyMessage.classList.toggle("error", isError);
+};
+
+const setProductGalleryImage = (galleryButton) => {
+  const productCard = galleryButton?.closest(".product-card");
+  const mainImage = productCard?.querySelector(".product-photo img");
+
+  if (!mainImage || !galleryButton?.dataset.galleryImage || mainImage.src === galleryButton.dataset.galleryImage) {
+    return;
+  }
+
+  mainImage.classList.add("is-switching");
+  window.setTimeout(() => {
+    mainImage.src = galleryButton.dataset.galleryImage;
+
+    productCard.querySelectorAll("[data-gallery-image]").forEach((button) => {
+      button.classList.toggle("active", button === galleryButton);
+    });
+
+    window.setTimeout(() => {
+      mainImage.classList.remove("is-switching");
+    }, 120);
+  }, 180);
+};
+
+const startProductGalleryRotation = () => {
+  if (productGalleryTimer) {
+    window.clearInterval(productGalleryTimer);
+    productGalleryTimer = null;
+  }
+
+  const galleries = document.querySelectorAll(".product-gallery");
+
+  if (!galleries.length) {
+    return;
+  }
+
+  productGalleryTimer = window.setInterval(() => {
+    document.querySelectorAll(".product-gallery").forEach((gallery) => {
+      const buttons = Array.from(gallery.querySelectorAll("[data-gallery-image]"));
+
+      if (buttons.length < 2) {
+        return;
+      }
+
+      const activeIndex = Math.max(0, buttons.findIndex((button) => button.classList.contains("active")));
+      const nextButton = buttons[(activeIndex + 1) % buttons.length];
+      setProductGalleryImage(nextButton);
+    });
+  }, 1000);
 };
 
 const slugify = (value) =>
@@ -680,15 +730,7 @@ document.addEventListener("click", (event) => {
   }
 
   if (galleryButton) {
-    const productCard = galleryButton.closest(".product-card");
-    const mainImage = productCard?.querySelector(".product-photo img");
-
-    if (mainImage) {
-      mainImage.src = galleryButton.dataset.galleryImage;
-      productCard.querySelectorAll("[data-gallery-image]").forEach((button) => {
-        button.classList.toggle("active", button === galleryButton);
-      });
-    }
+    setProductGalleryImage(galleryButton);
   }
 
   if (sizeOptionButton) {
@@ -1189,6 +1231,7 @@ const renderFirestoreProducts = (products) => {
   productGrid.querySelectorAll("[data-firestore-product]").forEach((card) => card.remove());
   productGrid.querySelector(".empty-products")?.toggleAttribute("hidden", products.length > 0);
   productGrid.insertAdjacentHTML("beforeend", products.map(renderFirebaseProduct).join(""));
+  startProductGalleryRotation();
 };
 
 const loadFirestoreProducts = () => {
