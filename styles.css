@@ -2008,6 +2008,10 @@ button:disabled {
   gap: 22px;
 }
 
+.contact-hero h1 {
+  font-size: clamp(3.2rem, 8vw, 7rem);
+}
+
 .contact-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
