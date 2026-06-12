@@ -452,8 +452,9 @@ button:disabled {
 .category-card {
   position: relative;
   display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
   min-height: 420px;
-  align-content: end;
+  align-content: start;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -514,8 +515,9 @@ button:disabled {
 }
 
 .category-cta {
+  align-self: end;
   width: fit-content;
-  margin-top: 8px;
+  margin-top: 24px;
   border-bottom: 2px solid var(--accent-2);
   color: var(--accent-2);
   font-weight: 900;
