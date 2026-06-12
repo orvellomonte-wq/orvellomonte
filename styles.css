@@ -426,7 +426,7 @@ button:disabled {
 }
 
 #categories {
-  padding-top: clamp(36px, 5vw, 58px);
+  padding-top: clamp(18px, 3vw, 34px);
 }
 
 .section-heading {
@@ -2935,8 +2935,8 @@ button:disabled {
   }
 
   .hero {
-    min-height: 58svh;
-    padding: 92px 16px 30px;
+    min-height: 50svh;
+    padding: 82px 16px 22px;
   }
 
   .hero-image {
