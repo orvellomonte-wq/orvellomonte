@@ -89,6 +89,7 @@ const adminLock = document.querySelector("[data-admin-lock]");
 const adminOnlySections = document.querySelectorAll("[data-admin-only]");
 const pageCategory = document.body.dataset.category;
 const productGrid = document.querySelector("[data-product-grid]");
+const productMarquee = document.querySelector("[data-product-marquee]");
 const adminPanel = document.querySelector(".admin-product-panel");
 const adminToggleButton = document.querySelector(".admin-toggle-button");
 const adminForm = document.querySelector(".admin-product-form");
@@ -1286,8 +1287,41 @@ const renderFirestoreProducts = (products) => {
   startProductGalleryRotation();
 };
 
+const renderProductMarquee = (products) => {
+  if (!productMarquee) {
+    return;
+  }
+
+  const visibleProducts = products.filter((product) => product.active !== false).slice(0, 10);
+
+  if (visibleProducts.length === 0) {
+    return;
+  }
+
+  const marqueeProducts = [...visibleProducts, ...visibleProducts, ...visibleProducts];
+
+  productMarquee.innerHTML = marqueeProducts.map((product) => {
+    const imageUrl = getProductImage(product);
+    const categoryName = product.category === "men" ? "Erkek" : "Kadın";
+    const categoryHref = product.category === "men" ? "erkek.html" : "kadın.html";
+
+    return `
+      <a class="promo-product-card" href="${categoryHref}">
+        <div class="promo-product-visual ${imageUrl ? "has-image" : ""}">
+          ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}">` : ""}
+        </div>
+        <div>
+          <span>${escapeHtml(categoryName)} Drop</span>
+          <strong>${escapeHtml(product.name)}</strong>
+          <small>${formatPrice(Number(product.price || 0))}</small>
+        </div>
+      </a>
+    `;
+  }).join("");
+};
+
 const loadFirestoreProducts = () => {
-  if (!productGrid || (!pageCategory && !isAdminPage)) {
+  if ((!productGrid && !productMarquee) || (!pageCategory && !isAdminPage && !productMarquee)) {
     return;
   }
 
@@ -1305,6 +1339,7 @@ const loadFirestoreProducts = () => {
 
       currentProducts = products;
       renderFirestoreProducts(products);
+      renderProductMarquee(products);
     },
     () => {
       setAdminMessage("Firestore ürünleri okunamadı. Firebase Rules ayarlarını kontrol et.", true);
