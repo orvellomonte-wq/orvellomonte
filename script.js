@@ -1310,8 +1310,8 @@ const renderProductMarquee = (products) => {
         <div class="promo-product-visual ${imageUrl ? "has-image" : ""}">
           ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}">` : ""}
         </div>
-        <div>
-          <span>${escapeHtml(categoryName)} Drop</span>
+        <div class="promo-product-info">
+          <span>${escapeHtml(categoryName)}</span>
           <strong>${escapeHtml(product.name)}</strong>
           <small>${formatPrice(Number(product.price || 0))}</small>
         </div>
