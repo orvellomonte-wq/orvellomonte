@@ -1159,6 +1159,7 @@ button:disabled {
 }
 
 .admin-toggle-button,
+.admin-seed-products-button,
 .admin-discount-toggle-button {
   min-height: 46px;
   border: 0;
@@ -1170,6 +1171,12 @@ button:disabled {
   font-weight: 900;
   text-transform: uppercase;
   box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+}
+
+.admin-seed-products-button {
+  border: 1px solid rgba(217, 79, 50, 0.5);
+  color: var(--ink);
+  background: rgba(217, 79, 50, 0.18);
 }
 
 .admin-discount-toggle-button {
@@ -2984,6 +2991,7 @@ button:disabled {
   }
 
   .admin-toggle-button,
+  .admin-seed-products-button,
   .admin-discount-toggle-button {
     width: 100%;
   }
