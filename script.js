@@ -495,6 +495,7 @@ const openCheckout = () => {
   }
 
   renderCheckoutSummary();
+  resetPaytrFrame();
   setCheckoutMessage("");
   document.body.classList.add("checkout-open");
   checkoutModal.setAttribute("aria-hidden", "false");
@@ -508,6 +509,7 @@ const closeCheckout = () => {
 
   document.body.classList.remove("checkout-open");
   checkoutModal.setAttribute("aria-hidden", "true");
+  resetPaytrFrame();
 };
 
 const applyDiscountCode = async () => {
@@ -576,6 +578,85 @@ const buildOrderItems = () => cart.map((item) => ({
   price: Number(item.price || 0),
   quantity: Number(item.quantity || 1)
 }));
+
+let paytrIframeScriptPromise = null;
+
+const loadPaytrIframeScript = () => {
+  if (window.iFrameResize) {
+    return Promise.resolve();
+  }
+
+  if (!paytrIframeScriptPromise) {
+    paytrIframeScriptPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://www.paytr.com/js/iframeResizer.min.js";
+      script.async = true;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error("PayTR iframe script yuklenemedi."));
+      document.head.appendChild(script);
+    });
+  }
+
+  return paytrIframeScriptPromise;
+};
+
+const getPaytrFrameMount = () => {
+  if (!checkoutForm) {
+    return null;
+  }
+
+  let mount = checkoutForm.querySelector(".paytr-frame-mount");
+
+  if (!mount) {
+    mount = document.createElement("div");
+    mount.className = "paytr-frame-mount";
+    mount.hidden = true;
+    checkoutMessage?.before(mount);
+  }
+
+  return mount;
+};
+
+const resetPaytrFrame = () => {
+  const mount = checkoutForm?.querySelector(".paytr-frame-mount");
+
+  if (mount) {
+    mount.hidden = true;
+    mount.innerHTML = "";
+  }
+
+  if (checkoutForm) {
+    checkoutForm.classList.remove("checkout-payment-open");
+    delete checkoutForm.dataset.paymentOpen;
+  }
+  const submitButton = checkoutForm?.querySelector("button[type='submit']");
+
+  if (submitButton) {
+    submitButton.disabled = false;
+  }
+};
+
+const renderPaytrFrame = async ({ iframeUrl, merchantOid }) => {
+  const mount = getPaytrFrameMount();
+
+  if (!mount) {
+    return;
+  }
+
+  mount.innerHTML = `
+    <div class="paytr-frame-head">
+      <span>PayTR Guvenli Odeme</span>
+      <small>Siparis No: ${escapeHtml(merchantOid)}</small>
+    </div>
+    <iframe src="${escapeHtml(iframeUrl)}" id="paytriframe" title="PayTR Guvenli Odeme" frameborder="0" scrolling="no"></iframe>
+  `;
+  mount.hidden = false;
+  checkoutForm.classList.add("checkout-payment-open");
+  checkoutForm.dataset.paymentOpen = "true";
+
+  await loadPaytrIframeScript();
+  window.iFrameResize?.({}, "#paytriframe");
+};
 
 const openSideMenu = () => {
   if (!sideMenu || !menuToggle) {
@@ -935,53 +1016,55 @@ checkoutForm?.addEventListener("submit", async (event) => {
   }
 
   const submitButton = checkoutForm.querySelector("button[type='submit']");
+  if (checkoutForm.dataset.paymentOpen === "true") {
+    setCheckoutMessage("PayTR odeme ekrani zaten acik. Odemeyi oradan tamamla.");
+    return;
+  }
   submitButton.disabled = true;
-  setCheckoutMessage("Sipariş kaydediliyor...");
+  setCheckoutMessage("PayTR guvenli odeme ekrani hazirlaniyor...");
 
   try {
     const subtotal = getCartSubtotal();
     const discountAmount = getDiscountAmount();
     const total = getCartTotal();
 
-    await addDoc(collection(db, "orders"), {
-      customer: {
-        fullName,
-        phone,
-        address,
-        email: currentUser?.email || ""
+    const response = await fetch("/api/paytr-token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
       },
-      userId: currentUser?.uid || "",
-      items: buildOrderItems(),
-      subtotal,
-      discount: activeDiscount ? {
-        code: activeDiscount.code,
-        percent: Number(activeDiscount.percent || 0),
-        amount: discountAmount
-      } : null,
-      total,
-      status: "new",
-      source: pageCategory || "site",
-      createdAt: serverTimestamp()
+      body: JSON.stringify({
+        customer: {
+          fullName,
+          phone,
+          address,
+          email: currentUser?.email || ""
+        },
+        userId: currentUser?.uid || "",
+        items: buildOrderItems(),
+        subtotal,
+        discount: activeDiscount ? {
+          code: activeDiscount.code,
+          percent: Number(activeDiscount.percent || 0),
+          amount: discountAmount
+        } : null,
+        total,
+        source: pageCategory || "site"
+      })
     });
+    const result = await response.json().catch(() => ({}));
 
-    cart = [];
-    activeDiscount = null;
-    saveCart();
-    renderCart();
-    checkoutForm.reset();
-    renderCheckoutSummary();
-    setCheckoutMessage("Sipariş alındı. Admin paneline düştü.");
+    if (!response.ok || !result.iframeUrl) {
+      throw new Error(result.error || "PayTR odeme ekrani acilamadi.");
+    }
 
-    window.setTimeout(() => {
-      closeCheckout();
-      setCheckoutMessage("");
-    }, 1600);
+    await renderPaytrFrame(result);
+    setCheckoutMessage("PayTR odeme ekrani acildi. Odemeyi tamamlayinca admin panelinde durum guncellenecek.");
   } catch (error) {
-    setCheckoutMessage(error.code === "permission-denied"
-      ? "Sipariş kaydedilemedi: Firestore Rules içinde orders yazma iznini yayınla."
-      : error.message || "Sipariş kaydedilemedi. Firebase ayarlarını kontrol et.", true);
+    resetPaytrFrame();
+    setCheckoutMessage(error.message || "PayTR odeme baslatilamadi. Vercel env ve PayTR ayarlarini kontrol et.", true);
   } finally {
-    submitButton.disabled = false;
+    submitButton.disabled = checkoutForm.dataset.paymentOpen === "true";
   }
 });
 
@@ -1509,6 +1592,14 @@ const renderAdminOrders = (orders) => {
     const customerName = customer.fullName || "İsimsiz müşteri";
     const phone = customer.phone || "Telefon yok";
     const address = customer.address || "Adres yok";
+    const paymentStatus = order.payment?.status || "manual";
+    const paymentLabel = {
+      paid: "Odendi",
+      pending: "Odeme Bekliyor",
+      failed: "Odeme Basarisiz",
+      token_failed: "Odeme Acilamadi",
+      manual: "Manuel Siparis"
+    }[paymentStatus] || "Odeme Bekliyor";
 
     const isDone = order.status === "done";
 
@@ -1523,7 +1614,10 @@ const renderAdminOrders = (orders) => {
         </div>
         <div class="order-package-head">
           <div>
-            <span class="order-badge">Paket</span>
+            <div class="order-badge-row">
+              <span class="order-badge">Paket</span>
+              <span class="order-payment-badge is-${escapeHtml(paymentStatus)}">${escapeHtml(paymentLabel)}</span>
+            </div>
             <h4>${escapeHtml(customerName)}</h4>
             <p>${escapeHtml(formatOrderDate(order.createdAt))}</p>
           </div>
