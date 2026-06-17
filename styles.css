@@ -3017,99 +3017,25 @@ button:disabled {
 
 .paytr-checkout-page {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 15% 0%, rgba(217, 79, 50, 0.16), transparent 28%),
-    linear-gradient(135deg, #0b0b0b, #151413);
-}
-
-.paytr-checkout-header {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  border-bottom: 1px solid var(--line);
-  padding: 14px clamp(14px, 4vw, 34px);
-  background: rgba(10, 10, 10, 0.86);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-
-.paytr-checkout-header .brand {
-  max-width: none;
-  width: auto;
-  font-size: clamp(1.35rem, 5vw, 2.1rem);
-}
-
-.paytr-back-link {
-  flex: 0 0 auto;
-  border: 1px solid rgba(231, 216, 189, 0.34);
-  border-radius: 999px;
-  padding: 10px 12px;
-  color: var(--ink);
-  background: rgba(247, 241, 232, 0.07);
-  font-size: 0.72rem;
-  font-weight: 900;
-  text-decoration: none;
-  text-transform: uppercase;
-  white-space: nowrap;
+  margin: 0;
+  background: #fff;
 }
 
 .paytr-checkout-shell {
-  display: grid;
-  gap: 16px;
-  width: min(980px, 100%);
+  width: 100%;
   margin: 0 auto;
-  padding: clamp(16px, 4vw, 28px);
-}
-
-.paytr-checkout-intro {
-  display: grid;
-  gap: 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: clamp(16px, 4vw, 24px);
-  background:
-    linear-gradient(135deg, rgba(231, 216, 189, 0.1), transparent 44%),
-    rgba(247, 241, 232, 0.045);
-}
-
-.paytr-checkout-intro h1 {
-  margin: 0;
-  font-size: clamp(2.4rem, 8vw, 5rem);
-}
-
-.paytr-checkout-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  color: var(--muted);
-  font-size: 0.88rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.paytr-checkout-meta strong {
-  color: var(--accent-2);
-  font-size: 1.1rem;
+  padding: 0;
 }
 
 .paytr-checkout-frame {
   overflow: hidden;
-  border: 1px solid rgba(231, 216, 189, 0.22);
-  border-radius: 8px;
   background: #fff;
-  box-shadow: 0 26px 90px rgba(0, 0, 0, 0.42);
 }
 
 .paytr-checkout-frame iframe {
   display: block;
   width: 100%;
-  min-height: 720px;
+  min-height: 100vh;
   border: 0;
   background: #fff;
 }
@@ -3588,46 +3514,12 @@ button:disabled {
     min-height: 620px;
   }
 
-  .paytr-checkout-header {
-    align-items: flex-start;
-    padding: 12px;
-  }
-
-  .paytr-checkout-header .brand {
-    max-width: 62vw;
-    white-space: normal;
-  }
-
-  .paytr-back-link {
-    padding: 9px 10px;
-    font-size: 0.66rem;
-  }
-
   .paytr-checkout-shell {
-    gap: 10px;
-    padding: 10px;
-  }
-
-  .paytr-checkout-intro {
-    padding: 14px;
-  }
-
-  .paytr-checkout-intro h1 {
-    font-size: clamp(2rem, 12vw, 3.1rem);
-  }
-
-  .paytr-checkout-meta {
-    display: grid;
-    justify-content: start;
-    font-size: 0.72rem;
-  }
-
-  .paytr-checkout-frame {
-    border-radius: 6px;
+    padding: 0;
   }
 
   .paytr-checkout-frame iframe {
-    min-height: 680px;
+    min-height: 100vh;
   }
 
   .order-product {

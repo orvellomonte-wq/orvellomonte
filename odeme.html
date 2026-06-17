@@ -3,32 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Güvenli Ödeme | Orvello Monte</title>
-  <meta name="description" content="Orvello Monte PayTR güvenli ödeme ekranı.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <title>Guvenli Odeme | Orvello Monte</title>
+  <meta name="description" content="Orvello Monte PayTR guvenli odeme ekrani.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="paytr-checkout-page">
-  <header class="paytr-checkout-header">
-    <a class="brand" href="index.html" aria-label="Orvello Monte ana sayfa">ORVELLO MONTE</a>
-    <a class="paytr-back-link" href="index.html">Alışverişe Dön</a>
-  </header>
-
   <main class="paytr-checkout-shell">
-    <section class="paytr-checkout-intro">
-      <p class="kicker">PayTR Güvenli Ödeme</p>
-      <h1>Ödemeyi Tamamla</h1>
-      <div class="paytr-checkout-meta">
-        <span id="paytr-order-code">Sipariş hazırlanıyor</span>
-        <strong id="paytr-order-amount"></strong>
-      </div>
-    </section>
-
     <section class="paytr-checkout-frame" aria-live="polite">
-      <div class="paytr-frame-status" id="paytr-frame-status">Ödeme ekranı yükleniyor...</div>
-      <iframe id="paytriframe" title="PayTR Güvenli Ödeme" frameborder="0" scrolling="no"></iframe>
+      <div class="paytr-frame-status" id="paytr-frame-status">Odeme ekrani yukleniyor...</div>
+      <iframe id="paytriframe" title="PayTR Guvenli Odeme" frameborder="0" scrolling="no"></iframe>
     </section>
   </main>
 
@@ -37,13 +20,11 @@
       const storageKey = "orvello-paytr-payment";
       const status = document.getElementById("paytr-frame-status");
       const iframe = document.getElementById("paytriframe");
-      const orderCode = document.getElementById("paytr-order-code");
-      const orderAmount = document.getElementById("paytr-order-amount");
 
       const showError = (message) => {
         status.innerHTML = `
           <strong>${message}</strong>
-          <a class="button primary" href="index.html">Sepete Dön</a>
+          <a class="button primary" href="index.html">Sepete Don</a>
         `;
         iframe.hidden = true;
       };
@@ -61,18 +42,8 @@
         && payment.iframeUrl.startsWith("https://www.paytr.com/odeme/guvenli/");
 
       if (!payment || !isFresh || !isPaytrUrl) {
-        showError("Ödeme oturumu bulunamadı veya süresi doldu.");
+        showError("Odeme oturumu bulunamadi veya suresi doldu.");
         return;
-      }
-
-      orderCode.textContent = `Sipariş No: ${payment.merchantOid || "-"}`;
-
-      if (Number(payment.amount) > 0) {
-        orderAmount.textContent = new Intl.NumberFormat("tr-TR", {
-          style: "currency",
-          currency: "TRY",
-          maximumFractionDigits: 0
-        }).format(Number(payment.amount));
       }
 
       iframe.src = payment.iframeUrl;
