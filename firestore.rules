@@ -103,7 +103,7 @@ service cloud.firestore {
         && request.resource.data.images is list
         && request.resource.data.images.size() >= 1
         && request.resource.data.images.size() <= 8
-        && request.resource.data.category in ["women", "men"]
+        && request.resource.data.category in ["women", "men", "accessories"]
         && request.resource.data.active is bool
         && validShortText(request.resource.data.slug, 160);
     }

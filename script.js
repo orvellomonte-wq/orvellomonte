@@ -1511,16 +1511,19 @@ const renderProductMarquee = (products) => {
 
   productMarquee.innerHTML = marqueeProducts.map((product) => {
     const imageUrl = getProductImage(product);
-    const categoryName = product.category === "men" ? "Erkek" : "Kadın";
-    const categoryHref = product.category === "men" ? "erkek.html" : "kadın.html";
+    const categoryMeta = {
+      men: { name: "Erkek", href: "erkek.html" },
+      women: { name: "Kadın", href: "kadın.html" },
+      accessories: { name: "Aksesuar", href: "aksesuar.html" }
+    }[product.category] || { name: "Kadın", href: "kadın.html" };
 
     return `
-      <a class="promo-product-card" href="${categoryHref}">
+      <a class="promo-product-card" href="${categoryMeta.href}">
         <div class="promo-product-visual ${imageUrl ? "has-image" : ""}">
           ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}">` : ""}
         </div>
         <div class="promo-product-info">
-          <span>${escapeHtml(categoryName)}</span>
+          <span>${escapeHtml(categoryMeta.name)}</span>
           <strong>${escapeHtml(product.name)}</strong>
           <small>${formatPrice(Number(product.price || 0))}</small>
         </div>

@@ -7,6 +7,7 @@ Streetwear tarzında tek sayfalık vitrin sitesi.
 - `index.html`: Sayfa yapısı
 - `kadın.html`: Kadın ürün sayfası
 - `erkek.html`: Erkek ürün sayfası
+- `aksesuar.html`: Aksesuar ürün sayfası
 - `admin.html`: Ürün ve sipariş yönetimi
 - `siparisler.html`: Admin sipariş paketleri
 - `styles.css`: Responsive tasarım ve ürün görselleri
@@ -17,7 +18,7 @@ Streetwear tarzında tek sayfalık vitrin sitesi.
 
 Admin hesabı: `orvellomonte@gmail.com`
 
-Side paneldeki Admin linki sadece bu hesapla giriş yapınca görünür. `admin.html` sayfasında ürün ekleme butonu açılır. Butona basınca ürünün kadın veya erkek sayfasında yayınlanacağı seçilir; ürün adı, fiyat, özel beden adı, beden bazlı stok, açıklama ve birden fazla görsel yükleme alanı açılır. Admin istediği kadar özel beden ekleyebilir, mevcut ürünleri admin sayfasındaki ürün kartları üzerinden düzenleyebilir veya silebilir. Görseller yayınlamadan önce tarayıcıda `webp` olarak sıkıştırılır ve QUAORA örneğindeki mantıkla direkt Firebase Firestore `products` koleksiyonundaki ürün dökümanına yazılır. Bu ürün yayınlama akışı Firebase Storage gerektirmez.
+Side paneldeki Admin linki sadece bu hesapla giriş yapınca görünür. `admin.html` sayfasında ürün ekleme butonu açılır. Butona basınca ürünün kadın, erkek veya aksesuar sayfasında yayınlanacağı seçilir; ürün adı, fiyat, özel beden adı, beden bazlı stok, açıklama ve birden fazla görsel yükleme alanı açılır. Admin istediği kadar özel beden ekleyebilir, mevcut ürünleri admin sayfasındaki ürün kartları üzerinden düzenleyebilir veya silebilir. Görseller yayınlamadan önce tarayıcıda `webp` olarak sıkıştırılır ve QUAORA örneğindeki mantıkla direkt Firebase Firestore `products` koleksiyonundaki ürün dökümanına yazılır. Bu ürün yayınlama akışı Firebase Storage gerektirmez.
 
 ## Siparişler
 

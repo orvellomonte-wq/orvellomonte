@@ -445,7 +445,7 @@ button:disabled {
 
 .category-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
 }
 
@@ -490,6 +490,21 @@ button:disabled {
 
 .category-card.men {
   --garment: #101010;
+}
+
+.category-card.accessories {
+  --garment: #c6a45d;
+}
+
+.category-card.accessories::after {
+  top: 96px;
+  right: 14%;
+  width: 30%;
+  height: 38%;
+  border-radius: 50%;
+  box-shadow:
+    -38px 58px 0 -20px rgba(247, 241, 232, 0.18),
+    0 66px 0 -18px rgba(0, 0, 0, 0.34);
 }
 
 .category-card .kicker,
