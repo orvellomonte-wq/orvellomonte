@@ -10,6 +10,7 @@ Streetwear tarzında tek sayfalık vitrin sitesi.
 - `aksesuar.html`: Aksesuar ürün sayfası
 - `admin.html`: Ürün ve sipariş yönetimi
 - `siparisler.html`: Admin sipariş paketleri
+- `odeme.html`: PayTR iFrame ödeme sayfası
 - `styles.css`: Responsive tasarım ve ürün görselleri
 - `script.js`: Firebase Auth giriş/kayıt paneli, kalıcı sepet drawer'ı ve bülten formu
 - `assets/hero-streetwear.png`: Hero/lookbook görseli
@@ -22,7 +23,7 @@ Side paneldeki Admin linki sadece bu hesapla giriş yapınca görünür. `admin.
 
 ## Siparişler
 
-Sepetteki `Ödemeye Geç` butonu satın alma formunu açar. Müşteri ad soyad, telefon ve adres bilgisini girince `/api/paytr-token` Vercel Function üzerinden PayTR iFrame ödeme ekranı açılır ve sipariş `orders` koleksiyonuna `payment.status: pending` olarak yazılır. PayTR `Bildirim URL` callback'i `/api/paytr-callback` adresine geldiğinde sipariş `paid` veya `failed` olarak güncellenir. Admin hesabıyla `admin.html` sayfasında giriş yapıldığında `Siparişler` butonu görünür; bu buton `siparisler.html` sayfasındaki sipariş paketlerine gider. Burada ürün adı, beden, görsel, adet, müşteri adı, telefon, adres ve ödeme durumu listelenir.
+Sepetteki `Ödemeye Geç` butonu satın alma formunu açar. Müşteri ad soyad, telefon ve adres bilgisini girince `/api/paytr-token` Vercel Function üzerinden PayTR token alınır, sipariş `orders` koleksiyonuna `payment.status: pending` olarak yazılır ve müşteri mobil uyumlu `odeme.html` sayfasındaki PayTR iFrame ödeme ekranına yönlendirilir. PayTR `Bildirim URL` callback'i `/api/paytr-callback` adresine geldiğinde sipariş `paid` veya `failed` olarak güncellenir. Admin hesabıyla `admin.html` sayfasında giriş yapıldığında `Siparişler` butonu görünür; bu buton `siparisler.html` sayfasındaki sipariş paketlerine gider. Burada ürün adı, beden, görsel, adet, müşteri adı, telefon, adres ve ödeme durumu listelenir.
 
 Admin panelindeki `İndirim Kodu` butonu `discounts` koleksiyonuna aktif/pasif indirim kodu yazar. Kullanıcı satın alma panelindeki indirim kodu alanına bu kodu girince sepet toplamına yüzde indirim uygulanır ve sipariş kaydına indirim kodu, indirim tutarı ve son toplam eklenir.
 

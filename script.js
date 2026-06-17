@@ -658,6 +658,16 @@ const renderPaytrFrame = async ({ iframeUrl, merchantOid }) => {
   window.iFrameResize?.({}, "#paytriframe");
 };
 
+const openPaytrPaymentPage = ({ iframeUrl, merchantOid, amount }) => {
+  sessionStorage.setItem("orvello-paytr-payment", JSON.stringify({
+    iframeUrl,
+    merchantOid,
+    amount,
+    createdAt: Date.now()
+  }));
+  window.location.href = "odeme.html";
+};
+
 const openSideMenu = () => {
   if (!sideMenu || !menuToggle) {
     return;
@@ -1058,13 +1068,17 @@ checkoutForm?.addEventListener("submit", async (event) => {
       throw new Error(result.error || "PayTR odeme ekrani acilamadi.");
     }
 
-    await renderPaytrFrame(result);
-    setCheckoutMessage("PayTR odeme ekrani acildi. Odemeyi tamamlayinca admin panelinde durum guncellenecek.");
+    setCheckoutMessage("Odeme sayfasi aciliyor...");
+    openPaytrPaymentPage({
+      iframeUrl: result.iframeUrl,
+      merchantOid: result.merchantOid,
+      amount: total
+    });
   } catch (error) {
     resetPaytrFrame();
     setCheckoutMessage(error.message || "PayTR odeme baslatilamadi. Vercel env ve PayTR ayarlarini kontrol et.", true);
   } finally {
-    submitButton.disabled = checkoutForm.dataset.paymentOpen === "true";
+    submitButton.disabled = false;
   }
 });
 
