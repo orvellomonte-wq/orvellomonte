@@ -12,6 +12,11 @@ if (process.env.VERCEL_URL) {
   ALLOWED_ORIGINS.add(`https://${process.env.VERCEL_URL}`);
 }
 
+const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 18;
+const rateLimitBuckets = globalThis.__orvelloPaytrRateLimitBuckets || new Map();
+globalThis.__orvelloPaytrRateLimitBuckets = rateLimitBuckets;
+
 const getServiceAccount = () => {
   if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
     throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON missing.");
@@ -57,7 +62,7 @@ const parseJsonBody = (req) => {
 
 const isAllowedOrigin = (req) => {
   const origin = req.headers.origin;
-  return !origin || ALLOWED_ORIGINS.has(origin);
+  return Boolean(origin && ALLOWED_ORIGINS.has(origin));
 };
 
 const getClientIp = (req) => {
@@ -65,6 +70,27 @@ const getClientIp = (req) => {
   const realIp = String(req.headers["x-real-ip"] || "").trim();
   const socketIp = String(req.socket?.remoteAddress || "").replace(/^::ffff:/, "");
   return (forwardedFor || realIp || socketIp || "127.0.0.1").slice(0, 39);
+};
+
+const isRateLimited = (ip) => {
+  const now = Date.now();
+  const recent = (rateLimitBuckets.get(ip) || []).filter((time) => now - time < RATE_LIMIT_WINDOW_MS);
+
+  if (recent.length >= RATE_LIMIT_MAX_REQUESTS) {
+    rateLimitBuckets.set(ip, recent);
+    return true;
+  }
+
+  recent.push(now);
+  rateLimitBuckets.set(ip, recent);
+
+  for (const [bucketIp, hits] of rateLimitBuckets.entries()) {
+    if (hits.length === 0 || now - hits[hits.length - 1] > RATE_LIMIT_WINDOW_MS) {
+      rateLimitBuckets.delete(bucketIp);
+    }
+  }
+
+  return false;
 };
 
 const cleanText = (value, maxLength) =>
@@ -198,6 +224,13 @@ module.exports = async (req, res) => {
     return;
   }
 
+  const userIp = getClientIp(req);
+
+  if (isRateLimited(userIp)) {
+    sendJson(res, 429, { error: "Cok fazla odeme denemesi. Biraz sonra tekrar dene." });
+    return;
+  }
+
   try {
     const merchantId = process.env.PAYTR_MERCHANT_ID;
     const merchantKey = process.env.PAYTR_MERCHANT_KEY;
@@ -211,7 +244,6 @@ module.exports = async (req, res) => {
     const db = admin.firestore();
     const body = parseJsonBody(req);
     const order = await buildOrder(db, body);
-    const userIp = getClientIp(req);
     const baseUrl = getBaseUrl(req);
     const currency = "TL";
     const testMode = String(process.env.PAYTR_TEST_MODE ?? "1");

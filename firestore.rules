@@ -115,7 +115,7 @@ service cloud.firestore {
     }
 
     match /orders/{orderId} {
-      allow create: if validOrderCreate();
+      allow create: if false;
       allow read, update, delete: if isAdmin();
     }
 
