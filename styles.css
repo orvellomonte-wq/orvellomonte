@@ -1937,6 +1937,7 @@ button:disabled {
 }
 
 .order-payment-badge.is-failed,
+.order-payment-badge.is-amount_mismatch,
 .order-payment-badge.is-token_failed {
   border-color: rgba(255, 155, 137, 0.42);
   color: #ffb0a2;

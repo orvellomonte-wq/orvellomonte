@@ -89,19 +89,39 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const currentPaymentStatus = orderSnapshot.data()?.payment?.status;
+    const orderData = orderSnapshot.data() || {};
+    const currentPaymentStatus = orderData.payment?.status;
 
-    if (currentPaymentStatus === "paid" || currentPaymentStatus === "failed") {
+    if (["paid", "failed", "amount_mismatch"].includes(currentPaymentStatus)) {
       sendText(res, 200, "OK");
       return;
     }
 
     if (status === "success") {
+      const requestedAmount = Number(orderData.payment?.requestedAmount || 0);
+      const paidAmount = Number(totalAmount);
+
+      if (requestedAmount > 0 && paidAmount < requestedAmount) {
+        await orderRef.update({
+          "payment.status": "amount_mismatch",
+          "payment.provider": "paytr",
+          "payment.merchantOid": merchantOid,
+          "payment.totalAmount": paidAmount,
+          "payment.requestedAmount": requestedAmount,
+          "payment.failedReasonMessage": "PayTR total_amount requestedAmount altinda geldi.",
+          "payment.failedAt": admin.firestore.FieldValue.serverTimestamp(),
+          "payment.rawStatus": status,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        sendText(res, 200, "OK");
+        return;
+      }
+
       await orderRef.update({
         "payment.status": "paid",
         "payment.provider": "paytr",
         "payment.merchantOid": merchantOid,
-        "payment.totalAmount": Number(totalAmount),
+        "payment.totalAmount": paidAmount,
         "payment.paidAt": admin.firestore.FieldValue.serverTimestamp(),
         "payment.rawStatus": status,
         updatedAt: admin.firestore.FieldValue.serverTimestamp()

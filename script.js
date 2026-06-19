@@ -1614,6 +1614,7 @@ const renderAdminOrders = (orders) => {
       paid: "Odendi",
       pending: "Odeme Bekliyor",
       failed: "Odeme Basarisiz",
+      amount_mismatch: "Tutar Uyusmadi",
       token_failed: "Odeme Acilamadi",
       manual: "Manuel Siparis"
     }[paymentStatus] || "Odeme Bekliyor";

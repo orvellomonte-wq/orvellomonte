@@ -111,10 +111,16 @@ const normalizeImageUrl = (value) => {
   return imageUrl.slice(0, 180000);
 };
 
-const getBaseUrl = (req) => {
-  const host = req.headers["x-forwarded-host"] || req.headers.host || "orvellomonte.com";
-  const proto = req.headers["x-forwarded-proto"] || "https";
-  return `${proto}://${host}`;
+const getPublicBaseUrl = () => {
+  const baseUrl = String(process.env.PUBLIC_SITE_URL || "https://orvellomonte.com")
+    .trim()
+    .replace(/\/+$/, "");
+
+  if (!baseUrl.startsWith("https://")) {
+    throw new Error("PUBLIC_SITE_URL must start with https://");
+  }
+
+  return baseUrl;
 };
 
 const getActiveDiscount = async (db, discount) => {
@@ -244,9 +250,9 @@ module.exports = async (req, res) => {
     const db = admin.firestore();
     const body = parseJsonBody(req);
     const order = await buildOrder(db, body);
-    const baseUrl = getBaseUrl(req);
+    const baseUrl = getPublicBaseUrl();
     const currency = "TL";
-    const testMode = String(process.env.PAYTR_TEST_MODE ?? "1");
+    const testMode = String(process.env.PAYTR_TEST_MODE ?? "0");
     const noInstallment = String(process.env.PAYTR_NO_INSTALLMENT ?? "0");
     const maxInstallment = String(process.env.PAYTR_MAX_INSTALLMENT ?? "0");
     const userBasket = Buffer
@@ -303,7 +309,7 @@ module.exports = async (req, res) => {
       payment_amount: String(order.paymentAmount),
       paytr_token: paytrToken,
       user_basket: userBasket,
-      debug_on: String(process.env.PAYTR_DEBUG_ON ?? "1"),
+      debug_on: String(process.env.PAYTR_DEBUG_ON ?? "0"),
       no_installment: noInstallment,
       max_installment: maxInstallment,
       user_name: order.customer.fullName,

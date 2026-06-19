@@ -38,11 +38,12 @@ PayTR iFrame API entegrasyonu server-side çalışır. Vercel Project Settings >
 - `PAYTR_MERCHANT_ID`
 - `PAYTR_MERCHANT_KEY`
 - `PAYTR_MERCHANT_SALT`
-- `PAYTR_TEST_MODE=1` test için, canlıda `0`
-- `PAYTR_DEBUG_ON=1` test için, canlıda `0`
+- `PAYTR_TEST_MODE=0` canlı için, testte `1`
+- `PAYTR_DEBUG_ON=0` canlı için, testte `1`
+- `PUBLIC_SITE_URL=https://orvellomonte.com`
 - `FIREBASE_SERVICE_ACCOUNT_JSON`
 
-PayTR panelinde Bildirim URL olarak `https://orvellomonte.com/api/paytr-callback` girilmelidir. Başarı ve hata sayfaları token isteğinde otomatik olarak `odeme-basarili.html` ve `odeme-hata.html` adreslerine ayarlanır.
+PayTR panelinde Bildirim URL olarak `https://orvellomonte.com/api/paytr-callback` girilmelidir. Başarı ve hata sayfaları token isteğinde otomatik olarak `odeme-basarili.html` ve `odeme-hata.html` adreslerine ayarlanır. Canlı moda geçmeden önce PayTR panelinde başarılı test ödemesi tamamlanmalı, domain HTTPS olarak açılmalı ve Bildirim URL dışarıdan POST alabilir durumda olmalıdır. Siparişin kesin sonucu sadece `/api/paytr-callback` üzerinden gelen hash doğrulanmış PayTR bildirimiyle `paid` veya `failed` yapılır; başarı/hata sayfaları sipariş onayı yapmaz.
 
 ## Yayına Alma
 
