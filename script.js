@@ -302,13 +302,32 @@ const readImage = (file) =>
     image.src = url;
   });
 
+const canvasToCompressedBlob = async (canvas, quality) => {
+  const formats = [
+    { type: "image/webp", extension: "webp" },
+    { type: "image/jpeg", extension: "jpg" }
+  ];
+
+  for (const format of formats) {
+    const blob = await new Promise((resolve) => {
+      canvas.toBlob(resolve, format.type, quality);
+    });
+
+    if (blob) {
+      return { blob, extension: format.extension };
+    }
+  }
+
+  throw new Error("Gorsel sikistirilamadi. Farkli bir JPG veya PNG dosyasi dene.");
+};
+
 const compressImage = async (file, options = {}) => {
   const image = await readImage(file);
-  const maxSide = options.maxSide || 520;
-  const quality = options.quality || 0.52;
+  const maxSide = options.maxSide || 480;
+  const quality = options.quality || 0.46;
   const ratio = Math.min(1, maxSide / Math.max(image.width, image.height));
-  const width = Math.round(image.width * ratio);
-  const height = Math.round(image.height * ratio);
+  const width = Math.max(1, Math.round(image.width * ratio));
+  const height = Math.max(1, Math.round(image.height * ratio));
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
 
@@ -318,25 +337,20 @@ const compressImage = async (file, options = {}) => {
   context.fillRect(0, 0, width, height);
   context.drawImage(image, 0, 0, width, height);
 
-  const blob = await new Promise((resolve) => {
-    canvas.toBlob(resolve, "image/webp", quality);
-  });
-
-  if (!blob) {
-    return file;
-  }
-
+  const { blob, extension } = await canvasToCompressedBlob(canvas, quality);
   const baseName = slugify(file.name.replace(/\.[^.]+$/, "")) || "product-image";
-  return new File([blob], `${baseName}.webp`, { type: "image/webp" });
+  return new File([blob], `${baseName}.${extension}`, { type: blob.type || `image/${extension}` });
 };
 
 const compressImageToDataUrl = async (file, targetLength, onStatus) => {
   const steps = [
-    { maxSide: 520, quality: 0.52 },
-    { maxSide: 460, quality: 0.48 },
-    { maxSide: 400, quality: 0.44 },
-    { maxSide: 340, quality: 0.4 },
-    { maxSide: 300, quality: 0.36 }
+    { maxSide: 520, quality: 0.5 },
+    { maxSide: 460, quality: 0.44 },
+    { maxSide: 380, quality: 0.38 },
+    { maxSide: 320, quality: 0.32 },
+    { maxSide: 260, quality: 0.28 },
+    { maxSide: 220, quality: 0.24 },
+    { maxSide: 180, quality: 0.2 }
   ];
 
   let bestDataUrl = "";
@@ -366,8 +380,8 @@ const fileToDataUrl = (file) =>
 
 const prepareProductImages = async (files, onStatus) => {
   const imageUrls = [];
-  const totalTargetBytes = 390000;
-  const targetPerImage = Math.max(38000, Math.floor(totalTargetBytes / Math.max(files.length, 1)));
+  const totalTargetBytes = 520000;
+  const targetPerImage = Math.max(30000, Math.floor(totalTargetBytes / Math.max(files.length, 1)));
 
   for (let index = 0; index < files.length; index += 1) {
     onStatus(`Görsel ${index + 1}/${files.length} sıkıştırılıyor...`);
@@ -2200,8 +2214,8 @@ const setupAdminPanel = () => {
         sizes,
         tone,
         imageUrls,
-        images: imageUrls,
-        imageStorage: "firestore-base64",
+        images: [],
+        imageStorage: "firestore-base64-compressed",
         category: targetCategory,
         active: true,
         slug: productSlug,
