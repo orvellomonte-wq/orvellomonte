@@ -90,6 +90,7 @@ const adminOnlySections = document.querySelectorAll("[data-admin-only]");
 const pageCategory = document.body.dataset.category;
 const productGrid = document.querySelector("[data-product-grid]");
 const productMarquee = document.querySelector("[data-product-marquee]");
+const productMarqueeWindow = productMarquee?.closest(".product-marquee-window");
 const adminPanel = document.querySelector(".admin-product-panel");
 const adminToggleButton = document.querySelector(".admin-toggle-button");
 const adminSeedProductsButton = document.querySelector(".admin-seed-products-button");
@@ -1630,9 +1631,7 @@ const renderProductMarquee = (products) => {
     return;
   }
 
-  const marqueeProducts = [...visibleProducts, ...visibleProducts, ...visibleProducts];
-
-  productMarquee.innerHTML = marqueeProducts.map((product) => {
+  productMarquee.innerHTML = visibleProducts.map((product) => {
     const imageUrl = getProductImage(product);
     const categoryMeta = {
       men: { name: "Erkek", href: "erkek.html" },
@@ -1653,6 +1652,67 @@ const renderProductMarquee = (products) => {
       </a>
     `;
   }).join("");
+};
+
+const setupProductMarqueeDrag = () => {
+  if (!productMarqueeWindow) {
+    return;
+  }
+
+  let isDragging = false;
+  let suppressClick = false;
+  let startX = 0;
+  let startScrollLeft = 0;
+
+  productMarqueeWindow.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) {
+      return;
+    }
+
+    isDragging = true;
+    suppressClick = false;
+    startX = event.clientX;
+    startScrollLeft = productMarqueeWindow.scrollLeft;
+    productMarqueeWindow.classList.add("is-dragging");
+    productMarqueeWindow.setPointerCapture?.(event.pointerId);
+  });
+
+  productMarqueeWindow.addEventListener("pointermove", (event) => {
+    if (!isDragging) {
+      return;
+    }
+
+    const deltaX = event.clientX - startX;
+
+    if (Math.abs(deltaX) > 5) {
+      suppressClick = true;
+    }
+
+    productMarqueeWindow.scrollLeft = startScrollLeft - deltaX;
+    event.preventDefault();
+  });
+
+  const stopDragging = (event) => {
+    if (!isDragging) {
+      return;
+    }
+
+    isDragging = false;
+    productMarqueeWindow.classList.remove("is-dragging");
+    productMarqueeWindow.releasePointerCapture?.(event.pointerId);
+  };
+
+  productMarqueeWindow.addEventListener("pointerup", stopDragging);
+  productMarqueeWindow.addEventListener("pointercancel", stopDragging);
+  productMarqueeWindow.addEventListener("click", (event) => {
+    if (!suppressClick) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    suppressClick = false;
+  }, true);
 };
 
 const loadFirestoreProducts = () => {
@@ -2498,5 +2558,6 @@ renderCart();
 setupAdminPanel();
 setupDiscountPanel();
 setupSubscriberMessagePanel();
+setupProductMarqueeDrag();
 loadPolicyContent();
 loadFirestoreProducts();

@@ -563,7 +563,37 @@ button:disabled {
 
 .product-marquee-window {
   position: relative;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-padding-inline: clamp(18px, 5vw, 72px);
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+}
+
+.product-marquee-window:active {
+  cursor: grabbing;
+}
+
+.product-marquee-window.is-dragging {
+  user-select: none;
+}
+
+.product-marquee-window.is-dragging .promo-product-card {
+  pointer-events: none;
+}
+
+.product-marquee-window::-webkit-scrollbar {
+  height: 8px;
+}
+
+.product-marquee-window::-webkit-scrollbar-track {
+  background: rgba(247, 241, 232, 0.08);
+}
+
+.product-marquee-window::-webkit-scrollbar-thumb {
+  background: rgba(247, 241, 232, 0.28);
+  border-radius: 999px;
 }
 
 .product-marquee-window::before,
@@ -592,11 +622,6 @@ button:disabled {
   width: max-content;
   gap: clamp(32px, 6vw, 96px);
   padding: 0 clamp(18px, 5vw, 72px);
-  animation: productMarquee 42s linear infinite;
-}
-
-.product-marquee-track:hover {
-  animation-play-state: paused;
 }
 
 .promo-product-card {
@@ -612,6 +637,7 @@ button:disabled {
   color: var(--ink);
   background: transparent;
   box-shadow: none;
+  scroll-snap-align: start;
 }
 
 .promo-product-visual {
@@ -3330,7 +3356,6 @@ button:disabled {
   .product-marquee-track {
     gap: 24px;
     padding: 0 16px;
-    animation-duration: 34s;
   }
 
   .promo-product-card {
