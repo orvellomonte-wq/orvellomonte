@@ -303,6 +303,10 @@ const PRODUCT_IMAGE_EXTENSIONS = new Set([
   "tiff"
 ]);
 
+const HEIC_IMAGE_EXTENSIONS = new Set(["heic", "heif"]);
+const HEIC_CONVERTER_URL = "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js";
+let heicConverterPromise = null;
+
 const getFileExtension = (file) =>
   String(file?.name || "")
     .split(".")
@@ -312,6 +316,55 @@ const getFileExtension = (file) =>
 
 const isProductImageFile = (file) =>
   Boolean(file?.type?.startsWith("image/") || PRODUCT_IMAGE_EXTENSIONS.has(getFileExtension(file)));
+
+const isHeicImageFile = (file) => {
+  const type = String(file?.type || "").toLowerCase();
+  return HEIC_IMAGE_EXTENSIONS.has(getFileExtension(file)) || type.includes("heic") || type.includes("heif");
+};
+
+const loadHeicConverter = () => {
+  if (window.heic2any) {
+    return Promise.resolve(window.heic2any);
+  }
+
+  if (!heicConverterPromise) {
+    heicConverterPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = HEIC_CONVERTER_URL;
+      script.async = true;
+      script.onload = () => {
+        if (window.heic2any) {
+          resolve(window.heic2any);
+          return;
+        }
+
+        reject(new Error("HEIC donusturucu yuklenemedi."));
+      };
+      script.onerror = () => reject(new Error("HEIC donusturucu yuklenemedi."));
+      document.head.appendChild(script);
+    });
+  }
+
+  return heicConverterPromise;
+};
+
+const convertHeicToJpeg = async (file, onStatus) => {
+  if (!isHeicImageFile(file)) {
+    return file;
+  }
+
+  onStatus?.("HEIC/HEIF fotoğraf JPEG'e çevriliyor...");
+  const heic2any = await loadHeicConverter();
+  const converted = await heic2any({
+    blob: file,
+    toType: "image/jpeg",
+    quality: 0.82
+  });
+  const blob = Array.isArray(converted) ? converted[0] : converted;
+  const baseName = slugify(file.name.replace(/\.[^.]+$/, "")) || "product-image";
+
+  return new File([blob], `${baseName}.jpg`, { type: "image/jpeg" });
+};
 
 const readImageWithElement = (file) =>
   new Promise((resolve, reject) => {
@@ -361,7 +414,8 @@ const canvasToCompressedBlob = async (canvas, quality) => {
 };
 
 const compressImage = async (file, options = {}) => {
-  const image = await readImage(file);
+  const sourceFile = await convertHeicToJpeg(file);
+  const image = await readImage(sourceFile);
   const maxSide = options.maxSide || 480;
   const quality = options.quality || 0.46;
   const ratio = Math.min(1, maxSide / Math.max(image.width, image.height));
@@ -378,11 +432,12 @@ const compressImage = async (file, options = {}) => {
   image.close?.();
 
   const { blob, extension } = await canvasToCompressedBlob(canvas, quality);
-  const baseName = slugify(file.name.replace(/\.[^.]+$/, "")) || "product-image";
+  const baseName = slugify(sourceFile.name.replace(/\.[^.]+$/, "")) || "product-image";
   return new File([blob], `${baseName}.${extension}`, { type: blob.type || `image/${extension}` });
 };
 
 const compressImageToDataUrl = async (file, targetLength, onStatus) => {
+  const sourceFile = await convertHeicToJpeg(file, onStatus);
   const steps = [
     { maxSide: 520, quality: 0.5 },
     { maxSide: 460, quality: 0.44 },
@@ -396,7 +451,7 @@ const compressImageToDataUrl = async (file, targetLength, onStatus) => {
   let bestDataUrl = "";
 
   for (const step of steps) {
-    const compressedFile = await compressImage(file, step);
+    const compressedFile = await compressImage(sourceFile, step);
     const dataUrl = await fileToDataUrl(compressedFile);
     bestDataUrl = dataUrl;
 
