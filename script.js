@@ -92,11 +92,10 @@ const productGrid = document.querySelector("[data-product-grid]");
 const productMarquee = document.querySelector("[data-product-marquee]");
 const productMarqueeWindow = productMarquee?.closest(".product-marquee-window");
 const adminPanel = document.querySelector(".admin-product-panel");
-const adminProductsSection = document.querySelector(".admin-products-section");
 const adminToggleButton = document.querySelector(".admin-toggle-button");
-const adminShowProductsButtons = document.querySelectorAll("[data-show-admin-products]");
 const adminSeedProductsButton = document.querySelector(".admin-seed-products-button");
 const adminForm = document.querySelector(".admin-product-form");
+const adminHomeFeatureToggle = document.querySelector("[data-home-feature-toggle]");
 const adminMessage = document.querySelector(".admin-message");
 const adminDiscountToggleButton = document.querySelector(".admin-discount-toggle-button");
 const adminDiscountForm = document.querySelector(".admin-discount-form");
@@ -1526,6 +1525,7 @@ const resetAdminFormForCreate = () => {
   adminSizeRows = [];
   clearAdminImagePreview();
   renderAdminSizeStocks();
+  setHomeFeatureEnabled(false);
   setAdminMode("create");
   setAdminMessage("");
 };
@@ -1562,25 +1562,15 @@ const openAdminForm = () => {
   setAdminMessage("");
 };
 
-const showAdminProductsOnPage = () => {
-  if (!isAdminUser(currentUser)) {
-    setAdminMessage("Bu işlem için admin hesabıyla giriş yapmalısın.", true);
+const setHomeFeatureEnabled = (enabled) => {
+  if (!adminForm?.elements.homeFeatured || !adminHomeFeatureToggle) {
     return;
   }
 
-  if (!adminProductsSection) {
-    return;
-  }
-
-  closeAdminForm();
-  adminProductsSection.hidden = false;
-  adminProductsSection.classList.add("is-highlighted");
-  adminProductsSection.scrollIntoView({ behavior: "smooth", block: "start" });
-  setAdminMessage("İlanlar bu sayfada gösteriliyor.");
-
-  window.setTimeout(() => {
-    adminProductsSection.classList.remove("is-highlighted");
-  }, 1600);
+  adminForm.elements.homeFeatured.value = enabled ? "true" : "false";
+  adminHomeFeatureToggle.classList.toggle("is-active", enabled);
+  adminHomeFeatureToggle.setAttribute("aria-pressed", enabled ? "true" : "false");
+  adminHomeFeatureToggle.textContent = enabled ? "Anasayfadan Kaldır" : "Anasayfada Göster";
 };
 
 const renderFirebaseProduct = (product) => {
@@ -1648,9 +1638,21 @@ const renderProductMarquee = (products) => {
     return;
   }
 
-  const visibleProducts = products.filter((product) => product.active !== false).slice(0, 10);
+  const visibleProducts = products
+    .filter((product) => product.active !== false && product.homeFeatured === true)
+    .slice(0, 10);
 
   if (visibleProducts.length === 0) {
+    productMarquee.innerHTML = `
+      <article class="promo-product-card">
+        <div class="promo-product-visual"></div>
+        <div class="promo-product-info">
+          <span>Anasayfa</span>
+          <strong>Öne çıkarılan ürün yok</strong>
+          <small>Admin panelden ürün seç</small>
+        </div>
+      </article>
+    `;
     return;
   }
 
@@ -2246,6 +2248,7 @@ const editProduct = (productId) => {
   }));
   renderAdminSizeStocks();
   renderExistingAdminImagePreview(existingAdminImages);
+  setHomeFeatureEnabled(product.homeFeatured === true);
   setAdminMode("edit", product.name || "Ürün");
   openAdminForm();
   setAdminMessage(`${product.name || "Ürün"} düzenleniyor. Yeni görsel seçmezsen mevcut görseller korunur.`);
@@ -2290,8 +2293,10 @@ const setupAdminPanel = () => {
 
   adminSeedProductsButton?.addEventListener("click", seedDemoProducts);
 
-  adminShowProductsButtons.forEach((button) => {
-    button.addEventListener("click", showAdminProductsOnPage);
+  adminHomeFeatureToggle?.addEventListener("click", () => {
+    const enabled = adminForm.elements.homeFeatured?.value === "true";
+    setHomeFeatureEnabled(!enabled);
+    setAdminMessage(!enabled ? "Ürün anasayfada görünecek." : "Ürün anasayfadan kaldırılacak.");
   });
 
   document.querySelectorAll("[data-admin-close]").forEach((button) => {
@@ -2352,6 +2357,7 @@ const setupAdminPanel = () => {
     const stock = Object.values(sizeStocks).reduce((total, sizeStock) => total + sizeStock, 0);
     const existingProduct = currentEditId ? currentProducts.find((item) => item.id === currentEditId) : null;
     const tone = existingProduct?.tone || "hoodie";
+    const homeFeatured = formData.get("homeFeatured") === "true";
     const imageFiles = [...adminForm.elements.images.files];
 
     if (!targetCategory || !name || !description || !price || price < 1 || sizes.length === 0 || hasInvalidSizeStock) {
@@ -2399,6 +2405,7 @@ const setupAdminPanel = () => {
         images: [],
         imageStorage: "firestore-base64-compressed",
         category: targetCategory,
+        homeFeatured,
         active: true,
         slug: productSlug,
         updatedAt: serverTimestamp(),

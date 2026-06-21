@@ -67,7 +67,6 @@
 
       <div class="admin-action-row">
         <button class="admin-toggle-button" type="button">Ürün Ekle</button>
-        <button class="admin-show-products-button" type="button" data-show-admin-products>İlanları Göster</button>
         <button class="admin-seed-products-button" type="button">10 Demo Ürün Ekle</button>
         <button class="admin-discount-toggle-button" type="button">&#304;ndirim Kodu</button>
       </div>
@@ -78,10 +77,7 @@
             <p class="kicker">Yeni ürün</p>
             <h3>Drop'a ürün ekle</h3>
           </div>
-          <div class="admin-form-head-actions">
-            <button class="admin-form-products-button" type="button" data-show-admin-products>İlanları Göster</button>
-            <button class="admin-close-button" type="button" aria-label="Ürün panelini kapat" data-admin-close>×</button>
-          </div>
+          <button class="admin-close-button" type="button" aria-label="Ürün panelini kapat" data-admin-close>×</button>
         </div>
         <fieldset class="admin-category-picker">
           <legend>Hangi sayfada yayınlansın?</legend>
@@ -109,6 +105,14 @@
             </label>
           </div>
         </fieldset>
+        <div class="admin-home-feature">
+          <div>
+            <span>Anasayfa ilanı</span>
+            <small>Buton aktifse ürün anasayfadaki kayan ürün alanında görünür.</small>
+          </div>
+          <input name="homeFeatured" type="hidden" value="false">
+          <button type="button" data-home-feature-toggle aria-pressed="false">Anasayfada Göster</button>
+        </div>
         <label>
           <span>Ürün adı</span>
           <input name="name" type="text" placeholder="Oversize Zip Hoodie" required>
