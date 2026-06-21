@@ -92,7 +92,9 @@ const productGrid = document.querySelector("[data-product-grid]");
 const productMarquee = document.querySelector("[data-product-marquee]");
 const productMarqueeWindow = productMarquee?.closest(".product-marquee-window");
 const adminPanel = document.querySelector(".admin-product-panel");
+const adminProductsSection = document.querySelector(".admin-products-section");
 const adminToggleButton = document.querySelector(".admin-toggle-button");
+const adminShowProductsButtons = document.querySelectorAll("[data-show-admin-products]");
 const adminSeedProductsButton = document.querySelector(".admin-seed-products-button");
 const adminForm = document.querySelector(".admin-product-form");
 const adminMessage = document.querySelector(".admin-message");
@@ -1560,6 +1562,27 @@ const openAdminForm = () => {
   setAdminMessage("");
 };
 
+const showAdminProductsOnPage = () => {
+  if (!isAdminUser(currentUser)) {
+    setAdminMessage("Bu işlem için admin hesabıyla giriş yapmalısın.", true);
+    return;
+  }
+
+  if (!adminProductsSection) {
+    return;
+  }
+
+  closeAdminForm();
+  adminProductsSection.hidden = false;
+  adminProductsSection.classList.add("is-highlighted");
+  adminProductsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+  setAdminMessage("İlanlar bu sayfada gösteriliyor.");
+
+  window.setTimeout(() => {
+    adminProductsSection.classList.remove("is-highlighted");
+  }, 1600);
+};
+
 const renderFirebaseProduct = (product) => {
   const imageUrl = getProductImage(product);
   const imageUrls = product.imageUrls || product.images || [];
@@ -2266,6 +2289,10 @@ const setupAdminPanel = () => {
   });
 
   adminSeedProductsButton?.addEventListener("click", seedDemoProducts);
+
+  adminShowProductsButtons.forEach((button) => {
+    button.addEventListener("click", showAdminProductsOnPage);
+  });
 
   document.querySelectorAll("[data-admin-close]").forEach((button) => {
     button.addEventListener("click", closeAdminForm);

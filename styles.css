@@ -1167,6 +1167,13 @@ button:disabled {
 
 .admin-products-section {
   border-top: 1px solid var(--line);
+  scroll-margin-top: 82px;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.admin-products-section.is-highlighted {
+  background: rgba(154, 214, 142, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(154, 214, 142, 0.32);
 }
 
 .admin-product-panel[hidden] {
@@ -1200,6 +1207,7 @@ button:disabled {
 }
 
 .admin-toggle-button,
+.admin-show-products-button,
 .admin-seed-products-button,
 .admin-discount-toggle-button {
   min-height: 46px;
@@ -1212,6 +1220,12 @@ button:disabled {
   font-weight: 900;
   text-transform: uppercase;
   box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+}
+
+.admin-show-products-button {
+  border: 1px solid rgba(154, 214, 142, 0.52);
+  color: #dff5d8;
+  background: rgba(154, 214, 142, 0.14);
 }
 
 .admin-seed-products-button {
@@ -1379,6 +1393,27 @@ button:disabled {
   font-size: clamp(2rem, 6vw, 3.6rem);
   line-height: 0.92;
   text-transform: uppercase;
+}
+
+.admin-form-head-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-form-products-button {
+  min-height: 40px;
+  border: 1px solid rgba(154, 214, 142, 0.52);
+  border-radius: 999px;
+  padding: 0 13px;
+  color: #dff5d8;
+  cursor: pointer;
+  background: rgba(154, 214, 142, 0.14);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .admin-close-button {
@@ -3200,6 +3235,7 @@ button:disabled {
   }
 
   .admin-toggle-button,
+  .admin-show-products-button,
   .admin-seed-products-button,
   .admin-discount-toggle-button {
     width: 100%;
@@ -3219,6 +3255,15 @@ button:disabled {
   .admin-description-field,
   .admin-size-builder {
     grid-column: 1 / -1;
+  }
+
+  .admin-form-head-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .admin-form-products-button {
+    flex: 1 1 auto;
   }
 
   .admin-image-preview {
