@@ -101,7 +101,7 @@ service cloud.firestore {
         && request.resource.data.imageUrls.size() >= 1
         && request.resource.data.imageUrls.size() <= 8
         && request.resource.data.images is list
-        && request.resource.data.images.size() >= 1
+        && request.resource.data.images.size() >= 0
         && request.resource.data.images.size() <= 8
         && request.resource.data.category in ["women", "men", "accessories"]
         && request.resource.data.active is bool
