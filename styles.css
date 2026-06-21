@@ -698,7 +698,7 @@ button:disabled {
   padding: 132px clamp(18px, 5vw, 72px) 58px;
   background:
     linear-gradient(90deg, rgba(13, 13, 13, 0.92), rgba(13, 13, 13, 0.5)),
-    url("assets/hero-streetwear.png") center / cover;
+    url("assets/orvello-drop-hero.jpg") center / cover;
 }
 
 .page-hero-content {
