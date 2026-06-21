@@ -286,7 +286,34 @@ const slugify = (value) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 
-const readImage = (file) =>
+const PRODUCT_IMAGE_EXTENSIONS = new Set([
+  "jpg",
+  "jpeg",
+  "jfif",
+  "pjpeg",
+  "pjp",
+  "png",
+  "webp",
+  "gif",
+  "bmp",
+  "avif",
+  "heic",
+  "heif",
+  "tif",
+  "tiff"
+]);
+
+const getFileExtension = (file) =>
+  String(file?.name || "")
+    .split(".")
+    .pop()
+    .toLowerCase()
+    .trim();
+
+const isProductImageFile = (file) =>
+  Boolean(file?.type?.startsWith("image/") || PRODUCT_IMAGE_EXTENSIONS.has(getFileExtension(file)));
+
+const readImageWithElement = (file) =>
   new Promise((resolve, reject) => {
     const image = new Image();
     const url = URL.createObjectURL(file);
@@ -297,10 +324,22 @@ const readImage = (file) =>
     };
     image.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error("Görsel okunamadı."));
+      reject(new Error("Fotoğraf tarayıcıda okunamadı. HEIC/HEIF ise telefonda JPG olarak kaydedip tekrar dene."));
     };
     image.src = url;
   });
+
+const readImage = async (file) => {
+  if ("createImageBitmap" in window) {
+    try {
+      return await createImageBitmap(file);
+    } catch (error) {
+      // Some mobile formats fail here but still decode through an object URL.
+    }
+  }
+
+  return readImageWithElement(file);
+};
 
 const canvasToCompressedBlob = async (canvas, quality) => {
   const formats = [
@@ -336,6 +375,7 @@ const compressImage = async (file, options = {}) => {
   context.fillStyle = "#111";
   context.fillRect(0, 0, width, height);
   context.drawImage(image, 0, 0, width, height);
+  image.close?.();
 
   const { blob, extension } = await canvasToCompressedBlob(canvas, quality);
   const baseName = slugify(file.name.replace(/\.[^.]+$/, "")) || "product-image";
@@ -2187,8 +2227,8 @@ const setupAdminPanel = () => {
       return;
     }
 
-    if (imageFiles.some((file) => !file.type.startsWith("image/"))) {
-      setAdminMessage("Sadece görsel dosyaları yükleyebilirsin.", true);
+    if (imageFiles.some((file) => !isProductImageFile(file))) {
+      setAdminMessage("Sadece fotoğraf dosyaları yükleyebilirsin.", true);
       return;
     }
 
