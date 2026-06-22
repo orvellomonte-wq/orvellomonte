@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ürün | Orvello Monte</title>
+  <meta name="description" content="Orvello Monte ürün detay sayfası.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-product-detail-page="true">
+  <header class="site-header">
+    <button class="menu-toggle" type="button" aria-label="Menüyü aç" aria-controls="side-menu" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <a class="brand" href="index.html" aria-label="Orvello Monte ana sayfa">ORVELLO MONTE</a>
+    <div class="header-actions">
+      <button class="account-button" type="button" aria-haspopup="dialog">Hesabım</button>
+      <button class="cart-link" type="button" aria-haspopup="dialog" aria-label="Sepeti aç">Cart <span>0</span></button>
+    </div>
+  </header>
+
+  <aside class="side-menu" id="side-menu" aria-hidden="true">
+    <div class="side-menu-backdrop" data-close-menu></div>
+    <nav class="side-menu-panel" aria-label="Orvello Monte menü">
+      <div class="side-menu-head">
+        <span>ORVELLO MONTE</span>
+        <button class="side-menu-close" type="button" aria-label="Menüyü kapat" data-close-menu>×</button>
+      </div>
+      <a class="side-menu-link" href="kadın.html">Kadın</a>
+      <a class="side-menu-link" href="erkek.html">Erkek</a>
+      <a class="side-menu-link" href="aksesuar.html">Aksesuar</a>
+      <a class="side-menu-link" href="politikalar.html">Politikalar</a>
+      <a class="side-menu-link" href="admin.html" data-admin-link hidden>Admin</a>
+      <a class="side-menu-link" href="siparisler.html" data-admin-link hidden>Siparişler</a>
+      <a class="side-menu-link" href="iletisim.html">İletişim</a>
+    </nav>
+  </aside>
+
+  <main>
+    <section class="product-detail-shell" data-product-detail>
+      <div class="product-detail-empty">
+        <p class="kicker">Ürün</p>
+        <h1>Ürün yükleniyor...</h1>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>© 2026 Orvello Monte</span>
+    <span>Product Detail</span>
+  </footer>
+
+  <div class="auth-modal" aria-hidden="true">
+    <div class="auth-backdrop" data-close-auth></div>
+    <section class="auth-panel" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+      <button class="auth-close" type="button" aria-label="Paneli kapat" data-close-auth>×</button>
+      <p class="kicker">Orvello Account</p>
+      <h2 id="auth-title">Giriş Yap</h2>
+      <div class="auth-tabs" role="tablist" aria-label="Hesap işlemleri">
+        <button class="active" type="button" data-auth-mode="login">Giriş</button>
+        <button type="button" data-auth-mode="register">Kayıt</button>
+      </div>
+      <form class="auth-form">
+        <label class="auth-field auth-name-field" for="auth-name"><span>Ad Soyad</span><input id="auth-name" type="text" autocomplete="name" placeholder="Orvello Monte"></label>
+        <label class="auth-field" for="auth-email"><span>E-posta</span><input id="auth-email" type="email" autocomplete="email" placeholder="mail@ornek.com" required></label>
+        <label class="auth-field" for="auth-password"><span>Şifre</span><input id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="En az 6 karakter" required></label>
+        <button class="auth-submit" type="submit">Giriş Yap</button>
+        <p class="auth-message" role="status" aria-live="polite"></p>
+      </form>
+      <div class="user-panel" hidden>
+        <span class="user-badge">Aktif hesap</span>
+        <strong class="user-name"></strong>
+        <p class="user-email"></p>
+        <button class="sign-out-button" type="button">Çıkış Yap</button>
+      </div>
+    </section>
+  </div>
+
+  <aside class="cart-drawer" aria-hidden="true">
+    <div class="cart-backdrop" data-close-cart></div>
+    <section class="cart-panel" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+      <div class="cart-head">
+        <div><p class="kicker">Your Bag</p><h2 id="cart-title">Sepet</h2></div>
+        <button class="cart-close" type="button" aria-label="Sepeti kapat" data-close-cart>×</button>
+      </div>
+      <div class="cart-empty">
+        <strong>Sepetin boş.</strong>
+        <p>Kadın, erkek veya aksesuar koleksiyonundan favori parçalarını ekleyerek başlayabilirsin.</p>
+        <a class="button primary" href="index.html#categories" data-close-cart>Koleksiyonlara Dön</a>
+      </div>
+      <div class="cart-items" aria-live="polite"></div>
+      <footer class="cart-summary">
+        <div class="cart-summary-row"><span>Ara toplam</span><strong class="cart-subtotal">₺0</strong></div>
+        <div class="cart-summary-note">Kargo ve ödeme bilgileri ödeme adımında hesaplanır.</div>
+        <button class="checkout-button" type="button">Ödemeye Geç</button>
+        <button class="clear-cart-button" type="button">Sepeti Temizle</button>
+      </footer>
+    </section>
+  </aside>
+
+  <div class="checkout-modal" aria-hidden="true">
+    <div class="checkout-backdrop" data-close-checkout></div>
+    <section class="checkout-panel" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+      <button class="checkout-close" type="button" aria-label="Satın alma panelini kapat" data-close-checkout>×</button>
+      <p class="kicker">Checkout</p>
+      <h2 id="checkout-title">Satın Al</h2>
+      <form class="checkout-form">
+        <label class="checkout-field">
+          <span>Ad Soyad</span>
+          <input name="fullName" type="text" autocomplete="name" placeholder="Adın ve soyadın" required>
+        </label>
+        <label class="checkout-field">
+          <span>Telefon</span>
+          <input name="phone" type="tel" autocomplete="tel" placeholder="05xx xxx xx xx" required>
+        </label>
+        <label class="checkout-field checkout-address-field">
+          <span>Adres</span>
+          <textarea name="address" autocomplete="street-address" placeholder="Açık adresini yaz" required></textarea>
+        </label>
+        <div class="checkout-discount">
+          <label class="checkout-field">
+            <span>İndirim Kodu</span>
+            <input name="discountCode" type="text" autocomplete="off" placeholder="ORVELLO10">
+          </label>
+          <button class="discount-apply-button" type="button">Uygula</button>
+        </div>
+        <div class="checkout-order-summary" aria-live="polite"></div>
+        <button class="checkout-submit" type="submit">PayTR ile Öde</button>
+        <p class="checkout-message" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+  </div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>

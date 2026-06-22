@@ -89,6 +89,7 @@ const adminLock = document.querySelector("[data-admin-lock]");
 const adminOnlySections = document.querySelectorAll("[data-admin-only]");
 const pageCategory = document.body.dataset.category;
 const productGrid = document.querySelector("[data-product-grid]");
+const productDetail = document.querySelector("[data-product-detail]");
 const productMarquee = document.querySelector("[data-product-marquee]");
 const productMarqueeWindow = productMarquee?.closest(".product-marquee-window");
 const adminPanel = document.querySelector(".admin-product-panel");
@@ -180,6 +181,14 @@ const getProductTone = (id) => {
 
 const getProductImage = (product) => product.imageUrls?.[0] || product.images?.[0] || "";
 
+const getProductDetailUrl = (productId) => `urun.html?id=${encodeURIComponent(productId)}`;
+
+const getCategoryMeta = (category) => ({
+  men: { name: "Erkek", href: "erkek.html" },
+  women: { name: "Kadın", href: "kadın.html" },
+  accessories: { name: "Aksesuar", href: "aksesuar.html" }
+}[category] || { name: "Kadın", href: "kadın.html" });
+
 const escapeHtml = (value) =>
   String(value)
     .replaceAll("&", "&amp;")
@@ -231,8 +240,8 @@ const setAdminSubscriberMessage = (message, isError = false) => {
 };
 
 const setProductGalleryImage = (galleryButton) => {
-  const productCard = galleryButton?.closest(".product-card");
-  const mainImage = productCard?.querySelector(".product-photo img");
+  const productCard = galleryButton?.closest(".product-card, .product-detail");
+  const mainImage = productCard?.querySelector(".product-detail-main-image img, .product-photo img");
 
   if (!mainImage || !galleryButton?.dataset.galleryImage || mainImage.src === galleryButton.dataset.galleryImage) {
     return;
@@ -945,6 +954,8 @@ document.addEventListener("click", (event) => {
   const deleteOrderButton = event.target.closest("[data-order-delete]");
   const policyEditButton = event.target.closest("[data-policy-edit]");
   const policyCancelButton = event.target.closest("[data-policy-cancel]");
+  const detailLinkCard = event.target.closest("[data-product-detail-link]");
+  const isInteractiveProductClick = event.target.closest("a, button, input, textarea, select, label");
 
   if (policyEditButton) {
     openPolicyEditor(policyEditButton.dataset.policyEdit);
@@ -991,7 +1002,7 @@ document.addEventListener("click", (event) => {
   }
 
   if (sizeOptionButton) {
-    const productCard = sizeOptionButton.closest(".product-card");
+    const productCard = sizeOptionButton.closest(".product-card, .product-detail");
 
     productCard?.querySelectorAll("[data-size-option]").forEach((button) => {
       button.classList.toggle("active", button === sizeOptionButton);
@@ -1000,7 +1011,7 @@ document.addEventListener("click", (event) => {
   }
 
   if (productButton) {
-    const productCard = productButton.closest(".product-card");
+    const productCard = productButton.closest(".product-card, .product-detail");
     const selectedSize = productCard?.querySelector("[data-size-option].active")?.dataset.sizeOption || "Standart";
     const baseId = productButton.dataset.id;
     const originalText = productButton.textContent;
@@ -1039,6 +1050,11 @@ document.addEventListener("click", (event) => {
     window.setTimeout(() => {
       productButton.textContent = originalText;
     }, 1200);
+    return;
+  }
+
+  if (detailLinkCard && !isInteractiveProductClick) {
+    window.location.href = detailLinkCard.dataset.productDetailLink;
   }
 });
 
@@ -1584,7 +1600,7 @@ const renderFirebaseProduct = (product) => {
   const firstAvailableSize = sizes.find((size) => Number(sizeStocks[size] ?? stock) > 0) || sizes[0];
 
   return `
-  <article class="product-card" data-firestore-product="${escapeHtml(product.id)}">
+  <article class="product-card" data-firestore-product="${escapeHtml(product.id)}" data-product-detail-link="${escapeHtml(getProductDetailUrl(product.id))}">
     ${isAdmin ? `
       <div class="product-admin-actions" aria-label="${escapeHtml(product.name)} admin işlemleri">
         <button type="button" data-admin-edit-product="${escapeHtml(product.id)}">Düzenle</button>
@@ -1633,6 +1649,87 @@ const renderFirestoreProducts = (products) => {
   startProductGalleryRotation();
 };
 
+const renderProductDetail = (products) => {
+  if (!productDetail) {
+    return;
+  }
+
+  const productId = new URLSearchParams(window.location.search).get("id");
+  const product = products.find((item) => item.id === productId);
+
+  if (!productId) {
+    productDetail.innerHTML = `
+      <div class="product-detail-empty">
+        <p class="kicker">Ürün</p>
+        <h1>Ürün seçilmedi.</h1>
+        <a class="button primary" href="index.html#categories">Koleksiyonlara Dön</a>
+      </div>
+    `;
+    return;
+  }
+
+  if (!product) {
+    productDetail.innerHTML = `
+      <div class="product-detail-empty">
+        <p class="kicker">Ürün</p>
+        <h1>Ürün bulunamadı.</h1>
+        <a class="button primary" href="index.html#categories">Koleksiyonlara Dön</a>
+      </div>
+    `;
+    return;
+  }
+
+  const imageUrl = getProductImage(product);
+  const imageUrls = product.imageUrls?.length ? product.imageUrls : product.images || [];
+  const sizeStocks = product.sizeStocks || {};
+  const sizes = product.sizes?.length ? product.sizes : Object.keys(sizeStocks).length ? Object.keys(sizeStocks) : ["Standart"];
+  const stock = Number(product.stock || 0);
+  const isOutOfStock = stock <= 0;
+  const firstAvailableSize = sizes.find((size) => Number(sizeStocks[size] ?? stock) > 0) || sizes[0];
+  const categoryMeta = getCategoryMeta(product.category);
+
+  document.title = `${product.name || "Ürün"} | Orvello Monte`;
+
+  productDetail.innerHTML = `
+    <nav class="product-detail-breadcrumb" aria-label="Ürün yolu">
+      <a href="index.html">Ana Sayfa</a>
+      <span>/</span>
+      <a href="${escapeHtml(categoryMeta.href)}">${escapeHtml(categoryMeta.name)}</a>
+    </nav>
+    <article class="product-detail product-card" data-firestore-product="${escapeHtml(product.id)}">
+      <div class="product-detail-media">
+        <div class="product-detail-main-image product-photo">
+          ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}">` : ""}
+        </div>
+        ${imageUrls.length > 1 ? `
+          <div class="product-gallery product-detail-gallery" aria-label="${escapeHtml(product.name)} görselleri">
+            ${imageUrls.map((url, index) => `<button class="${index === 0 ? "active" : ""}" type="button" aria-label="Görsel ${index + 1}" data-gallery-image="${escapeHtml(url)}"><img src="${escapeHtml(url)}" alt=""></button>`).join("")}
+          </div>
+        ` : ""}
+      </div>
+      <div class="product-detail-info">
+        <p class="kicker">${escapeHtml(categoryMeta.name)} / Orvello Monte</p>
+        <h1>${escapeHtml(product.name)}</h1>
+        <strong class="product-detail-price">${formatPrice(Number(product.price || 0))}</strong>
+        <p class="product-detail-description">${escapeHtml(product.description || "Ürün açıklaması yakında eklenecek.")}</p>
+        <div class="product-meta product-detail-meta">
+          <span class="product-detail-label">Beden</span>
+          <div class="size-options" aria-label="${escapeHtml(product.name)} beden seçimi">
+            ${sizes.map((size) => {
+              const sizeStock = Number(sizeStocks[size] ?? stock);
+              const canSelect = sizeStock > 0;
+              return `<button class="size-option ${size === firstAvailableSize && canSelect ? "active" : ""} ${canSelect ? "" : "disabled"}" type="button" data-size-option="${escapeHtml(size)}" ${canSelect ? "" : "disabled"}>${escapeHtml(size)}</button>`;
+            }).join("")}
+          </div>
+        </div>
+        <button class="product-detail-add" type="button" data-product="${escapeHtml(product.name)}" data-id="${escapeHtml(product.id)}" data-price="${Number(product.price || 0)}" data-tone="${escapeHtml(product.tone || "hoodie")}" data-stock="${stock}" data-size-stocks="${escapeHtml(JSON.stringify(sizeStocks))}" data-image="${escapeHtml(imageUrl)}" ${isOutOfStock ? "disabled" : ""}>
+          ${isOutOfStock ? "Stok Yok" : "Sepete Ekle"}
+        </button>
+      </div>
+    </article>
+  `;
+};
+
 const renderProductMarquee = (products) => {
   if (!productMarquee) {
     return;
@@ -1665,7 +1762,7 @@ const renderProductMarquee = (products) => {
     }[product.category] || { name: "Kadın", href: "kadın.html" };
 
     return `
-      <a class="promo-product-card" href="${categoryMeta.href}">
+      <a class="promo-product-card" href="${escapeHtml(getProductDetailUrl(product.id))}">
         <div class="promo-product-visual ${imageUrl ? "has-image" : ""}">
           ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}">` : ""}
         </div>
@@ -1741,7 +1838,7 @@ const setupProductMarqueeDrag = () => {
 };
 
 const loadFirestoreProducts = () => {
-  if ((!productGrid && !productMarquee) || (!pageCategory && !isAdminPage && !productMarquee)) {
+  if ((!productGrid && !productMarquee && !productDetail) || (!pageCategory && !isAdminPage && !productMarquee && !productDetail)) {
     return;
   }
 
@@ -1759,6 +1856,7 @@ const loadFirestoreProducts = () => {
 
       currentProducts = products;
       renderFirestoreProducts(products);
+      renderProductDetail(products);
       renderProductMarquee(products);
     },
     () => {
