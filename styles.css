@@ -743,7 +743,7 @@ button:disabled {
 
 .product-detail-media {
   display: grid;
-  align-content: start;
+  align-content: center;
   gap: 12px;
   min-width: 0;
 }
@@ -3357,6 +3357,10 @@ button:disabled {
   .product-detail-info {
     position: static;
     min-height: 0;
+    align-content: start;
+  }
+
+  .product-detail-media {
     align-content: start;
   }
 
