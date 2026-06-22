@@ -742,35 +742,58 @@ button:disabled {
 
 .product-detail-media {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .product-detail-main-image {
-  min-height: min(72vh, 760px);
+  display: grid;
+  min-height: 560px;
+  max-height: 760px;
+  aspect-ratio: 4 / 5;
+  place-items: center;
   overflow: hidden;
-  border: 1px solid rgba(247, 241, 232, 0.1);
-  background: #111;
+  border: 1px solid rgba(247, 241, 232, 0.12);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(247, 241, 232, 0.08), transparent 34%),
+    #101010;
 }
 
 .product-detail-main-image img {
   width: 100%;
   height: 100%;
-  min-height: min(72vh, 760px);
-  object-fit: cover;
+  object-fit: contain;
   display: block;
+  padding: clamp(10px, 2vw, 22px);
 }
 
 .product-detail-gallery {
   display: flex;
   gap: 10px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding: 2px 2px 6px;
 }
 
 .product-detail-gallery button {
-  width: 72px;
-  height: 88px;
+  width: 78px;
+  height: 92px;
   flex: 0 0 auto;
+  overflow: hidden;
+  border: 1px solid rgba(247, 241, 232, 0.16);
+  border-radius: 6px;
+  padding: 0;
+  background: #111;
+}
+
+.product-detail-gallery button.active {
+  border-color: rgba(231, 216, 189, 0.78);
+}
+
+.product-detail-gallery img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .product-detail-info {
@@ -3329,7 +3352,12 @@ button:disabled {
 
   .product-detail-main-image,
   .product-detail-main-image img {
-    min-height: 420px;
+    min-height: 0;
+  }
+
+  .product-detail-main-image {
+    max-height: none;
+    aspect-ratio: 3 / 4;
   }
 
   .contact-grid {
