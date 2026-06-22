@@ -1762,7 +1762,7 @@ const renderProductMarquee = (products) => {
     }[product.category] || { name: "Kadın", href: "kadın.html" };
 
     return `
-      <a class="promo-product-card" href="${escapeHtml(getProductDetailUrl(product.id))}">
+      <a class="promo-product-card" href="${escapeHtml(getProductDetailUrl(product.id))}" data-product-detail-link="${escapeHtml(getProductDetailUrl(product.id))}">
         <div class="promo-product-visual ${imageUrl ? "has-image" : ""}">
           ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}">` : ""}
         </div>
