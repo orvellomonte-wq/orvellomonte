@@ -346,7 +346,6 @@ h2 {
 }
 
 .button,
-.product-row button,
 .signup-form button,
 .auth-submit,
 .sign-out-button,
@@ -376,7 +375,6 @@ button:disabled {
 }
 
 .button:hover,
-.product-row button:hover,
 .signup-form button:hover,
 .auth-submit:hover,
 .sign-out-button:hover,
@@ -816,22 +814,6 @@ button:disabled {
   font-weight: 900;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-}
-
-.product-detail-add {
-  min-height: 52px;
-  border: 0;
-  border-radius: 6px;
-  color: var(--bg);
-  cursor: pointer;
-  background: var(--accent-2);
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.product-detail-add:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
 }
 
 .product-detail-empty {
@@ -2401,7 +2383,7 @@ button:disabled {
 .product-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 16px;
 }
 
@@ -2410,7 +2392,6 @@ button:disabled {
   font-weight: 900;
 }
 
-.product-row button,
 .signup-form button {
   min-height: 42px;
   padding: 0 16px;
@@ -3375,15 +3356,6 @@ button:disabled {
 
   .product-info {
     padding: 16px;
-  }
-
-  .product-row {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .product-row button {
-    width: 100%;
   }
 
   .cart-panel,

@@ -1631,7 +1631,6 @@ const renderFirebaseProduct = (product) => {
       </div>
       <div class="product-row">
         <span>${formatPrice(product.price)}</span>
-        <button type="button" data-product="${escapeHtml(product.name)}" data-id="${escapeHtml(product.id)}" data-price="${product.price}" data-tone="${escapeHtml(product.tone)}" data-stock="${stock}" data-size-stocks="${escapeHtml(JSON.stringify(sizeStocks))}" data-image="${escapeHtml(imageUrl)}" ${isOutOfStock ? "disabled" : ""}>${isOutOfStock ? "Stok Yok" : "Sepete Ekle"}</button>
       </div>
     </div>
   </article>
@@ -1722,9 +1721,6 @@ const renderProductDetail = (products) => {
             }).join("")}
           </div>
         </div>
-        <button class="product-detail-add" type="button" data-product="${escapeHtml(product.name)}" data-id="${escapeHtml(product.id)}" data-price="${Number(product.price || 0)}" data-tone="${escapeHtml(product.tone || "hoodie")}" data-stock="${stock}" data-size-stocks="${escapeHtml(JSON.stringify(sizeStocks))}" data-image="${escapeHtml(imageUrl)}" ${isOutOfStock ? "disabled" : ""}>
-          ${isOutOfStock ? "Stok Yok" : "Sepete Ekle"}
-        </button>
       </div>
     </article>
   `;
