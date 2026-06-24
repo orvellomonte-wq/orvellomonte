@@ -1248,6 +1248,29 @@ const setMessage = (message, isError = false) => {
   authMessage.classList.toggle("error", isError);
 };
 
+const getAuthErrorMessage = (error) => {
+  const code = error?.code || "";
+  const messages = {
+    "auth/email-already-in-use": "Bu e-posta zaten kayıtlı.",
+    "auth/invalid-email": "E-posta adresini kontrol et.",
+    "auth/invalid-credential": "E-posta veya şifre hatalı.",
+    "auth/user-not-found": "Bu e-posta ile kayıtlı hesap bulunamadı.",
+    "auth/wrong-password": "E-posta veya şifre hatalı.",
+    "auth/missing-password": "Şifre alanını doldur.",
+    "auth/too-many-requests": "Çok fazla deneme yapıldı. Biraz bekleyip tekrar dene.",
+    "auth/network-request-failed": "Bağlantı kurulamadı. Telefon internetini ve tarayıcı izinlerini kontrol et.",
+    "auth/operation-not-allowed": "Firebase Authentication içinde Email/Password girişini aktif et.",
+    "auth/configuration-not-found": "Firebase Authentication kurulumu eksik. Email/Password sağlayıcısını aktif et.",
+    "auth/unauthorized-domain": "Firebase Authentication > Settings > Authorized domains listesine orvellomonte.com ve www.orvellomonte.com ekle.",
+    "auth/app-not-authorized": "Firebase Authentication authorized domains listesine bu domaini ekle.",
+    "auth/invalid-api-key": "Firebase API key geçersiz. Web app Firebase ayarlarını kontrol et.",
+    "auth/api-key-not-valid.-please-pass-a-valid-api-key": "Firebase API key geçersiz. Web app Firebase ayarlarını kontrol et.",
+    "auth/weak-password": "Şifre en az 6 karakter olmalı."
+  };
+
+  return messages[code] || `Giriş yapılamadı (${code || "bilinmeyen hata"}). Firebase Authentication ayarlarını kontrol et.`;
+};
+
 const setAdminMessage = (message, isError = false) => {
   if (!adminMessage) {
     return;
@@ -2593,15 +2616,8 @@ authForm.addEventListener("submit", async (event) => {
 
     authForm.reset();
   } catch (error) {
-    const messages = {
-      "auth/email-already-in-use": "Bu e-posta zaten kayıtlı.",
-      "auth/invalid-email": "E-posta adresini kontrol et.",
-      "auth/invalid-credential": "E-posta veya şifre hatalı.",
-      "auth/operation-not-allowed": "Firebase'de Email/Password girişini aktif et.",
-      "auth/unauthorized-domain": "Firebase Auth authorized domains listesine domaini ekle.",
-      "auth/weak-password": "Şifre en az 6 karakter olmalı."
-    };
-    setMessage(messages[error.code] || "İşlem tamamlanamadı. Firebase ayarlarını kontrol et.", true);
+    console.error("Firebase auth error:", error);
+    setMessage(getAuthErrorMessage(error), true);
   } finally {
     authSubmit.disabled = false;
   }
