@@ -834,6 +834,18 @@ button:disabled {
   gap: 10px;
 }
 
+.product-detail-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.product-detail-cart-button {
+  width: 100%;
+  min-height: 56px;
+  letter-spacing: 0.08em;
+}
+
 .product-detail-label {
   color: var(--muted);
   font-size: 0.75rem;

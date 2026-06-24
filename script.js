@@ -1744,6 +1744,20 @@ const renderProductDetail = (products) => {
             }).join("")}
           </div>
         </div>
+        <div class="product-detail-actions">
+          <button
+            class="button primary product-detail-cart-button"
+            type="button"
+            data-product="${escapeHtml(product.name)}"
+            data-id="${escapeHtml(product.id)}"
+            data-price="${Number(product.price || 0)}"
+            data-tone="${escapeHtml(product.tone || "")}"
+            data-stock="${stock}"
+            data-size-stocks="${escapeHtml(JSON.stringify(sizeStocks))}"
+            data-image="${escapeHtml(imageUrl || "")}"
+            ${isOutOfStock ? "disabled" : ""}
+          >${isOutOfStock ? "Stok Yok" : "Sepete Ekle"}</button>
+        </div>
       </div>
     </article>
   `;
