@@ -1,18 +1,5 @@
 {
   "cleanUrls": true,
-  "redirects": [
-    {
-      "source": "/(.*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.orvellomonte.com"
-        }
-      ],
-      "destination": "https://orvellomonte.com/$1",
-      "permanent": true
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
