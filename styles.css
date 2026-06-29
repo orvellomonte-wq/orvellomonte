@@ -3290,6 +3290,11 @@ button:disabled {
   background: #fff;
 }
 
+.paytr-checkout-frame iframe[hidden],
+.paytr-frame-status[hidden] {
+  display: none;
+}
+
 .paytr-frame-status {
   display: grid;
   min-height: 240px;
