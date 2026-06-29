@@ -28,13 +28,39 @@ const getFirebaseApp = () => {
   });
 };
 
-const parseBody = (req) => {
+const readRawBody = (req) => new Promise((resolve, reject) => {
+  if (req.readableEnded) {
+    resolve("");
+    return;
+  }
+
+  let rawBody = "";
+
+  req.setEncoding?.("utf8");
+  req.on?.("data", (chunk) => {
+    rawBody += chunk;
+  });
+  req.on?.("end", () => resolve(rawBody));
+  req.on?.("error", reject);
+});
+
+const parseBody = async (req) => {
+  if (Buffer.isBuffer(req.body)) {
+    return Object.fromEntries(new URLSearchParams(req.body.toString("utf8")).entries());
+  }
+
   if (req.body && typeof req.body === "object") {
     return req.body;
   }
 
   const params = new URLSearchParams(String(req.body || ""));
-  return Object.fromEntries(params.entries());
+
+  if ([...params.keys()].length > 0) {
+    return Object.fromEntries(params.entries());
+  }
+
+  const rawBody = await readRawBody(req);
+  return Object.fromEntries(new URLSearchParams(rawBody).entries());
 };
 
 const sendText = (res, status, text) => {
@@ -203,7 +229,7 @@ module.exports = async (req, res) => {
       throw new Error("PAYTR env missing.");
     }
 
-    const post = parseBody(req);
+    const post = await parseBody(req);
     const merchantOid = String(post.merchant_oid || "");
     const status = String(post.status || "");
     const totalAmount = String(post.total_amount || "");
