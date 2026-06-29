@@ -785,7 +785,7 @@ const openPaytrPaymentPage = ({ iframeUrl, merchantOid, amount }) => {
     amount,
     createdAt: Date.now()
   }));
-  window.location.href = "odeme.html";
+  window.location.href = iframeUrl;
 };
 
 const openSideMenu = () => {
@@ -1195,7 +1195,7 @@ checkoutForm?.addEventListener("submit", async (event) => {
       throw new Error(result.error || "PayTR odeme ekrani acilamadi.");
     }
 
-    setCheckoutMessage("Odeme sayfasi aciliyor...");
+    setCheckoutMessage("PayTR guvenli odeme sayfasina yonlendiriliyorsun...");
     openPaytrPaymentPage({
       iframeUrl: result.iframeUrl,
       merchantOid: result.merchantOid,
