@@ -43,6 +43,150 @@ const sendText = (res, status, text) => {
   res.status(status).send(text);
 };
 
+const getStockDeductions = (items) => {
+  const deductions = new Map();
+
+  for (const item of Array.isArray(items) ? items : []) {
+    const productId = String(item.productId || "").trim();
+    const size = String(item.size || "Standart").trim() || "Standart";
+    const quantity = Math.max(1, Math.min(999, Number.parseInt(item.quantity, 10) || 1));
+
+    if (!productId) {
+      continue;
+    }
+
+    const current = deductions.get(productId) || {
+      productId,
+      totalQuantity: 0,
+      sizeQuantities: {}
+    };
+
+    current.totalQuantity += quantity;
+    current.sizeQuantities[size] = (current.sizeQuantities[size] || 0) + quantity;
+    deductions.set(productId, current);
+  }
+
+  return [...deductions.values()];
+};
+
+const deductPaidOrderStock = async (db, orderRef, merchantOid, paidAmount, rawStatus) => {
+  await db.runTransaction(async (transaction) => {
+    const orderSnapshot = await transaction.get(orderRef);
+
+    if (!orderSnapshot.exists) {
+      return;
+    }
+
+    const orderData = orderSnapshot.data() || {};
+    const currentPaymentStatus = orderData.payment?.status;
+
+    if (["failed", "amount_mismatch"].includes(currentPaymentStatus)) {
+      return;
+    }
+
+    if (currentPaymentStatus === "paid" && orderData.payment?.stockDeducted === true) {
+      return;
+    }
+
+    const requestedAmount = Number(orderData.payment?.requestedAmount || 0);
+
+    if (requestedAmount > 0 && paidAmount < requestedAmount) {
+      transaction.update(orderRef, {
+        "payment.status": "amount_mismatch",
+        "payment.provider": "paytr",
+        "payment.merchantOid": merchantOid,
+        "payment.totalAmount": paidAmount,
+        "payment.requestedAmount": requestedAmount,
+        "payment.failedReasonMessage": "PayTR total_amount requestedAmount altinda geldi.",
+        "payment.failedAt": admin.firestore.FieldValue.serverTimestamp(),
+        "payment.rawStatus": rawStatus,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      return;
+    }
+
+    const deductions = getStockDeductions(orderData.items);
+    const productRefs = deductions.map((deduction) =>
+      db.collection("products").doc(deduction.productId)
+    );
+    const productSnapshots = [];
+
+    for (const productRef of productRefs) {
+      productSnapshots.push(await transaction.get(productRef));
+    }
+
+    const stockIssues = [];
+
+    deductions.forEach((deduction, index) => {
+      const productSnapshot = productSnapshots[index];
+
+      if (!productSnapshot.exists) {
+        stockIssues.push({
+          productId: deduction.productId,
+          quantity: deduction.totalQuantity,
+          reason: "product_not_found"
+        });
+        return;
+      }
+
+      const productData = productSnapshot.data() || {};
+      const currentStock = Number(productData.stock || 0);
+      const sizeStocks = productData.sizeStocks && typeof productData.sizeStocks === "object"
+        ? { ...productData.sizeStocks }
+        : {};
+
+      if (currentStock < deduction.totalQuantity) {
+        stockIssues.push({
+          productId: deduction.productId,
+          quantity: deduction.totalQuantity,
+          stockBefore: currentStock,
+          reason: "insufficient_total_stock"
+        });
+      }
+
+      for (const [size, quantity] of Object.entries(deduction.sizeQuantities)) {
+        const currentSizeStock = Number(sizeStocks[size] ?? currentStock);
+
+        if (currentSizeStock < quantity) {
+          stockIssues.push({
+            productId: deduction.productId,
+            size,
+            quantity,
+            sizeStockBefore: currentSizeStock,
+            reason: "insufficient_size_stock"
+          });
+        }
+
+        sizeStocks[size] = Math.max(0, currentSizeStock - quantity);
+      }
+
+      transaction.update(productRefs[index], {
+        stock: Math.max(0, currentStock - deduction.totalQuantity),
+        sizeStocks,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    });
+
+    const orderUpdate = {
+      "payment.status": "paid",
+      "payment.provider": "paytr",
+      "payment.merchantOid": merchantOid,
+      "payment.totalAmount": paidAmount,
+      "payment.paidAt": admin.firestore.FieldValue.serverTimestamp(),
+      "payment.rawStatus": rawStatus,
+      "payment.stockDeducted": true,
+      "payment.stockDeductedAt": admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (stockIssues.length > 0) {
+      orderUpdate["payment.stockIssues"] = stockIssues;
+    }
+
+    transaction.update(orderRef, orderUpdate);
+  });
+};
+
 module.exports = async (req, res) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
 
@@ -92,40 +236,18 @@ module.exports = async (req, res) => {
     const orderData = orderSnapshot.data() || {};
     const currentPaymentStatus = orderData.payment?.status;
 
-    if (["paid", "failed", "amount_mismatch"].includes(currentPaymentStatus)) {
+    if (
+      ["failed", "amount_mismatch"].includes(currentPaymentStatus)
+      || (currentPaymentStatus === "paid" && (orderData.payment?.stockDeducted === true || status !== "success"))
+    ) {
       sendText(res, 200, "OK");
       return;
     }
 
     if (status === "success") {
-      const requestedAmount = Number(orderData.payment?.requestedAmount || 0);
       const paidAmount = Number(totalAmount);
 
-      if (requestedAmount > 0 && paidAmount < requestedAmount) {
-        await orderRef.update({
-          "payment.status": "amount_mismatch",
-          "payment.provider": "paytr",
-          "payment.merchantOid": merchantOid,
-          "payment.totalAmount": paidAmount,
-          "payment.requestedAmount": requestedAmount,
-          "payment.failedReasonMessage": "PayTR total_amount requestedAmount altinda geldi.",
-          "payment.failedAt": admin.firestore.FieldValue.serverTimestamp(),
-          "payment.rawStatus": status,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-        sendText(res, 200, "OK");
-        return;
-      }
-
-      await orderRef.update({
-        "payment.status": "paid",
-        "payment.provider": "paytr",
-        "payment.merchantOid": merchantOid,
-        "payment.totalAmount": paidAmount,
-        "payment.paidAt": admin.firestore.FieldValue.serverTimestamp(),
-        "payment.rawStatus": status,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+      await deductPaidOrderStock(admin.firestore(), orderRef, merchantOid, paidAmount, status);
     } else {
       await orderRef.update({
         "payment.status": "failed",
