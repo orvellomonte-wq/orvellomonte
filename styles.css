@@ -896,8 +896,8 @@ button:disabled {
   min-height: 58vh;
   padding: 132px clamp(18px, 5vw, 72px) 58px;
   background:
-    linear-gradient(90deg, rgba(13, 13, 13, 0.92), rgba(13, 13, 13, 0.5)),
-    url("assets/orvello-drop-hero.jpg") center / cover;
+    linear-gradient(90deg, rgba(13, 13, 13, 0.9), rgba(13, 13, 13, 0.44)),
+    url("assets/orvello-channel-hero.jpeg") center 38% / cover;
 }
 
 .page-hero-content {
