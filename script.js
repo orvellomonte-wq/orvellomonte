@@ -768,7 +768,7 @@ const renderPaytrFrame = async ({ iframeUrl, merchantOid }) => {
       <span>PayTR Guvenli Odeme</span>
       <small>Siparis No: ${escapeHtml(merchantOid)}</small>
     </div>
-    <iframe src="${escapeHtml(iframeUrl)}" id="paytriframe" title="PayTR Guvenli Odeme" frameborder="0" scrolling="no"></iframe>
+    <iframe src="${escapeHtml(iframeUrl)}" id="paytriframe" title="PayTR Guvenli Odeme" frameborder="0" scrolling="no" allow="payment"></iframe>
   `;
   mount.hidden = false;
   checkoutForm.classList.add("checkout-payment-open");
