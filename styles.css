@@ -715,7 +715,7 @@ button:disabled {
 
 .product-detail-shell {
   min-height: 100vh;
-  padding: 128px clamp(16px, 5vw, 72px) 72px;
+  padding: 112px clamp(16px, 4vw, 56px) 72px;
   background:
     linear-gradient(180deg, rgba(247, 241, 232, 0.05), transparent 24%),
     var(--bg);
@@ -740,10 +740,12 @@ button:disabled {
 
 .product-detail {
   display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
-  gap: clamp(18px, 3vw, 38px);
-  min-height: calc(100vh - 200px);
-  align-items: stretch;
+  grid-template-columns: minmax(460px, 0.98fr) minmax(360px, 0.82fr);
+  gap: clamp(24px, 4vw, 58px);
+  align-items: center;
+  width: min(100%, 1360px);
+  min-height: calc(100vh - 180px);
+  margin-inline: auto;
 }
 
 .product-detail-media {
@@ -751,7 +753,7 @@ button:disabled {
   align-content: center;
   gap: 12px;
   min-width: 0;
-  width: min(100%, clamp(260px, 42vh, 430px));
+  width: min(100%, clamp(460px, 42vw, 680px));
   justify-self: center;
 }
 
@@ -822,13 +824,15 @@ button:disabled {
   position: sticky;
   top: 96px;
   display: grid;
-  min-height: clamp(520px, calc(100vh - 240px), 760px);
+  min-height: auto;
+  max-width: 520px;
   align-content: center;
   gap: 18px;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: clamp(18px, 3vw, 34px);
   background: rgba(17, 17, 17, 0.82);
+  justify-self: start;
 }
 
 .product-detail-info h1 {
