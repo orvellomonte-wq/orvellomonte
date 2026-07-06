@@ -250,6 +250,7 @@ const setProductGalleryImage = (galleryButton) => {
   mainImage.classList.add("is-switching");
   window.setTimeout(() => {
     mainImage.src = galleryButton.dataset.galleryImage;
+    applyListingImageRatio(mainImage);
 
     productCard.querySelectorAll("[data-gallery-image]").forEach((button) => {
       button.classList.toggle("active", button === galleryButton);
@@ -259,6 +260,36 @@ const setProductGalleryImage = (galleryButton) => {
       mainImage.classList.remove("is-switching");
     }, 120);
   }, 180);
+};
+
+const applyListingImageRatio = (image) => {
+  const frame = image?.closest(".promo-product-visual, .product-visual, .product-detail-main-image");
+
+  if (!image || !frame) {
+    return;
+  }
+
+  const syncRatio = () => {
+    if (!image.naturalWidth || !image.naturalHeight) {
+      return;
+    }
+
+    frame.style.aspectRatio = `${image.naturalWidth} / ${image.naturalHeight}`;
+    frame.classList.add("has-natural-ratio");
+  };
+
+  if (image.complete) {
+    syncRatio();
+    return;
+  }
+
+  image.addEventListener("load", syncRatio, { once: true });
+};
+
+const refreshListingImageRatios = (root = document) => {
+  root
+    .querySelectorAll(".promo-product-visual img, .product-visual.product-photo img, .product-detail-main-image img")
+    .forEach(applyListingImageRatio);
 };
 
 const startProductGalleryRotation = () => {
@@ -1668,6 +1699,7 @@ const renderFirestoreProducts = (products) => {
   productGrid.querySelectorAll("[data-firestore-product]").forEach((card) => card.remove());
   productGrid.querySelector(".empty-products")?.toggleAttribute("hidden", products.length > 0);
   productGrid.insertAdjacentHTML("beforeend", products.map(renderFirebaseProduct).join(""));
+  refreshListingImageRatios(productGrid);
   startProductGalleryRotation();
 };
 
@@ -1761,6 +1793,7 @@ const renderProductDetail = (products) => {
       </div>
     </article>
   `;
+  refreshListingImageRatios(productDetail);
 };
 
 const renderProductMarquee = (products) => {
@@ -1807,6 +1840,7 @@ const renderProductMarquee = (products) => {
       </a>
     `;
   }).join("");
+  refreshListingImageRatios(productMarquee);
 };
 
 const setupProductMarqueeDrag = () => {

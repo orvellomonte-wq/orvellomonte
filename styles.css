@@ -3631,7 +3631,7 @@ button:disabled {
   }
 
   .promo-product-card {
-    grid-template-rows: minmax(260px, 1fr) auto;
+    grid-template-rows: auto auto;
     gap: 16px;
     width: min(72vw, 280px);
     min-width: min(72vw, 280px);
