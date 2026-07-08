@@ -3325,7 +3325,7 @@ button:disabled {
   color: var(--ink);
   background: rgba(255, 250, 242, 0.68);
   border-color: rgba(22, 20, 18, 0.14);
-  box-shadow: 0 10px 30px rgba(74, 56, 40, 0.08);
+  box-shadow: none;
 }
 
 :root[data-theme="light"] .cart-link span {
@@ -3340,7 +3340,7 @@ button:disabled {
 :root[data-theme="light"] .side-menu-panel {
   border-right-color: rgba(22, 20, 18, 0.1);
   background: rgba(255, 250, 242, 0.96);
-  box-shadow: 28px 0 70px rgba(74, 56, 40, 0.18);
+  box-shadow: none;
 }
 
 :root[data-theme="light"] .side-menu-head,
@@ -3380,9 +3380,7 @@ button:disabled {
 }
 
 :root[data-theme="light"] .category-card.accessories::after {
-  box-shadow:
-    -38px 58px 0 -20px rgba(22, 20, 18, 0.1),
-    0 66px 0 -18px rgba(107, 81, 52, 0.18);
+  box-shadow: none;
 }
 
 :root[data-theme="light"] .product-marquee-section {
@@ -3392,16 +3390,22 @@ button:disabled {
 }
 
 :root[data-theme="light"] .product-marquee-shell::before {
-  background: linear-gradient(90deg, #fffaf2, transparent);
+  display: none;
 }
 
 :root[data-theme="light"] .product-marquee-shell::after {
-  background: linear-gradient(270deg, #fffaf2, transparent);
+  display: none;
 }
 
 :root[data-theme="light"] .promo-product-card,
 :root[data-theme="light"] .site-footer {
   color: var(--ink);
+}
+
+:root[data-theme="light"] .category-card,
+:root[data-theme="light"] .product-card,
+:root[data-theme="light"] .product-detail-info {
+  box-shadow: none;
 }
 
 .payment-result-page {

@@ -151,9 +151,9 @@ const applyTheme = (theme) => {
   document.documentElement.dataset.theme = isLight ? "light" : "dark";
 
   if (themeToggle) {
-    themeToggle.textContent = isLight ? "KOYU" : "ISIK";
+    themeToggle.textContent = isLight ? "KOYU" : "BEYAZ";
     themeToggle.setAttribute("aria-pressed", isLight ? "true" : "false");
-    themeToggle.setAttribute("aria-label", isLight ? "Koyu modu ac" : "Aydinlik modu ac");
+    themeToggle.setAttribute("aria-label", isLight ? "Koyu modu ac" : "Beyaz modu ac");
   }
 };
 
