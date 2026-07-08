@@ -819,6 +819,38 @@ const openPaytrPaymentPage = ({ iframeUrl, merchantOid, amount }) => {
   window.location.href = iframeUrl;
 };
 
+const isHomeFeatured = (value) => value === true || value === "true" || value === 1;
+
+const getFirestoreMillis = (value) => {
+  if (!value) {
+    return 0;
+  }
+
+  if (typeof value.toMillis === "function") {
+    return value.toMillis();
+  }
+
+  if (typeof value.toDate === "function") {
+    return value.toDate().getTime();
+  }
+
+  if (typeof value.seconds === "number") {
+    return value.seconds * 1000;
+  }
+
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+
+  return Number(value) || 0;
+};
+
+const getFeaturedSortTime = (product) => Math.max(
+  getFirestoreMillis(product.homeFeaturedAt),
+  getFirestoreMillis(product.updatedAt),
+  getFirestoreMillis(product.createdAt)
+);
+
 const openSideMenu = () => {
   if (!sideMenu || !menuToggle) {
     return;
@@ -1802,7 +1834,8 @@ const renderProductMarquee = (products) => {
   }
 
   const visibleProducts = products
-    .filter((product) => product.active !== false && product.homeFeatured === true)
+    .filter((product) => product.active !== false && isHomeFeatured(product.homeFeatured))
+    .sort((a, b) => getFeaturedSortTime(b) - getFeaturedSortTime(a))
     .slice(0, 10);
 
   if (visibleProducts.length === 0) {
@@ -2413,7 +2446,7 @@ const editProduct = (productId) => {
   }));
   renderAdminSizeStocks();
   renderExistingAdminImagePreview(existingAdminImages);
-  setHomeFeatureEnabled(product.homeFeatured === true);
+  setHomeFeatureEnabled(isHomeFeatured(product.homeFeatured));
   setAdminMode("edit", product.name || "Ürün");
   openAdminForm();
   setAdminMessage(`${product.name || "Ürün"} düzenleniyor. Yeni görsel seçmezsen mevcut görseller korunur.`);
@@ -2571,6 +2604,7 @@ const setupAdminPanel = () => {
         imageStorage: "firestore-base64-compressed",
         category: targetCategory,
         homeFeatured,
+        homeFeaturedAt: homeFeatured ? serverTimestamp() : null,
         active: true,
         slug: productSlug,
         updatedAt: serverTimestamp(),
