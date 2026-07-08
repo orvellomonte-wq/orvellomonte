@@ -567,6 +567,32 @@ button:disabled {
   text-transform: uppercase;
 }
 
+.product-marquee-shell {
+  position: relative;
+  overflow: hidden;
+}
+
+.product-marquee-shell::before,
+.product-marquee-shell::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  bottom: 0;
+  width: min(90px, 14vw);
+  pointer-events: none;
+}
+
+.product-marquee-shell::before {
+  left: 0;
+  background: linear-gradient(90deg, #0c0c0c, transparent);
+}
+
+.product-marquee-shell::after {
+  right: 0;
+  background: linear-gradient(270deg, #0c0c0c, transparent);
+}
+
 .product-marquee-window {
   position: relative;
   overflow-x: auto;
@@ -600,27 +626,6 @@ button:disabled {
 .product-marquee-window::-webkit-scrollbar-thumb {
   background: rgba(247, 241, 232, 0.28);
   border-radius: 999px;
-}
-
-.product-marquee-window::before,
-.product-marquee-window::after {
-  content: "";
-  position: absolute;
-  z-index: 2;
-  top: 0;
-  bottom: 0;
-  width: min(90px, 14vw);
-  pointer-events: none;
-}
-
-.product-marquee-window::before {
-  left: 0;
-  background: linear-gradient(90deg, #0c0c0c, transparent);
-}
-
-.product-marquee-window::after {
-  right: 0;
-  background: linear-gradient(270deg, #0c0c0c, transparent);
 }
 
 .product-marquee-track {
