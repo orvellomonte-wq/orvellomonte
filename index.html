@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Orvello Monte | Streetwear</title>
   <meta name="description" content="Orvello Monte streetwear koleksiyonu: hoodie, cargo, tee ve aksesuarlar.">
+  <script>
+    (() => {
+      try {
+        const savedTheme = localStorage.getItem("orvello-theme");
+        if (savedTheme === "light") {
+          document.documentElement.dataset.theme = "light";
+        }
+      } catch (error) {
+        document.documentElement.dataset.theme = "dark";
+      }
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -93,6 +105,7 @@
         margin-left: 0;
       }
 
+      .theme-toggle,
       .account-button,
       .cart-link {
         min-height: 32px;
@@ -205,7 +218,7 @@
       display: grid !important;
       grid-template-columns: 48px 1fr auto !important;
       align-items: center !important;
-      gap: 0 !important;
+      gap: 0.32rem !important;
       padding: 0.9rem clamp(0.85rem, 2.4vw, 1.6rem) !important;
     }
 
@@ -273,7 +286,7 @@
       justify-self: end !important;
       display: flex !important;
       align-items: center !important;
-      gap: 0 !important;
+      gap: 0.32rem !important;
       margin: 0 !important;
       z-index: 4;
     }
@@ -449,6 +462,60 @@
         height: 34px;
       }
     }
+
+    .theme-toggle {
+      min-height: 42px;
+      padding: 0.62rem 0.68rem;
+      white-space: nowrap;
+    }
+
+    :root[data-theme="light"] .site-header {
+      color: #161412 !important;
+      background: linear-gradient(180deg, rgba(244, 239, 231, 0.94), rgba(244, 239, 231, 0)) !important;
+    }
+
+    :root[data-theme="light"] .menu-toggle,
+    :root[data-theme="light"] .theme-toggle,
+    :root[data-theme="light"] .account-button,
+    :root[data-theme="light"] .cart-link {
+      color: #161412 !important;
+      border-color: rgba(22, 20, 18, 0.14) !important;
+      background: rgba(255, 250, 242, 0.72) !important;
+    }
+
+    :root[data-theme="light"] .side-menu-panel {
+      background: rgba(255, 250, 242, 0.97) !important;
+      border-right-color: rgba(22, 20, 18, 0.12) !important;
+      box-shadow: 28px 0 70px rgba(74, 56, 40, 0.18) !important;
+    }
+
+    :root[data-theme="light"] .side-menu-head,
+    :root[data-theme="light"] .side-menu-close,
+    :root[data-theme="light"] .side-menu-link {
+      color: #161412 !important;
+    }
+
+    :root[data-theme="light"] .side-menu-link,
+    :root[data-theme="light"] .side-menu-close {
+      border-color: rgba(22, 20, 18, 0.12) !important;
+      background: rgba(22, 20, 18, 0.04) !important;
+    }
+
+    @media (max-width: 700px) {
+      .theme-toggle {
+        min-height: 34px !important;
+        padding: 0.42rem 0.46rem !important;
+        font-size: 0.66rem !important;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .theme-toggle {
+        min-height: 30px !important;
+        padding: 0.36rem 0.38rem !important;
+        font-size: 0.58rem !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -462,6 +529,7 @@
     <a class="brand" href="#top" aria-label="Orvello Monte ana sayfa">ORVELLO MONTE</a>
 
     <div class="header-actions">
+      <button class="theme-toggle" type="button" aria-label="Aydinlik modu ac" aria-pressed="false">ISIK</button>
       <button class="account-button" type="button" aria-haspopup="dialog">Hesabım</button>
       <button class="cart-link" type="button" aria-haspopup="dialog" aria-label="Sepeti aç">SEPET <span>0</span></button>
     </div>

@@ -14,6 +14,19 @@
   --listing-media-bg: #101010;
 }
 
+:root[data-theme="light"] {
+  --bg: #f4efe7;
+  --panel: #fffaf2;
+  --panel-2: #eee4d7;
+  --ink: #161412;
+  --muted: #655b50;
+  --line: rgba(22, 20, 18, 0.14);
+  --accent: #b84a32;
+  --accent-2: #6b5134;
+  --shadow: rgba(74, 56, 40, 0.14);
+  --listing-media-bg: #eee7de;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -256,6 +269,24 @@ body.menu-open {
   background: rgba(247, 241, 232, 0.08);
 }
 
+.theme-toggle {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 10px;
+  color: var(--ink);
+  cursor: pointer;
+  background: rgba(247, 241, 232, 0.08);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: transform 180ms ease, background 180ms ease, color 180ms ease;
+}
+
 .cart-link span {
   display: grid;
   min-width: 24px;
@@ -386,6 +417,7 @@ button:disabled {
 .clear-cart-button:hover,
 .quantity-button:hover,
 .remove-item-button:hover,
+.theme-toggle:hover,
 .account-button:hover {
   transform: translateY(-2px);
 }
@@ -3280,6 +3312,96 @@ button:disabled {
   border-top: 1px solid var(--line);
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+:root[data-theme="light"] .site-header {
+  background: linear-gradient(180deg, rgba(244, 239, 231, 0.92), rgba(244, 239, 231, 0));
+}
+
+:root[data-theme="light"] .menu-toggle,
+:root[data-theme="light"] .account-button,
+:root[data-theme="light"] .cart-link,
+:root[data-theme="light"] .theme-toggle {
+  color: var(--ink);
+  background: rgba(255, 250, 242, 0.68);
+  border-color: rgba(22, 20, 18, 0.14);
+  box-shadow: 0 10px 30px rgba(74, 56, 40, 0.08);
+}
+
+:root[data-theme="light"] .cart-link span {
+  color: #fffaf2;
+  background: var(--ink);
+}
+
+:root[data-theme="light"] .side-menu-backdrop {
+  background: rgba(244, 239, 231, 0.48);
+}
+
+:root[data-theme="light"] .side-menu-panel {
+  border-right-color: rgba(22, 20, 18, 0.1);
+  background: rgba(255, 250, 242, 0.96);
+  box-shadow: 28px 0 70px rgba(74, 56, 40, 0.18);
+}
+
+:root[data-theme="light"] .side-menu-head,
+:root[data-theme="light"] .side-menu-close,
+:root[data-theme="light"] .side-menu-link {
+  color: var(--ink);
+}
+
+:root[data-theme="light"] .side-menu-link,
+:root[data-theme="light"] .side-menu-close {
+  border-color: rgba(22, 20, 18, 0.12);
+  background: rgba(22, 20, 18, 0.04);
+}
+
+:root[data-theme="light"] .hero-overlay {
+  background:
+    linear-gradient(90deg, rgba(244, 239, 231, 0.9) 0%, rgba(244, 239, 231, 0.56) 46%, rgba(244, 239, 231, 0.12) 100%),
+    linear-gradient(0deg, rgba(244, 239, 231, 0.96) 0%, rgba(244, 239, 231, 0.1) 44%);
+}
+
+:root[data-theme="light"] .hero-copy {
+  color: rgba(22, 20, 18, 0.78);
+}
+
+:root[data-theme="light"] .ticker {
+  background: #fffaf2;
+}
+
+:root[data-theme="light"] .category-card::before {
+  background:
+    radial-gradient(circle at 72% 22%, rgba(107, 81, 52, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(255, 250, 242, 0.2), rgba(244, 239, 231, 0.88));
+}
+
+:root[data-theme="light"] .category-card.men {
+  --garment: #33302c;
+}
+
+:root[data-theme="light"] .category-card.accessories::after {
+  box-shadow:
+    -38px 58px 0 -20px rgba(22, 20, 18, 0.1),
+    0 66px 0 -18px rgba(107, 81, 52, 0.18);
+}
+
+:root[data-theme="light"] .product-marquee-section {
+  background:
+    linear-gradient(180deg, rgba(22, 20, 18, 0.035), transparent 28%),
+    #fffaf2;
+}
+
+:root[data-theme="light"] .product-marquee-shell::before {
+  background: linear-gradient(90deg, #fffaf2, transparent);
+}
+
+:root[data-theme="light"] .product-marquee-shell::after {
+  background: linear-gradient(270deg, #fffaf2, transparent);
+}
+
+:root[data-theme="light"] .promo-product-card,
+:root[data-theme="light"] .site-footer {
+  color: var(--ink);
 }
 
 .payment-result-page {

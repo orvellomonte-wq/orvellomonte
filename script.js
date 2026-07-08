@@ -53,6 +53,7 @@ if (canUseAnalytics) {
 
 const cartCounter = document.querySelector(".cart-link span");
 const cartButton = document.querySelector(".cart-link");
+const themeToggle = document.querySelector(".theme-toggle");
 const cartDrawer = document.querySelector(".cart-drawer");
 const cartItems = document.querySelector(".cart-items");
 const cartEmpty = document.querySelector(".cart-empty");
@@ -136,6 +137,37 @@ const formatPrice = (amount) =>
     currency: "TRY",
     maximumFractionDigits: 0
   }).format(amount);
+
+const getSavedTheme = () => {
+  try {
+    return localStorage.getItem("orvello-theme") === "light" ? "light" : "dark";
+  } catch {
+    return "dark";
+  }
+};
+
+const applyTheme = (theme) => {
+  const isLight = theme === "light";
+  document.documentElement.dataset.theme = isLight ? "light" : "dark";
+
+  if (themeToggle) {
+    themeToggle.textContent = isLight ? "KOYU" : "ISIK";
+    themeToggle.setAttribute("aria-pressed", isLight ? "true" : "false");
+    themeToggle.setAttribute("aria-label", isLight ? "Koyu modu ac" : "Aydinlik modu ac");
+  }
+};
+
+applyTheme(getSavedTheme());
+
+themeToggle?.addEventListener("click", () => {
+  const nextTheme = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+  try {
+    localStorage.setItem("orvello-theme", nextTheme);
+  } catch {
+    // Theme still changes for the current page when storage is unavailable.
+  }
+  applyTheme(nextTheme);
+});
 
 const saveCart = () => {
   localStorage.setItem(getCartStorageKey(), JSON.stringify(cart));
