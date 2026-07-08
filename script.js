@@ -120,6 +120,7 @@ let adminPreviewUrls = [];
 let currentProducts = [];
 let currentEditId = null;
 let existingAdminImages = [];
+let selectedAdminImageFiles = [];
 let adminSizeRows = [];
 let ordersUnsubscribe = null;
 let discountsUnsubscribe = null;
@@ -487,7 +488,9 @@ const compressImageToDataUrl = async (file, targetLength, onStatus) => {
     { maxSide: 320, quality: 0.32 },
     { maxSide: 260, quality: 0.28 },
     { maxSide: 220, quality: 0.24 },
-    { maxSide: 180, quality: 0.2 }
+    { maxSide: 180, quality: 0.2 },
+    { maxSide: 150, quality: 0.18 },
+    { maxSide: 120, quality: 0.16 }
   ];
 
   let bestDataUrl = "";
@@ -517,8 +520,8 @@ const fileToDataUrl = (file) =>
 
 const prepareProductImages = async (files, onStatus) => {
   const imageUrls = [];
-  const totalTargetBytes = 520000;
-  const targetPerImage = Math.max(30000, Math.floor(totalTargetBytes / Math.max(files.length, 1)));
+  const totalTargetBytes = 820000;
+  const targetPerImage = Math.max(45000, Math.floor(totalTargetBytes / Math.max(files.length, 1)));
 
   for (let index = 0; index < files.length; index += 1) {
     onStatus(`Görsel ${index + 1}/${files.length} sıkıştırılıyor...`);
@@ -1570,6 +1573,27 @@ const renderAdminImagePreview = (files) => {
     .join("");
 };
 
+const getAdminImageFileKey = (file) => `${file.name}-${file.size}-${file.lastModified}`;
+
+const addSelectedAdminImages = (files) => {
+  const incomingFiles = files.filter(isProductImageFile);
+  const existingKeys = new Set(selectedAdminImageFiles.map(getAdminImageFileKey));
+  let addedCount = 0;
+
+  incomingFiles.forEach((file) => {
+    if (selectedAdminImageFiles.length >= 8 || existingKeys.has(getAdminImageFileKey(file))) {
+      return;
+    }
+
+    selectedAdminImageFiles.push(file);
+    existingKeys.add(getAdminImageFileKey(file));
+    addedCount += 1;
+  });
+
+  renderAdminImagePreview(selectedAdminImageFiles);
+  return addedCount;
+};
+
 const renderExistingAdminImagePreview = (imageUrls) => {
   if (!adminImagePreview) {
     return;
@@ -1605,7 +1629,7 @@ const setAdminMode = (mode, productName = "") => {
   }
 
   if (adminForm?.elements.images) {
-    adminForm.elements.images.required = mode !== "edit";
+    adminForm.elements.images.required = false;
   }
 
   if (mode === "edit" && productName) {
@@ -1624,6 +1648,7 @@ const resetAdminFormForCreate = () => {
   }
   currentEditId = null;
   existingAdminImages = [];
+  selectedAdminImageFiles = [];
   adminSizeRows = [];
   clearAdminImagePreview();
   renderAdminSizeStocks();
@@ -2423,6 +2448,7 @@ const editProduct = (productId) => {
 
   currentEditId = product.id;
   existingAdminImages = product.imageUrls || product.images || [];
+  selectedAdminImageFiles = [];
   adminForm.reset();
 
   adminForm.elements.name.value = product.name || "";
@@ -2503,7 +2529,18 @@ const setupAdminPanel = () => {
 
   adminForm.elements.images?.addEventListener("change", () => {
     const files = [...adminForm.elements.images.files];
-    renderAdminImagePreview(files);
+    const addedCount = addSelectedAdminImages(files);
+    adminForm.elements.images.value = "";
+
+    if (files.length > 0 && addedCount === 0) {
+      setAdminMessage("Secilen dosyalar fotograf olarak okunamadi veya zaten ekli.", true);
+      return;
+    }
+
+    if (selectedAdminImageFiles.length > 0) {
+      setAdminMessage(`${selectedAdminImageFiles.length} gorsel secildi. Yayinlarken sikistirilacak.`);
+      return;
+    }
 
     if (files.length > 0) {
       setAdminMessage(`${files.length} görsel seçildi. Yayınlarken sıkıştırılacak.`);
@@ -2556,7 +2593,7 @@ const setupAdminPanel = () => {
     const existingProduct = currentEditId ? currentProducts.find((item) => item.id === currentEditId) : null;
     const tone = existingProduct?.tone || "hoodie";
     const homeFeatured = formData.get("homeFeatured") === "true";
-    const imageFiles = [...adminForm.elements.images.files];
+    const imageFiles = selectedAdminImageFiles;
 
     if (!targetCategory || !name || !description || !price || price < 1 || sizes.length === 0 || hasInvalidSizeStock) {
       setAdminMessage("Ürün adı, fiyat, beden stokları ve açıklama alanlarını kontrol et.", true);
@@ -2624,6 +2661,7 @@ const setupAdminPanel = () => {
       adminForm.reset();
       currentEditId = null;
       existingAdminImages = [];
+      selectedAdminImageFiles = [];
       clearAdminImagePreview();
       renderAdminSizeStocks();
       closeAdminForm();
