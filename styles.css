@@ -548,6 +548,13 @@ button:disabled {
 
 .category-card.accessories {
   --garment: #c6a45d;
+  background: url("assets/orvello-accessories-category.jpeg") center 48% / cover;
+  box-shadow: none;
+}
+
+.category-card.accessories::before,
+.category-card.accessories::after {
+  display: none;
 }
 
 .category-card.accessories::after {
