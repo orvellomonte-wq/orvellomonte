@@ -295,6 +295,44 @@ const setProductGalleryImage = (galleryButton) => {
   }, 180);
 };
 
+const updateProductImageZoom = (event) => {
+  const frame = event.target.closest(".product-detail-main-image");
+
+  if (!frame) {
+    return;
+  }
+
+  if (event.pointerType === "touch" && event.type !== "pointerdown" && event.buttons !== 1) {
+    return;
+  }
+
+  const rect = frame.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) / rect.width) * 100;
+  const y = ((event.clientY - rect.top) / rect.height) * 100;
+
+  frame.style.setProperty("--zoom-x", `${Math.max(0, Math.min(100, x))}%`);
+  frame.style.setProperty("--zoom-y", `${Math.max(0, Math.min(100, y))}%`);
+  frame.classList.add("is-zooming");
+};
+
+const resetProductImageZoom = (event) => {
+  const frame = event.target.closest(".product-detail-main-image");
+
+  if (!frame) {
+    return;
+  }
+
+  frame.classList.remove("is-zooming");
+  frame.style.removeProperty("--zoom-x");
+  frame.style.removeProperty("--zoom-y");
+};
+
+document.addEventListener("pointermove", updateProductImageZoom);
+document.addEventListener("pointerdown", updateProductImageZoom);
+document.addEventListener("pointerleave", resetProductImageZoom, true);
+document.addEventListener("pointerup", resetProductImageZoom);
+document.addEventListener("pointercancel", resetProductImageZoom);
+
 const applyListingImageRatio = (image) => {
   const frame = image?.closest(".promo-product-visual, .product-visual, .product-detail-main-image");
 
