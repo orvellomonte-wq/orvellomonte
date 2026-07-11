@@ -537,6 +537,13 @@ button:disabled {
 
 .category-card.men {
   --garment: #101010;
+  background: url("assets/orvello-men-category.jpeg") center 36% / cover;
+  box-shadow: none;
+}
+
+.category-card.men::before,
+.category-card.men::after {
+  display: none;
 }
 
 .category-card.accessories {
