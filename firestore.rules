@@ -87,6 +87,10 @@ service cloud.firestore {
           "tone", "imageUrls", "images", "imageStorage", "category", "active",
           "homeFeatured", "homeFeaturedAt", "slug", "createdAt", "createdBy", "updatedAt", "updatedBy"
         ])
+        && request.resource.data.keys().hasAll([
+          "name", "description", "price", "stock", "sizeStocks", "sizes",
+          "imageUrls", "category", "active", "slug"
+        ])
         && validShortText(request.resource.data.name, 120)
         && validShortText(request.resource.data.description, 2000)
         && request.resource.data.price is number
@@ -98,7 +102,7 @@ service cloud.firestore {
         && request.resource.data.sizes.size() >= 1
         && request.resource.data.sizes.size() <= 30
         && request.resource.data.imageUrls is list
-        && request.resource.data.imageUrls.size() >= 1
+        && request.resource.data.imageUrls.size() >= 0
         && request.resource.data.imageUrls.size() <= 8
         && request.resource.data.images is list
         && request.resource.data.images.size() >= 0
@@ -107,11 +111,6 @@ service cloud.firestore {
         && (
           !request.resource.data.keys().hasAny(["homeFeatured"])
           || request.resource.data.homeFeatured is bool
-        )
-        && (
-          !request.resource.data.keys().hasAny(["homeFeaturedAt"])
-          || request.resource.data.homeFeaturedAt == null
-          || request.resource.data.homeFeaturedAt is timestamp
         )
         && request.resource.data.active is bool
         && validShortText(request.resource.data.slug, 160);
