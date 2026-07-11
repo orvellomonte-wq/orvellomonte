@@ -1735,43 +1735,27 @@ const setHomeFeatureEnabled = (enabled) => {
 const renderFirebaseProduct = (product) => {
   const imageUrl = getProductImage(product);
   const imageUrls = product.imageUrls || product.images || [];
-  const sizeStocks = product.sizeStocks || {};
-  const sizes = product.sizes?.length ? product.sizes : Object.keys(sizeStocks).length ? Object.keys(sizeStocks) : ["S", "M", "L"];
-  const stock = Number(product.stock || 0);
-  const isOutOfStock = stock <= 0;
+  const displayImageUrls = imageUrls.slice(0, 4);
   const isAdmin = isAdminUser(currentUser) && isAdminPage;
-  const firstAvailableSize = sizes.find((size) => Number(sizeStocks[size] ?? stock) > 0) || sizes[0];
 
   return `
   <article class="product-card" data-firestore-product="${escapeHtml(product.id)}" data-product-detail-link="${escapeHtml(getProductDetailUrl(product.id))}">
     ${isAdmin ? `
-      <div class="product-admin-actions" aria-label="${escapeHtml(product.name)} admin işlemleri">
-        <button type="button" data-admin-edit-product="${escapeHtml(product.id)}">Düzenle</button>
+      <div class="product-admin-actions" aria-label="${escapeHtml(product.name)} admin islemleri">
+        <button type="button" data-admin-edit-product="${escapeHtml(product.id)}">Duzenle</button>
         <button type="button" data-admin-delete-product="${escapeHtml(product.id)}">Sil</button>
       </div>
     ` : ""}
     <div class="product-visual ${imageUrl ? "product-photo" : escapeHtml(product.tone)}">
       ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}">` : ""}
     </div>
-    <div class="product-info">
+    <div class="product-info product-info-simple">
       <h3>${escapeHtml(product.name)}</h3>
-      ${imageUrls.length > 1 ? `
-        <div class="product-gallery" aria-label="${escapeHtml(product.name)} görselleri">
-          ${imageUrls.map((url, index) => `<button class="${index === 0 ? "active" : ""}" type="button" aria-label="Görsel ${index + 1}" data-gallery-image="${escapeHtml(url)}"><img src="${escapeHtml(url)}" alt=""></button>`).join("")}
+      ${displayImageUrls.length > 1 ? `
+        <div class="product-gallery" aria-label="${escapeHtml(product.name)} gorselleri">
+          ${displayImageUrls.map((url, index) => `<button class="${index === 0 ? "active" : ""}" type="button" aria-label="Gorsel ${index + 1}" data-gallery-image="${escapeHtml(url)}"><img src="${escapeHtml(url)}" alt=""></button>`).join("")}
         </div>
       ` : ""}
-      <div class="product-meta">
-        <div class="size-options" aria-label="${escapeHtml(product.name)} beden seçimi">
-          ${sizes.map((size) => {
-            const sizeStock = Number(sizeStocks[size] ?? stock);
-            const canSelect = sizeStock > 0;
-            return `<button class="size-option ${size === firstAvailableSize && canSelect ? "active" : ""} ${canSelect ? "" : "disabled"}" type="button" data-size-option="${escapeHtml(size)}" ${canSelect ? "" : "disabled"}>${escapeHtml(size)}</button>`;
-          }).join("")}
-        </div>
-        ${isAdmin ? `<span class="stock-badge ${isOutOfStock ? "out" : ""}">${isOutOfStock ? "Stok Yok" : `${stock} stok`}</span>` : ""}
-        <button class="about-button" type="button" data-about-toggle>Hakkında</button>
-        <p class="product-about" hidden>${escapeHtml(product.description)}</p>
-      </div>
       <div class="product-row">
         <span>${formatPrice(product.price)}</span>
       </div>
@@ -1779,15 +1763,16 @@ const renderFirebaseProduct = (product) => {
   </article>
 `;
 };
-
 const renderFirestoreProducts = (products) => {
   if (!productGrid) {
     return;
   }
 
+  const visibleProducts = isAdminPage ? products : products.slice(0, 4);
+
   productGrid.querySelectorAll("[data-firestore-product]").forEach((card) => card.remove());
-  productGrid.querySelector(".empty-products")?.toggleAttribute("hidden", products.length > 0);
-  productGrid.insertAdjacentHTML("beforeend", products.map(renderFirebaseProduct).join(""));
+  productGrid.querySelector(".empty-products")?.toggleAttribute("hidden", visibleProducts.length > 0);
+  productGrid.insertAdjacentHTML("beforeend", visibleProducts.map(renderFirebaseProduct).join(""));
   refreshListingImageRatios(productGrid);
   startProductGalleryRotation();
 };

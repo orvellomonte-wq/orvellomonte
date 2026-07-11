@@ -1256,10 +1256,24 @@ button:disabled {
   padding: 20px;
 }
 
+.product-info-simple {
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+
 .product-info h3 {
   margin-bottom: 8px;
   font-size: 1.06rem;
   text-transform: uppercase;
+}
+
+.product-info-simple h3 {
+  margin-bottom: 0;
+}
+
+.product-info-simple .product-row {
+  margin-top: 2px;
 }
 
 .product-gallery {
