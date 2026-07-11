@@ -524,14 +524,11 @@ button:disabled {
 
 .category-card.women {
   --garment: #b74a35;
-  background:
-    linear-gradient(180deg, rgba(13, 13, 13, 0.12), rgba(13, 13, 13, 0.78)),
-    url("assets/orvello-women-category.jpeg") center 36% / cover;
+  background: url("assets/orvello-women-category.jpeg") center 36% / cover;
 }
 
 .category-card.women::before {
-  background:
-    linear-gradient(180deg, rgba(13, 13, 13, 0.08), rgba(13, 13, 13, 0.82));
+  display: none;
 }
 
 .category-card.women::after {
