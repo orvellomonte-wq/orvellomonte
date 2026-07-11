@@ -85,7 +85,7 @@ service cloud.firestore {
       return request.resource.data.keys().hasOnly([
           "name", "description", "price", "stock", "sizeStocks", "sizes",
           "tone", "imageUrls", "images", "imageStorage", "category", "active",
-          "homeFeatured", "slug", "createdAt", "createdBy", "updatedAt", "updatedBy"
+          "homeFeatured", "homeFeaturedAt", "slug", "createdAt", "createdBy", "updatedAt", "updatedBy"
         ])
         && validShortText(request.resource.data.name, 120)
         && validShortText(request.resource.data.description, 2000)
@@ -107,6 +107,11 @@ service cloud.firestore {
         && (
           !request.resource.data.keys().hasAny(["homeFeatured"])
           || request.resource.data.homeFeatured is bool
+        )
+        && (
+          !request.resource.data.keys().hasAny(["homeFeaturedAt"])
+          || request.resource.data.homeFeaturedAt == null
+          || request.resource.data.homeFeaturedAt is timestamp
         )
         && request.resource.data.active is bool
         && validShortText(request.resource.data.slug, 160);
