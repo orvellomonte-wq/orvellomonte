@@ -491,8 +491,8 @@ const canvasToCompressedBlob = async (canvas, quality) => {
 const compressImage = async (file, options = {}) => {
   const sourceFile = await convertHeicToJpeg(file);
   const image = await readImage(sourceFile);
-  const maxSide = options.maxSide || 480;
-  const quality = options.quality || 0.46;
+  const maxSide = options.maxSide || 900;
+  const quality = options.quality || 0.78;
   const ratio = Math.min(1, maxSide / Math.max(image.width, image.height));
   const width = Math.max(1, Math.round(image.width * ratio));
   const height = Math.max(1, Math.round(image.height * ratio));
@@ -514,15 +514,15 @@ const compressImage = async (file, options = {}) => {
 const compressImageToDataUrl = async (file, targetLength, onStatus) => {
   const sourceFile = await convertHeicToJpeg(file, onStatus);
   const steps = [
-    { maxSide: 520, quality: 0.5 },
-    { maxSide: 460, quality: 0.44 },
-    { maxSide: 380, quality: 0.38 },
-    { maxSide: 320, quality: 0.32 },
-    { maxSide: 260, quality: 0.28 },
-    { maxSide: 220, quality: 0.24 },
-    { maxSide: 180, quality: 0.2 },
-    { maxSide: 150, quality: 0.18 },
-    { maxSide: 120, quality: 0.16 }
+    { maxSide: 960, quality: 0.84 },
+    { maxSide: 860, quality: 0.8 },
+    { maxSide: 760, quality: 0.76 },
+    { maxSide: 680, quality: 0.72 },
+    { maxSide: 600, quality: 0.66 },
+    { maxSide: 520, quality: 0.58 },
+    { maxSide: 440, quality: 0.5 },
+    { maxSide: 360, quality: 0.42 },
+    { maxSide: 300, quality: 0.36 }
   ];
 
   let bestDataUrl = "";
@@ -552,8 +552,8 @@ const fileToDataUrl = (file) =>
 
 const prepareProductImages = async (files, onStatus) => {
   const imageUrls = [];
-  const totalTargetBytes = 820000;
-  const targetPerImage = Math.max(45000, Math.floor(totalTargetBytes / Math.max(files.length, 1)));
+  const totalTargetBytes = 940000;
+  const targetPerImage = Math.max(90000, Math.floor(totalTargetBytes / Math.max(files.length, 1)));
 
   for (let index = 0; index < files.length; index += 1) {
     onStatus(`Görsel ${index + 1}/${files.length} sıkıştırılıyor...`);
