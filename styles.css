@@ -2063,6 +2063,39 @@ button:disabled {
   font-weight: 900;
 }
 
+.admin-image-actions {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  left: 6px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.admin-image-actions button {
+  min-height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.58);
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.admin-image-actions button:disabled {
+  opacity: 0.36;
+  cursor: not-allowed;
+}
+
+.admin-image-actions button[data-admin-image-action="remove"] {
+  color: #ffddd6;
+}
+
 .admin-product-form button[type="submit"],
 .admin-discount-form button[type="submit"] {
   grid-column: 1 / -1;

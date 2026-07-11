@@ -1583,6 +1583,26 @@ const clearAdminImagePreview = () => {
   }
 };
 
+const moveAdminImage = (list, fromIndex, direction) => {
+  const toIndex = fromIndex + direction;
+
+  if (toIndex < 0 || toIndex >= list.length) {
+    return false;
+  }
+
+  const [item] = list.splice(fromIndex, 1);
+  list.splice(toIndex, 0, item);
+  return true;
+};
+
+const getAdminImageControls = (kind, index, total) => `
+  <div class="admin-image-actions" aria-label="Görsel sırası">
+    <button type="button" data-admin-image-kind="${kind}" data-admin-image-index="${index}" data-admin-image-action="up" ${index === 0 ? "disabled" : ""} aria-label="Görseli öne taşı">‹</button>
+    <button type="button" data-admin-image-kind="${kind}" data-admin-image-index="${index}" data-admin-image-action="down" ${index === total - 1 ? "disabled" : ""} aria-label="Görseli arkaya taşı">›</button>
+    <button type="button" data-admin-image-kind="${kind}" data-admin-image-index="${index}" data-admin-image-action="remove" aria-label="Görseli kaldır">×</button>
+  </div>
+`;
+
 const renderAdminImagePreview = (files) => {
   if (!adminImagePreview) {
     return;
@@ -1600,6 +1620,7 @@ const renderAdminImagePreview = (files) => {
       <figure>
         <img src="${url}" alt="Seçilen ürün görseli ${index + 1}">
         <figcaption>${index + 1}</figcaption>
+        ${getAdminImageControls("selected", index, files.length)}
       </figure>
     `)
     .join("");
@@ -1642,10 +1663,57 @@ const renderExistingAdminImagePreview = (imageUrls) => {
       <figure>
         <img src="${escapeHtml(url)}" alt="Mevcut ürün görseli ${index + 1}">
         <figcaption>${index + 1}</figcaption>
+        ${getAdminImageControls("existing", index, imageUrls.length)}
       </figure>
     `)
     .join("");
 };
+
+const handleAdminImagePreviewAction = (event) => {
+  const button = event.target.closest("[data-admin-image-action]");
+
+  if (!button) {
+    return;
+  }
+
+  const kind = button.dataset.adminImageKind;
+  const action = button.dataset.adminImageAction;
+  const index = Number(button.dataset.adminImageIndex);
+  const list = kind === "existing" ? existingAdminImages : selectedAdminImageFiles;
+
+  if (!Number.isInteger(index) || !list?.[index]) {
+    return;
+  }
+
+  if (action === "remove") {
+    list.splice(index, 1);
+  } else if (action === "up") {
+    moveAdminImage(list, index, -1);
+  } else if (action === "down") {
+    moveAdminImage(list, index, 1);
+  }
+
+  if (kind === "existing") {
+    renderExistingAdminImagePreview(existingAdminImages);
+    setAdminMessage(existingAdminImages.length
+      ? "Mevcut görsel sırası güncellendi."
+      : "Mevcut görseller kaldırıldı. Kaydetmeden önce yeni görsel seçmelisin.");
+    return;
+  }
+
+  if (selectedAdminImageFiles.length === 0 && currentEditId && existingAdminImages.length > 0) {
+    renderExistingAdminImagePreview(existingAdminImages);
+    setAdminMessage("Yeni seçilen görseller kaldırıldı. Mevcut görseller korunacak.");
+    return;
+  }
+
+  renderAdminImagePreview(selectedAdminImageFiles);
+  setAdminMessage(selectedAdminImageFiles.length
+    ? "Seçilen görsel sırası güncellendi."
+    : "Seçilen görseller kaldırıldı.");
+};
+
+adminImagePreview?.addEventListener("click", handleAdminImagePreviewAction);
 
 const setAdminMode = (mode, productName = "") => {
   currentEditId = mode === "edit" ? currentEditId : null;
@@ -2619,6 +2687,11 @@ const setupAdminPanel = () => {
 
     if (!currentEditId && imageFiles.length === 0) {
       setAdminMessage("En az bir ürün görseli seçmelisin.", true);
+      return;
+    }
+
+    if (currentEditId && imageFiles.length === 0 && existingAdminImages.length === 0) {
+      setAdminMessage("Üründe en az bir görsel kalmalı. Yeni görsel seçmelisin.", true);
       return;
     }
 
