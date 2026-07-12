@@ -93,6 +93,8 @@ const productGrid = document.querySelector("[data-product-grid]");
 const productDetail = document.querySelector("[data-product-detail]");
 const productMarquee = document.querySelector("[data-product-marquee]");
 const productMarqueeWindow = productMarquee?.closest(".product-marquee-window");
+const productMarqueePreviousButton = document.querySelector("[data-marquee-previous]");
+const productMarqueeNextButton = document.querySelector("[data-marquee-next]");
 const adminPanel = document.querySelector(".admin-product-panel");
 const adminToggleButton = document.querySelector(".admin-toggle-button");
 const adminSeedProductsButton = document.querySelector(".admin-seed-products-button");
@@ -2034,6 +2036,28 @@ const setupProductMarqueeDrag = () => {
   let startX = 0;
   let startScrollLeft = 0;
 
+  const updateMarqueeControls = () => {
+    const maxScrollLeft = Math.max(0, productMarqueeWindow.scrollWidth - productMarqueeWindow.clientWidth);
+    productMarqueePreviousButton?.toggleAttribute("disabled", productMarqueeWindow.scrollLeft <= 2);
+    productMarqueeNextButton?.toggleAttribute("disabled", productMarqueeWindow.scrollLeft >= maxScrollLeft - 2);
+  };
+
+  const scrollMarquee = (direction) => {
+    const firstCard = productMarquee?.querySelector(".promo-product-card");
+    const trackStyles = productMarquee ? window.getComputedStyle(productMarquee) : null;
+    const gap = Number.parseFloat(trackStyles?.columnGap || trackStyles?.gap || "0") || 0;
+    const cardStep = (firstCard?.getBoundingClientRect().width || productMarqueeWindow.clientWidth * 0.8) + gap;
+
+    productMarqueeWindow.scrollBy({ left: direction * cardStep, behavior: "smooth" });
+  };
+
+  productMarqueePreviousButton?.addEventListener("click", () => scrollMarquee(-1));
+  productMarqueeNextButton?.addEventListener("click", () => scrollMarquee(1));
+  productMarqueeWindow.addEventListener("scroll", updateMarqueeControls, { passive: true });
+  window.addEventListener("resize", updateMarqueeControls);
+  new MutationObserver(() => window.requestAnimationFrame(updateMarqueeControls))
+    .observe(productMarquee, { childList: true });
+
   productMarqueeWindow.addEventListener("pointerdown", (event) => {
     if (event.button !== 0) {
       return;
@@ -2083,6 +2107,8 @@ const setupProductMarqueeDrag = () => {
     event.stopPropagation();
     suppressClick = false;
   }, true);
+
+  window.requestAnimationFrame(updateMarqueeControls);
 };
 
 const loadFirestoreProducts = () => {
