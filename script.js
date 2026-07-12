@@ -1874,7 +1874,7 @@ const renderFirestoreProducts = (products) => {
     return;
   }
 
-  const visibleProducts = isAdminPage ? products : products.slice(0, 4);
+  const visibleProducts = products;
 
   productGrid.querySelectorAll("[data-firestore-product]").forEach((card) => card.remove());
   productGrid.querySelector(".empty-products")?.toggleAttribute("hidden", visibleProducts.length > 0);
