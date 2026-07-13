@@ -35,6 +35,84 @@
       object-fit: cover;
       object-position: center;
       display: block;
+      opacity: 0;
+      transition: opacity 0.45s ease;
+      animation: hero-video-failsafe 0s 3.2s forwards;
+    }
+
+    .hero-video.is-ready {
+      opacity: 1;
+      animation: none;
+    }
+
+    .site-intro {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      color: #f7f1e8;
+      background: #0c0c0c;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.45s ease, visibility 0.45s ease;
+      animation: site-intro-failsafe 0s 3.2s forwards;
+    }
+
+    .site-intro span {
+      position: relative;
+      padding-bottom: 16px;
+      font-family: "Anton", Impact, sans-serif;
+      font-size: clamp(1.35rem, 4vw, 2.4rem);
+      letter-spacing: 0.08em;
+    }
+
+    .site-intro span::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 2px;
+      background: #d94f32;
+      transform: scaleX(0);
+      transform-origin: left;
+      animation: site-intro-progress 2.5s ease-out forwards;
+    }
+
+    .site-intro.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      animation: none;
+    }
+
+    @keyframes site-intro-progress {
+      to { transform: scaleX(1); }
+    }
+
+    @keyframes site-intro-failsafe {
+      to {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+    }
+
+    @keyframes hero-video-failsafe {
+      to { opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hero-video,
+      .site-intro {
+        transition: none;
+      }
+
+      .site-intro span::after {
+        animation: none;
+        transform: scaleX(1);
+      }
     }
 
     .hero-content h1 {
@@ -521,6 +599,10 @@
   </style>
 </head>
 <body>
+  <div class="site-intro" data-site-intro aria-hidden="true">
+    <span>ORVELLO MONTE</span>
+  </div>
+
   <header class="site-header">
     <button class="menu-toggle" type="button" aria-label="Menüyü aç" aria-controls="side-menu" aria-expanded="false">
       <span></span>
@@ -761,6 +843,38 @@
 
   <script>
     (() => {
+      const intro = document.querySelector('[data-site-intro]');
+      const heroVideo = document.querySelector('.hero-video');
+
+      if (intro && heroVideo) {
+        const startedAt = Date.now();
+        const minimumDelay = 900;
+        const maximumDelay = 2500;
+        let revealScheduled = false;
+
+        const revealSite = () => {
+          if (revealScheduled) return;
+          revealScheduled = true;
+
+          const remainingDelay = Math.max(0, minimumDelay - (Date.now() - startedAt));
+          window.setTimeout(() => {
+            heroVideo.classList.add('is-ready');
+            intro.classList.add('is-hidden');
+            window.setTimeout(() => intro.remove(), 500);
+          }, remainingDelay);
+        };
+
+        if (heroVideo.readyState >= 3) {
+          revealSite();
+        } else {
+          heroVideo.addEventListener('canplay', revealSite, { once: true });
+          heroVideo.addEventListener('error', revealSite, { once: true });
+        }
+
+        window.setTimeout(revealSite, maximumDelay);
+        heroVideo.play().catch(() => {});
+      }
+
       const body = document.body;
       const menu = document.querySelector('.side-menu');
       const menuToggle = document.querySelector('.menu-toggle');
