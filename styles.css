@@ -668,6 +668,17 @@ button:disabled {
   font-size: 0.74rem;
 }
 
+body[data-category] .product-channel-nav .button.secondary {
+  border-color: #111;
+  color: #fff;
+  background: #111;
+}
+
+body[data-category] .product-channel-nav .button.secondary:hover {
+  border-color: #2b2b2b;
+  background: #2b2b2b;
+}
+
 .product-channel-nav .button span {
   font-size: 0.95rem;
   line-height: 1;
