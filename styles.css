@@ -3792,9 +3792,18 @@ body.product-features-open {
 }
 
 :root[data-theme="light"] .hero-overlay {
-  background:
-    linear-gradient(90deg, rgba(248, 248, 246, 0.94) 0%, rgba(248, 248, 246, 0.62) 46%, rgba(248, 248, 246, 0.08) 100%),
-    linear-gradient(0deg, rgba(244, 244, 242, 0.98) 0%, rgba(244, 244, 242, 0.08) 44%);
+  background: transparent;
+}
+
+:root[data-theme="light"] .home-page .site-header {
+  background: transparent;
+}
+
+:root[data-theme="light"] .home-page .menu-toggle,
+:root[data-theme="light"] .home-page .theme-toggle,
+:root[data-theme="light"] .home-page .account-button,
+:root[data-theme="light"] .home-page .cart-link {
+  box-shadow: none;
 }
 
 :root[data-theme="light"] .hero-copy {
