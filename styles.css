@@ -4032,7 +4032,27 @@ body.product-features-open {
 
 :root[data-theme="light"] .product-gallery.product-detail-gallery button.active {
   border-color: #111;
-  box-shadow: 0 0 0 2px rgba(12, 12, 12, 0.14);
+  box-shadow: none;
+}
+
+:root[data-theme="light"] .product-card,
+:root[data-theme="light"] .product-detail-main-image,
+:root[data-theme="light"] .product-visual,
+:root[data-theme="light"] .product-gallery button {
+  box-shadow: none;
+}
+
+:root[data-theme="light"] .home-page .category-card .kicker,
+:root[data-theme="light"] .home-page .category-card h3,
+:root[data-theme="light"] .home-page .category-cta {
+  color: #fff;
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.92),
+    0 0 18px rgba(0, 0, 0, 0.72);
+}
+
+:root[data-theme="light"] .home-page .category-cta {
+  border-bottom-color: #fff;
 }
 
 :root[data-theme="light"] .lookbook,
