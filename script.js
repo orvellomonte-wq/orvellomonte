@@ -14,8 +14,10 @@ import {
   deleteDoc,
   doc,
   getDocs,
-  getFirestore,
+  initializeFirestore,
   onSnapshot,
+  persistentLocalCache,
+  persistentMultipleTabManager,
   query,
   serverTimestamp,
   setDoc,
@@ -35,7 +37,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
+});
 const ADMIN_EMAIL = "orvellomonte@gmail.com";
 const isAdminPage = document.body.dataset.adminPage === "true";
 
@@ -1904,7 +1910,7 @@ const renderProductMarquee = (products) => {
     return;
   }
 
-  productMarquee.innerHTML = visibleProducts.map((product) => {
+  productMarquee.innerHTML = visibleProducts.map((product, index) => {
     const imageUrl = getProductImage(product);
     const categoryMeta = {
       men: { name: "Erkek", href: "erkek.html" },
@@ -1915,7 +1921,7 @@ const renderProductMarquee = (products) => {
     return `
       <a class="promo-product-card" href="${escapeHtml(getProductDetailUrl(product.id))}" data-product-detail-link="${escapeHtml(getProductDetailUrl(product.id))}">
         <div class="promo-product-visual ${imageUrl ? "has-image" : ""}">
-          ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}">` : ""}
+          ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}" loading="${index < 4 ? "eager" : "lazy"}" decoding="async" ${index < 2 ? 'fetchpriority="high"' : ""}>` : ""}
         </div>
         <div class="promo-product-info">
           <span>${escapeHtml(categoryMeta.name)}</span>
@@ -2018,9 +2024,12 @@ const loadFirestoreProducts = () => {
     return;
   }
 
+  const isFeaturedOnlyPage = Boolean(productMarquee && !productGrid && !productDetail && !pageCategory && !isAdminPage);
   const productQuery = pageCategory
     ? query(collection(db, "products"), where("category", "==", pageCategory))
-    : collection(db, "products");
+    : isFeaturedOnlyPage
+      ? query(collection(db, "products"), where("homeFeatured", "==", true))
+      : collection(db, "products");
 
   onSnapshot(
     productQuery,
