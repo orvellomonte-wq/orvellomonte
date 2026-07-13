@@ -3,6 +3,7 @@ const admin = require("firebase-admin");
 
 const FIREBASE_PROJECT_ID = "orvellomonte-392cf";
 const PAYTR_TOKEN_URL = "https://www.paytr.com/odeme/api/get-token";
+const CANONICAL_SITE_URL = "https://www.orvellomonte.com";
 const ALLOWED_ORIGINS = new Set([
   "https://www.orvellomonte.com",
   "https://orvellomonte.com"
@@ -112,15 +113,23 @@ const normalizeImageUrl = (value) => {
 };
 
 const getPublicBaseUrl = () => {
-  const baseUrl = String(process.env.PUBLIC_SITE_URL || "https://orvellomonte.com")
+  const configuredUrl = String(process.env.PUBLIC_SITE_URL || CANONICAL_SITE_URL)
     .trim()
     .replace(/\/+$/, "");
 
-  if (!baseUrl.startsWith("https://")) {
+  if (!configuredUrl.startsWith("https://")) {
     throw new Error("PUBLIC_SITE_URL must start with https://");
   }
 
-  return baseUrl;
+  const publicUrl = new URL(configuredUrl);
+
+  // The apex domain redirects to www with HTTP 307. PayTR return URLs must
+  // point directly at the canonical host so the payment flow is not redirected.
+  if (publicUrl.hostname === "orvellomonte.com") {
+    publicUrl.hostname = "www.orvellomonte.com";
+  }
+
+  return publicUrl.toString().replace(/\/+$/, "");
 };
 
 const getActiveDiscount = async (db, discount) => {
