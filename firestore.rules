@@ -84,7 +84,7 @@ service cloud.firestore {
     function validProductWrite() {
       return request.resource.data.keys().hasOnly([
           "name", "description", "price", "stock", "sizeStocks", "sizes",
-          "tone", "imageUrls", "images", "imageStorage", "category", "active",
+          "tone", "imageUrls", "images", "imageStorage", "category", "productType", "active",
           "homeFeatured", "homeFeaturedAt", "slug", "createdAt", "createdBy", "updatedAt", "updatedBy"
         ])
         && request.resource.data.keys().hasAll([
@@ -108,6 +108,10 @@ service cloud.firestore {
         && request.resource.data.images.size() >= 0
         && request.resource.data.images.size() <= 8
         && request.resource.data.category in ["women", "men", "accessories"]
+        && (
+          !request.resource.data.keys().hasAny(["productType"])
+          || request.resource.data.productType in ["top", "shorts"]
+        )
         && (
           !request.resource.data.keys().hasAny(["homeFeatured"])
           || request.resource.data.homeFeatured is bool

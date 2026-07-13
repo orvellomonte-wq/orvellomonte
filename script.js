@@ -96,6 +96,7 @@ const adminLock = document.querySelector("[data-admin-lock]");
 const adminOnlySections = document.querySelectorAll("[data-admin-only]");
 const pageCategory = document.body.dataset.category;
 const productGrid = document.querySelector("[data-product-grid]");
+const productGrids = document.querySelectorAll("[data-product-grid]");
 const productDetail = document.querySelector("[data-product-detail]");
 const productMarquee = document.querySelector("[data-product-marquee]");
 const productMarqueeWindow = productMarquee?.closest(".product-marquee-window");
@@ -144,6 +145,7 @@ let productGalleryTimer = null;
 let subscribersUnsubscribe = null;
 let newsletterSubscribers = [];
 let announcementUnsubscribe = null;
+let pendingProductSectionHash = ["#tops", "#shorts"].includes(window.location.hash) ? window.location.hash : "";
 
 const DEFAULT_ANNOUNCEMENT = "3000 TL ÜZERİ KARGO ÜCRETSİZ";
 
@@ -1768,6 +1770,10 @@ const resetAdminFormForCreate = () => {
   if (adminForm.elements.category) {
     adminForm.elements.category.value = "women";
   }
+  if (adminForm.elements.productType) {
+    adminForm.elements.productType.value = "top";
+  }
+  syncAdminProductType();
   currentEditId = null;
   existingAdminImages = [];
   selectedAdminImageFiles = [];
@@ -1822,6 +1828,27 @@ const setHomeFeatureEnabled = (enabled) => {
   adminHomeFeatureToggle.textContent = enabled ? "Anasayfadan Kaldır" : "Anasayfada Göster";
 };
 
+const normalizeProductType = (value) => value === "shorts" ? "shorts" : "top";
+
+const syncAdminProductType = () => {
+  if (!adminForm?.elements.productType) {
+    return;
+  }
+
+  const isAccessory = adminForm.elements.category?.value === "accessories";
+  const shortsInput = adminForm.querySelector("input[name='productType'][value='shorts']");
+  const topInput = adminForm.querySelector("input[name='productType'][value='top']");
+  const picker = adminForm.querySelector(".admin-product-type-picker");
+
+  if (shortsInput) {
+    shortsInput.disabled = isAccessory;
+  }
+  if (isAccessory && topInput) {
+    topInput.checked = true;
+  }
+  picker?.classList.toggle("is-disabled", isAccessory);
+};
+
 const renderFirebaseProduct = (product) => {
   const imageUrl = getProductImage(product);
   const imageUrls = product.imageUrls || product.images || [];
@@ -1854,16 +1881,37 @@ const renderFirebaseProduct = (product) => {
 `;
 };
 const renderFirestoreProducts = (products) => {
-  if (!productGrid) {
+  if (!productGrids.length) {
     return;
   }
 
-  const visibleProducts = products;
+  productGrids.forEach((grid) => {
+    const requestedType = grid.dataset.productType;
+    const visibleProducts = requestedType
+      ? products.filter((product) => normalizeProductType(product.productType) === requestedType)
+      : products;
 
-  productGrid.querySelectorAll("[data-firestore-product]").forEach((card) => card.remove());
-  productGrid.querySelector(".empty-products")?.toggleAttribute("hidden", visibleProducts.length > 0);
-  productGrid.insertAdjacentHTML("beforeend", visibleProducts.map(renderFirebaseProduct).join(""));
-  refreshListingImageRatios(productGrid);
+    grid.querySelectorAll("[data-firestore-product]").forEach((card) => card.remove());
+    grid.querySelector(".empty-products")?.toggleAttribute("hidden", visibleProducts.length > 0);
+    grid.insertAdjacentHTML("beforeend", visibleProducts.map(renderFirebaseProduct).join(""));
+    refreshListingImageRatios(grid);
+  });
+
+  if (pendingProductSectionHash) {
+    const targetSection = document.querySelector(pendingProductSectionHash);
+    const listingImages = [...document.querySelectorAll("#tops img, #shorts img")];
+    const waitForImages = Promise.all(listingImages.map((image) => image.complete
+      ? Promise.resolve()
+      : new Promise((resolve) => {
+          image.addEventListener("load", resolve, { once: true });
+          image.addEventListener("error", resolve, { once: true });
+        })));
+    const imageWaitTimeout = new Promise((resolve) => window.setTimeout(resolve, 2500));
+    pendingProductSectionHash = "";
+    Promise.race([waitForImages, imageWaitTimeout]).then(() => {
+      window.requestAnimationFrame(() => targetSection?.scrollIntoView({ block: "start" }));
+    });
+  }
   startProductGalleryRotation();
 };
 
@@ -2691,6 +2739,10 @@ const editProduct = (productId) => {
   if (adminForm.elements.category) {
     adminForm.elements.category.value = product.category || "women";
   }
+  if (adminForm.elements.productType) {
+    adminForm.elements.productType.value = normalizeProductType(product.productType);
+  }
+  syncAdminProductType();
 
   const productSizes = product.sizes?.length ? product.sizes : Object.keys(product.sizeStocks || {});
   const normalizedProductSizes = productSizes.length ? productSizes : (Number(product.stock || 0) > 0 ? ["STANDART"] : []);
@@ -2753,6 +2805,11 @@ const setupAdminPanel = () => {
     setHomeFeatureEnabled(!enabled);
     setAdminMessage(!enabled ? "Ürün anasayfada görünecek." : "Ürün anasayfadan kaldırılacak.");
   });
+
+  adminForm.querySelectorAll("input[name='category']").forEach((input) => {
+    input.addEventListener("change", syncAdminProductType);
+  });
+  syncAdminProductType();
 
   document.querySelectorAll("[data-admin-close]").forEach((button) => {
     button.addEventListener("click", closeAdminForm);
@@ -2817,6 +2874,9 @@ const setupAdminPanel = () => {
     const description = formData.get("description").trim();
     const price = Number(formData.get("price"));
     const targetCategory = pageCategory || formData.get("category");
+    const productType = targetCategory === "accessories"
+      ? "top"
+      : normalizeProductType(formData.get("productType"));
     const sizes = adminSizeRows.map((item) => item.size);
     const sizeStocks = getSizeStocksFromForm();
     const hasInvalidSizeStock = Object.values(sizeStocks).some((stock) => !Number.isFinite(stock) || stock < 0);
@@ -2876,6 +2936,7 @@ const setupAdminPanel = () => {
         images: [],
         imageStorage: "firestore-base64-compressed",
         category: targetCategory,
+        productType,
         homeFeatured,
         homeFeaturedAt: homeFeatured ? serverTimestamp() : null,
         active: true,
