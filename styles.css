@@ -650,26 +650,6 @@ button:disabled {
   scroll-margin-top: 94px;
 }
 
-.product-channel-heading {
-  display: grid;
-  justify-items: start;
-  gap: 8px;
-}
-
-.product-section-jump {
-  min-height: 42px;
-  margin-bottom: 10px;
-  padding: 0 16px;
-  gap: 10px;
-  letter-spacing: 0.08em;
-  font-size: 0.76rem;
-}
-
-.product-section-jump span {
-  font-size: 1rem;
-  line-height: 1;
-}
-
 .product-shorts-section {
   min-height: calc(100svh - 94px);
   border-top: 1px solid var(--line);
@@ -1325,6 +1305,29 @@ body.product-features-open {
 
 body[data-category] .page-hero {
   background: url("assets/orvello-channel-hero.jpeg") center 38% / cover;
+}
+
+body[data-category] .page-hero .hero-section-jump {
+  min-height: 44px;
+  margin-top: 24px;
+  padding: 0 18px;
+  gap: 10px;
+  border-color: rgba(255, 255, 255, 0.48);
+  color: #fff;
+  background: rgba(10, 10, 10, 0.72);
+  backdrop-filter: blur(8px);
+  letter-spacing: 0.08em;
+  font-size: 0.76rem;
+}
+
+body[data-category] .page-hero .hero-section-jump:hover {
+  border-color: rgba(255, 255, 255, 0.82);
+  background: rgba(10, 10, 10, 0.9);
+}
+
+body[data-category] .page-hero .hero-section-jump span {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .page-hero-content {
