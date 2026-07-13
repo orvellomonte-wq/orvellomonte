@@ -28,6 +28,8 @@
     }
 
     .hero-video {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -555,7 +557,9 @@
 
   <main id="top">
     <section class="hero" aria-label="Orvello Monte streetwear koleksiyonu">
-      <img class="hero-image" src="assets/orvello-home-campaign.jpeg" alt="Orvello Monte streetwear kampanya görseli">
+      <video class="hero-video" autoplay muted loop playsinline preload="metadata" poster="assets/orvello-home-campaign.jpeg" aria-hidden="true">
+        <source src="assets/orvello-home-reel.mp4" type="video/mp4">
+      </video>
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <p class="kicker">New Season / Limited Drop</p>
