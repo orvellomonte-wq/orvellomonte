@@ -101,6 +101,9 @@ const productMarquee = document.querySelector("[data-product-marquee]");
 const productMarqueeWindow = productMarquee?.closest(".product-marquee-window");
 const productMarqueePreviousButton = document.querySelector("[data-marquee-previous]");
 const productMarqueeNextButton = document.querySelector("[data-marquee-next]");
+const productFeaturesModal = document.querySelector("[data-product-features-modal]");
+const productFeaturesTitle = document.querySelector("[data-product-features-title]");
+const productFeaturesList = document.querySelector("[data-product-features-list]");
 const adminPanel = document.querySelector(".admin-product-panel");
 const adminToggleButton = document.querySelector(".admin-toggle-button");
 const adminForm = document.querySelector(".admin-product-form");
@@ -931,6 +934,53 @@ const getFeaturedSortTime = (product) => Math.max(
   getFirestoreMillis(product.createdAt)
 );
 
+const getProductFeatures = (description) => {
+  const features = String(description || "")
+    .split(/\s*(?:\*|•|\r?\n)\s*/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return features.length ? features : ["Ürün özellikleri yakında eklenecek."];
+};
+
+const openProductFeatures = () => {
+  if (!productFeaturesModal) {
+    return;
+  }
+
+  productFeaturesModal.hidden = false;
+  productFeaturesModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("product-features-open");
+  productFeaturesModal.querySelector(".product-features-close")?.focus();
+};
+
+const closeProductFeatures = () => {
+  if (!productFeaturesModal || productFeaturesModal.hidden) {
+    return;
+  }
+
+  productFeaturesModal.hidden = true;
+  productFeaturesModal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("product-features-open");
+};
+
+const goBackFromProduct = (fallbackUrl) => {
+  let isSameSiteReferrer = false;
+
+  try {
+    isSameSiteReferrer = Boolean(document.referrer && new URL(document.referrer).origin === window.location.origin);
+  } catch {
+    isSameSiteReferrer = false;
+  }
+
+  if (isSameSiteReferrer && window.history.length > 1) {
+    window.history.back();
+    return;
+  }
+
+  window.location.href = fallbackUrl || "index.html#categories";
+};
+
 const openSideMenu = () => {
   if (!sideMenu || !menuToggle) {
     return;
@@ -1098,7 +1148,25 @@ document.addEventListener("click", (event) => {
   const policyEditButton = event.target.closest("[data-policy-edit]");
   const policyCancelButton = event.target.closest("[data-policy-cancel]");
   const detailLinkCard = event.target.closest("[data-product-detail-link]");
+  const productBackButton = event.target.closest("[data-product-back]");
+  const productFeaturesOpenButton = event.target.closest("[data-open-product-features]");
+  const productFeaturesCloseButton = event.target.closest("[data-close-product-features]");
   const isInteractiveProductClick = event.target.closest("a, button, input, textarea, select, label");
+
+  if (productBackButton) {
+    goBackFromProduct(productBackButton.dataset.productBack);
+    return;
+  }
+
+  if (productFeaturesOpenButton) {
+    openProductFeatures();
+    return;
+  }
+
+  if (productFeaturesCloseButton) {
+    closeProductFeatures();
+    return;
+  }
 
   if (policyEditButton) {
     openPolicyEditor(policyEditButton.dataset.policyEdit);
@@ -1831,11 +1899,15 @@ const renderProductDetail = (products) => {
   const isOutOfStock = stock <= 0;
   const firstAvailableSize = sizes.find((size) => Number(sizeStocks[size] ?? stock) > 0) || sizes[0];
   const categoryMeta = getCategoryMeta(product.category);
+  const productFeatures = getProductFeatures(product.description);
+  const productSummary = productFeatures[0];
 
   document.title = `${product.name || "Ürün"} | Orvello Monte`;
 
   productDetail.innerHTML = `
     <nav class="product-detail-breadcrumb" aria-label="Ürün yolu">
+      <button class="product-detail-back" type="button" data-product-back="${escapeHtml(categoryMeta.href)}" aria-label="Önceki sayfaya dön">&#8592; Geri</button>
+      <span class="product-detail-breadcrumb-separator">/</span>
       <a href="index.html">Ana Sayfa</a>
       <span>/</span>
       <a href="${escapeHtml(categoryMeta.href)}">${escapeHtml(categoryMeta.name)}</a>
@@ -1855,7 +1927,8 @@ const renderProductDetail = (products) => {
         <p class="kicker">${escapeHtml(categoryMeta.name)} / Orvello Monte</p>
         <h1>${escapeHtml(product.name)}</h1>
         <strong class="product-detail-price">${formatPrice(Number(product.price || 0))}</strong>
-        <p class="product-detail-description">${escapeHtml(product.description || "Ürün açıklaması yakında eklenecek.")}</p>
+        <p class="product-detail-description">${escapeHtml(productSummary)}</p>
+        <button class="product-detail-feature-button" type="button" data-open-product-features>Ürün Özellikleri</button>
         <div class="product-meta product-detail-meta">
           <span class="product-detail-label">Beden</span>
           <div class="size-options" aria-label="${escapeHtml(product.name)} beden seçimi">
@@ -1883,6 +1956,14 @@ const renderProductDetail = (products) => {
       </div>
     </article>
   `;
+  if (productFeaturesTitle) {
+    productFeaturesTitle.textContent = product.name || "Ürün Özellikleri";
+  }
+  if (productFeaturesList) {
+    productFeaturesList.innerHTML = productFeatures
+      .map((feature) => `<li>${escapeHtml(feature)}</li>`)
+      .join("");
+  }
   refreshListingImageRatios(productDetail);
 };
 
@@ -2877,6 +2958,7 @@ document.addEventListener("keydown", (event) => {
     closeAuth();
     closeCart();
     closeCheckout();
+    closeProductFeatures();
     closeSideMenu();
   }
 });
