@@ -1325,6 +1325,10 @@ body.product-features-open {
     url("assets/orvello-channel-hero.jpeg") center 38% / cover;
 }
 
+body[data-category] .page-hero {
+  background: url("assets/orvello-channel-hero.jpeg") center 38% / cover;
+}
+
 .page-hero-content {
   width: min(760px, 100%);
 }
@@ -3909,7 +3913,7 @@ body.product-features-open {
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.14);
 }
 
-:root[data-theme="light"] .page-hero {
+:root[data-theme="light"] body[data-category] .page-hero {
   background: url("assets/orvello-channel-hero.jpeg") center 38% / cover;
 }
 
