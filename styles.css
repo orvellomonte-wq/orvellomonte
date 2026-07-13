@@ -70,11 +70,6 @@ textarea {
 }
 
 .announcement-bar {
-  position: fixed;
-  z-index: 13;
-  top: 0;
-  right: 0;
-  left: 0;
   height: 34px;
   overflow: hidden;
   border-bottom: 1px solid rgba(255, 255, 255, 0.14);
@@ -118,10 +113,6 @@ textarea {
   margin-left: 54px;
   background: currentColor;
   content: "";
-}
-
-.has-announcement-bar .site-header {
-  top: 34px;
 }
 
 @keyframes announcement-scroll {
@@ -4494,10 +4485,6 @@ body.product-features-open {
 
   .announcement-group span::after {
     margin-left: 30px;
-  }
-
-  .has-announcement-bar .site-header {
-    top: 30px;
   }
 
   .site-header {
