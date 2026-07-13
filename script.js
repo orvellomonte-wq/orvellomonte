@@ -113,6 +113,9 @@ const adminDiscountToggleButton = document.querySelector(".admin-discount-toggle
 const adminDiscountForm = document.querySelector(".admin-discount-form");
 const adminDiscountMessage = document.querySelector(".admin-discount-message");
 const adminDiscountList = document.querySelector("[data-admin-discounts]");
+const adminAnnouncementForm = document.querySelector("[data-admin-announcement-form]");
+const adminAnnouncementMessage = document.querySelector(".admin-announcement-message");
+const announcementTexts = document.querySelectorAll("[data-announcement-text]");
 const adminImagePreview = document.querySelector(".admin-image-preview");
 const adminSizeStocks = document.querySelector(".admin-size-stocks");
 const adminOrdersList = document.querySelector("[data-admin-orders]");
@@ -140,6 +143,9 @@ let policiesUnsubscribe = null;
 let productGalleryTimer = null;
 let subscribersUnsubscribe = null;
 let newsletterSubscribers = [];
+let announcementUnsubscribe = null;
+
+const DEFAULT_ANNOUNCEMENT = "3000 TL ÜZERİ KARGO ÜCRETSİZ";
 
 const formatPrice = (amount) =>
   new Intl.NumberFormat("tr-TR", {
@@ -2447,6 +2453,92 @@ const loadPolicyContent = () => {
   );
 };
 
+const setAdminAnnouncementMessage = (message, isError = false) => {
+  if (!adminAnnouncementMessage) {
+    return;
+  }
+
+  adminAnnouncementMessage.textContent = message;
+  adminAnnouncementMessage.classList.toggle("error", isError);
+};
+
+const renderAnnouncement = (value) => {
+  const text = String(value || "").trim() || DEFAULT_ANNOUNCEMENT;
+
+  announcementTexts.forEach((element) => {
+    element.textContent = text;
+  });
+
+  const input = adminAnnouncementForm?.elements.announcementText;
+  if (input && document.activeElement !== input) {
+    input.value = text;
+  }
+};
+
+const loadAnnouncement = () => {
+  if (announcementUnsubscribe) {
+    announcementUnsubscribe();
+    announcementUnsubscribe = null;
+  }
+
+  if (!announcementTexts.length && !adminAnnouncementForm) {
+    return;
+  }
+
+  renderAnnouncement(DEFAULT_ANNOUNCEMENT);
+  announcementUnsubscribe = onSnapshot(
+    doc(db, "site_content", "announcement"),
+    (snapshot) => {
+      renderAnnouncement(snapshot.exists() ? snapshot.data().text : DEFAULT_ANNOUNCEMENT);
+    },
+    (error) => {
+      setAdminAnnouncementMessage(error.code === "permission-denied"
+        ? "Duyuru okunamadı: Firestore Rules içinde site_content okuma iznini yayınla."
+        : "Duyuru okunamadı. Firebase bağlantısını kontrol et.", true);
+    }
+  );
+};
+
+const setupAnnouncementPanel = () => {
+  if (!adminAnnouncementForm) {
+    return;
+  }
+
+  adminAnnouncementForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!isAdminUser(currentUser)) {
+      setAdminAnnouncementMessage("Bu işlem için admin hesabıyla giriş yapmalısın.", true);
+      return;
+    }
+
+    const text = String(new FormData(adminAnnouncementForm).get("announcementText") || "").trim();
+    if (text.length < 3 || text.length > 140) {
+      setAdminAnnouncementMessage("Duyuru metni 3 ile 140 karakter arasında olmalı.", true);
+      return;
+    }
+
+    const submitButton = adminAnnouncementForm.querySelector("button[type='submit']");
+    submitButton.disabled = true;
+    setAdminAnnouncementMessage("Duyuru kaydediliyor...");
+
+    try {
+      await setDoc(doc(db, "site_content", "announcement"), {
+        text,
+        updatedAt: serverTimestamp(),
+        updatedBy: currentUser.email || ADMIN_EMAIL
+      }, { merge: true });
+      setAdminAnnouncementMessage("Duyuru kaydedildi ve ana sayfada yayınlandı.");
+    } catch (error) {
+      setAdminAnnouncementMessage(error.code === "permission-denied"
+        ? "Duyuru kaydedilemedi: Firestore Rules içinde site_content admin yazma iznini yayınla."
+        : error.message || "Duyuru kaydedilemedi. Firebase bağlantısını kontrol et.", true);
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+};
+
 const setupDiscountPanel = () => {
   if (!adminDiscountForm) {
     return;
@@ -2965,8 +3057,10 @@ document.addEventListener("keydown", (event) => {
 
 renderCart();
 setupAdminPanel();
+setupAnnouncementPanel();
 setupDiscountPanel();
 setupSubscriberMessagePanel();
 setupProductMarqueeDrag();
+loadAnnouncement();
 loadPolicyContent();
 loadFirestoreProducts();

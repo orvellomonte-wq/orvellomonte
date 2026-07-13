@@ -69,6 +69,67 @@ textarea {
   background: linear-gradient(180deg, rgba(13, 13, 13, 0.88), rgba(13, 13, 13, 0));
 }
 
+.announcement-bar {
+  position: fixed;
+  z-index: 13;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 34px;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  background: #111;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.announcement-track {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  animation: announcement-scroll 24s linear infinite;
+  will-change: transform;
+}
+
+.announcement-group {
+  display: flex;
+  min-width: 100vw;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-around;
+  gap: 54px;
+  padding: 0 28px;
+}
+
+.announcement-group span {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.announcement-group span::after {
+  width: 5px;
+  height: 5px;
+  margin-left: 54px;
+  background: currentColor;
+  content: "";
+}
+
+.has-announcement-bar .site-header {
+  top: 34px;
+}
+
+@keyframes announcement-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 .brand {
   grid-column: 1 / -1;
   grid-row: 1;
@@ -1709,6 +1770,98 @@ body.product-features-open {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.admin-announcement-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(280px, 1.35fr) auto;
+  gap: 14px;
+  align-items: end;
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  background: rgba(247, 241, 232, 0.045);
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.24);
+}
+
+.admin-announcement-copy {
+  align-self: center;
+}
+
+.admin-announcement-copy h3,
+.admin-announcement-copy p {
+  margin: 0;
+}
+
+.admin-announcement-copy h3 {
+  margin-top: 4px;
+  font-family: "Anton", Impact, sans-serif;
+  font-size: 1.55rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.admin-announcement-copy > p:last-child {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.admin-announcement-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.admin-announcement-form input {
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 12px;
+  color: var(--ink);
+  outline: 0;
+  background: rgba(247, 241, 232, 0.08);
+}
+
+.admin-announcement-form input:focus {
+  border-color: rgba(231, 216, 189, 0.8);
+  box-shadow: 0 0 0 3px rgba(231, 216, 189, 0.1);
+}
+
+.admin-announcement-form button {
+  min-height: 46px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 18px;
+  color: var(--bg);
+  cursor: pointer;
+  background: var(--accent-2);
+  font-weight: 900;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-announcement-form button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.admin-announcement-message {
+  grid-column: 1 / -1;
+  min-height: 20px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.admin-announcement-message.error {
+  color: #ff9b89;
 }
 
 .admin-toggle-button,
@@ -3726,6 +3879,7 @@ body.product-features-open {
 :root[data-theme="light"] .admin-orders-button,
 :root[data-theme="light"] .admin-product-form button[type="submit"],
 :root[data-theme="light"] .admin-discount-form button[type="submit"],
+:root[data-theme="light"] .admin-announcement-form button,
 :root[data-theme="light"] .admin-subscriber-form button,
 :root[data-theme="light"] .admin-size-entry button {
   color: #fff;
@@ -3740,6 +3894,7 @@ body.product-features-open {
 :root[data-theme="light"] .admin-orders-button:hover,
 :root[data-theme="light"] .admin-product-form button[type="submit"]:hover,
 :root[data-theme="light"] .admin-discount-form button[type="submit"]:hover,
+:root[data-theme="light"] .admin-announcement-form button:hover,
 :root[data-theme="light"] .admin-subscriber-form button:hover,
 :root[data-theme="light"] .admin-size-entry button:hover {
   background: #2a2a2a;
@@ -3876,6 +4031,7 @@ body.product-features-open {
 :root[data-theme="light"] .admin-product-form select,
 :root[data-theme="light"] .admin-product-form textarea,
 :root[data-theme="light"] .admin-discount-form input,
+:root[data-theme="light"] .admin-announcement-form input,
 :root[data-theme="light"] .admin-subscriber-form input,
 :root[data-theme="light"] .admin-subscriber-form textarea {
   border-color: rgba(12, 12, 12, 0.15);
@@ -3893,6 +4049,7 @@ body.product-features-open {
 :root[data-theme="light"] .admin-product-form select:focus,
 :root[data-theme="light"] .admin-product-form textarea:focus,
 :root[data-theme="light"] .admin-discount-form input:focus,
+:root[data-theme="light"] .admin-announcement-form input:focus,
 :root[data-theme="light"] .admin-subscriber-form input:focus,
 :root[data-theme="light"] .admin-subscriber-form textarea:focus {
   border-color: #111;
@@ -3914,6 +4071,7 @@ body.product-features-open {
 
 :root[data-theme="light"] .admin-product-panel .section-heading,
 :root[data-theme="light"] .admin-discount-form,
+:root[data-theme="light"] .admin-announcement-form,
 :root[data-theme="light"] .admin-category-picker,
 :root[data-theme="light"] .admin-size-builder,
 :root[data-theme="light"] .admin-images-field {
@@ -4280,6 +4438,15 @@ body.product-features-open {
     width: 100%;
   }
 
+  .admin-announcement-form {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .admin-announcement-form button {
+    width: 100%;
+  }
+
   .admin-form-head,
   .admin-category-picker,
   .admin-product-form > label:nth-of-type(1),
@@ -4315,6 +4482,24 @@ body.product-features-open {
 }
 
 @media (max-width: 560px) {
+  .announcement-bar {
+    height: 30px;
+    font-size: 0.62rem;
+  }
+
+  .announcement-group {
+    gap: 30px;
+    padding: 0 14px;
+  }
+
+  .announcement-group span::after {
+    margin-left: 30px;
+  }
+
+  .has-announcement-bar .site-header {
+    top: 30px;
+  }
+
   .site-header {
     grid-template-columns: 36px minmax(0, 1fr) auto;
     grid-template-rows: 32px 30px;
@@ -4704,5 +4889,11 @@ body.product-features-open {
 
   .site-footer {
     align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .announcement-track {
+    animation: none;
   }
 }

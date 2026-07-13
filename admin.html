@@ -72,6 +72,20 @@
         <button class="admin-discount-toggle-button" type="button">&#304;ndirim Kodu</button>
       </div>
 
+      <form class="admin-announcement-form" data-admin-announcement-form>
+        <div class="admin-announcement-copy">
+          <p class="kicker">Site Duyurusu</p>
+          <h3>Üst Akan Yazı</h3>
+          <p>Ana sayfanın en üstünde kayan duyuru metnini buradan değiştirebilirsin.</p>
+        </div>
+        <label>
+          <span>Duyuru metni</span>
+          <input name="announcementText" type="text" maxlength="140" value="3000 TL ÜZERİ KARGO ÜCRETSİZ" required>
+        </label>
+        <button type="submit">Duyuruyu Kaydet</button>
+        <p class="admin-announcement-message" role="status" aria-live="polite"></p>
+      </form>
+
       <form class="admin-product-form" hidden>
         <div class="admin-form-head">
           <div>
