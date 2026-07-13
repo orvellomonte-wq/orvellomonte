@@ -942,8 +942,15 @@ const getFeaturedSortTime = (product) => Math.max(
   getFirestoreMillis(product.createdAt)
 );
 
+const normalizeProductDescription = (value) => String(value || "")
+  .replace(/Türküye/giu, "Türkiye")
+  .replace(/Türkiyede/giu, "Türkiye'de")
+  .replace(/Türkiye\s+(?:['’`]\s*)?de/giu, "Türkiye'de")
+  .replace(/%\s+(\d+)/g, "%$1")
+  .replace(/[ \t]+([,.;:!?])/g, "$1");
+
 const getProductFeatures = (description) => {
-  const features = String(description || "")
+  const features = normalizeProductDescription(description)
     .split(/\s*(?:\*|•|\r?\n)\s*/)
     .map((item) => item.trim())
     .filter(Boolean);
@@ -2734,7 +2741,7 @@ const editProduct = (productId) => {
 
   adminForm.elements.name.value = product.name || "";
   adminForm.elements.price.value = product.price || "";
-  adminForm.elements.description.value = product.description || "";
+  adminForm.elements.description.value = normalizeProductDescription(product.description);
 
   if (adminForm.elements.category) {
     adminForm.elements.category.value = product.category || "women";
@@ -2871,7 +2878,7 @@ const setupAdminPanel = () => {
 
     const formData = new FormData(adminForm);
     const name = formData.get("name").trim();
-    const description = formData.get("description").trim();
+    const description = normalizeProductDescription(formData.get("description").trim());
     const price = Number(formData.get("price"));
     const targetCategory = pageCategory || formData.get("category");
     const productType = targetCategory === "accessories"
