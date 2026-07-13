@@ -545,20 +545,20 @@ button:disabled {
 
 .category-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
 }
 
 .category-card {
   position: relative;
   display: grid;
-  grid-template-rows: auto auto 1fr;
-  min-height: 310px;
+  grid-template-rows: 1fr auto;
+  min-height: 420px;
   align-content: start;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 20px;
+  padding: 28px;
   background: var(--panel);
   box-shadow: 0 18px 50px var(--shadow);
 }
@@ -589,14 +589,6 @@ button:disabled {
   background: url("assets/orvello-women-category.jpeg") center 36% / cover;
 }
 
-.category-card.women-top {
-  background-position: center 28%;
-}
-
-.category-card.women-bottom {
-  background-position: center 76%;
-}
-
 .category-card.women::before {
   display: none;
 }
@@ -609,14 +601,6 @@ button:disabled {
   --garment: #101010;
   background: url("assets/orvello-men-category.jpeg") center 36% / cover;
   box-shadow: none;
-}
-
-.category-card.men-top {
-  background-position: center 28%;
-}
-
-.category-card.men-bottom {
-  background-position: center 78%;
 }
 
 .category-card.men::before,
@@ -657,7 +641,7 @@ button:disabled {
 .category-card h3 {
   margin-bottom: 10px;
   font-family: "Anton", Impact, sans-serif;
-  font-size: clamp(1.65rem, 2.6vw, 2.8rem);
+  font-size: clamp(2.2rem, 5vw, 4rem);
   line-height: 0.95;
   text-transform: uppercase;
 }
@@ -687,12 +671,6 @@ button:disabled {
   content: "Aksesuar ürünleri Üst olarak kaydedilir.";
   font-size: 0.74rem;
   font-weight: 800;
-}
-
-@media (max-width: 1120px) and (min-width: 821px) {
-  .category-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 .category-card p {
@@ -4409,6 +4387,7 @@ body[data-category] .page-hero {
   }
 
   .product-grid,
+  .category-grid,
   .policy-grid,
   .admin-orders-list,
   .orders-page-list,
@@ -4473,16 +4452,8 @@ body[data-category] .page-hero {
   }
 
   .category-card {
-    min-height: 260px;
+    min-height: 360px;
     padding: 22px;
-  }
-
-  .category-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .category-card.accessories {
-    grid-column: 1 / -1;
   }
 
   .product-info {
@@ -4695,8 +4666,8 @@ body[data-category] .page-hero {
   }
 
   .category-card {
-    min-height: 230px;
-    padding: 16px;
+    min-height: 310px;
+    padding: 18px;
   }
 
   .product-marquee-section {
