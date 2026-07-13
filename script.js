@@ -97,7 +97,6 @@ const productMarqueePreviousButton = document.querySelector("[data-marquee-previ
 const productMarqueeNextButton = document.querySelector("[data-marquee-next]");
 const adminPanel = document.querySelector(".admin-product-panel");
 const adminToggleButton = document.querySelector(".admin-toggle-button");
-const adminSeedProductsButton = document.querySelector(".admin-seed-products-button");
 const adminForm = document.querySelector(".admin-product-form");
 const adminHomeFeatureToggle = document.querySelector("[data-home-feature-toggle]");
 const adminMessage = document.querySelector(".admin-message");
@@ -1429,103 +1428,6 @@ const setAdminDiscountMessage = (message, isError = false) => {
 
 const isAdminUser = (user) => user?.email?.toLowerCase() === ADMIN_EMAIL;
 
-const demoProducts = [
-  { name: "Regista Tee", category: "women", price: 1190, color: "#f2efe8", accent: "#d94f32", tone: "tee" },
-  { name: "Ruxs Black Tee", category: "men", price: 1290, color: "#171c1e", accent: "#5d8da7", tone: "tee" },
-  { name: "Teip Stripe Tee", category: "women", price: 1190, color: "#274c94", accent: "#63c7d0", tone: "tee" },
-  { name: "Dim Graphic Tee", category: "men", price: 1190, color: "#111315", accent: "#df4a35", tone: "tee" },
-  { name: "Night Move Hoodie", category: "men", price: 1890, color: "#121212", accent: "#e7d8bd", tone: "hoodie" },
-  { name: "Bone Zip Hoodie", category: "women", price: 1790, color: "#ddd6c9", accent: "#202020", tone: "hoodie" },
-  { name: "Rust Cargo Pant", category: "men", price: 1590, color: "#51352c", accent: "#d94f32", tone: "cargo" },
-  { name: "Ash Wide Pant", category: "women", price: 1490, color: "#6c6f68", accent: "#f7f1e8", tone: "cargo" },
-  { name: "Underground Crew", category: "men", price: 1690, color: "#1f2424", accent: "#7fb6c7", tone: "hoodie" },
-  { name: "Shadow Crop Tee", category: "women", price: 990, color: "#0f1011", accent: "#b7ada1", tone: "tee" }
-];
-
-const createDemoProductImage = (product) => {
-  const isPants = product.tone === "cargo";
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="720" height="920" viewBox="0 0 720 920">
-      <rect width="720" height="920" fill="#0f0f0f"/>
-      <rect x="26" y="26" width="668" height="868" rx="26" fill="#171717" stroke="rgba(247,241,232,0.2)" stroke-width="2"/>
-      <circle cx="360" cy="210" r="180" fill="rgba(247,241,232,0.08)"/>
-      ${isPants ? `
-        <path d="M272 178h176l42 626h-112l-28-392-28 392H210l42-626z" fill="${product.color}"/>
-        <path d="M272 178h176v78H272z" fill="${product.accent}" opacity="0.75"/>
-        <path d="M250 424h86v120h-76zM384 424h86l-10 120h-76z" fill="rgba(0,0,0,0.24)"/>
-      ` : `
-        <path d="M246 194c34-26 74-40 114-40s80 14 114 40l122 78-60 120-72-36v388H256V356l-72 36-60-120 122-78z" fill="${product.color}"/>
-        <path d="M298 178c18 20 39 30 62 30s44-10 62-30" fill="none" stroke="rgba(247,241,232,0.52)" stroke-width="18" stroke-linecap="round"/>
-        <rect x="304" y="324" width="112" height="126" rx="10" fill="${product.accent}" opacity="0.82"/>
-        <path d="M326 430l70-86M330 354l78 76" stroke="rgba(247,241,232,0.72)" stroke-width="10" stroke-linecap="round"/>
-      `}
-      <text x="360" y="844" text-anchor="middle" fill="rgba(247,241,232,0.78)" font-family="Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="4">ORVELLO MONTE</text>
-    </svg>
-  `;
-
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-};
-
-const seedDemoProducts = async () => {
-  if (!isAdminUser(currentUser)) {
-    setAdminMessage("Demo ürün eklemek için admin hesabıyla giriş yapmalısın.", true);
-    return;
-  }
-
-  if (!adminSeedProductsButton) {
-    return;
-  }
-
-  adminSeedProductsButton.disabled = true;
-  setAdminMessage("10 demo ürün hazırlanıyor...");
-
-  try {
-    const existingSnapshot = await getDocs(collection(db, "products"));
-    const existingSlugs = new Set(existingSnapshot.docs.map((item) => item.data().slug));
-    const productsToCreate = demoProducts.filter((product) => !existingSlugs.has(`demo-${slugify(product.name)}`));
-
-    if (productsToCreate.length === 0) {
-      setAdminMessage("Demo ürünler zaten ekli.");
-      return;
-    }
-
-    await Promise.all(productsToCreate.map((product) => {
-      const sizeStocks = product.tone === "cargo"
-        ? { "30": 8, "32": 10, "34": 7 }
-        : { S: 8, M: 12, L: 9 };
-      const imageUrl = createDemoProductImage(product);
-
-      return addDoc(collection(db, "products"), {
-        name: product.name,
-        description: "Demo ürün açıklaması. Kumaş, kalıp ve bakım bilgisini admin panelinden düzenleyebilirsin.",
-        price: product.price,
-        stock: Object.values(sizeStocks).reduce((total, sizeStock) => total + sizeStock, 0),
-        sizeStocks,
-        sizes: Object.keys(sizeStocks),
-        tone: product.tone,
-        imageUrls: [imageUrl],
-        images: [imageUrl],
-        imageStorage: "demo-svg",
-        category: product.category,
-        active: true,
-        slug: `demo-${slugify(product.name)}`,
-        createdAt: serverTimestamp(),
-        createdBy: currentUser.email,
-        updatedAt: serverTimestamp(),
-        updatedBy: currentUser.email
-      });
-    }));
-
-    setAdminMessage(`${productsToCreate.length} demo ürün eklendi.`);
-  } catch (error) {
-    setAdminMessage(error.code === "permission-denied"
-      ? "Demo ürün eklenemedi: Firestore Rules içinde admin ürün yazma iznini yayınla."
-      : error.message || "Demo ürün eklenemedi. Firebase ayarlarını kontrol et.", true);
-  } finally {
-    adminSeedProductsButton.disabled = false;
-  }
-};
-
 const updateTotalStockInput = () => {
   if (!adminForm) {
     return 0;
@@ -2663,8 +2565,6 @@ const setupAdminPanel = () => {
       closeAdminForm();
     }
   });
-
-  adminSeedProductsButton?.addEventListener("click", seedDemoProducts);
 
   adminHomeFeatureToggle?.addEventListener("click", () => {
     const enabled = adminForm.elements.homeFeatured?.value === "true";
