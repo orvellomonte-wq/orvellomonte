@@ -552,7 +552,7 @@ button:disabled {
 .category-card {
   position: relative;
   display: grid;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: auto 1fr auto;
   min-height: 420px;
   align-content: start;
   overflow: hidden;
@@ -1304,12 +1304,16 @@ body.product-features-open {
 }
 
 body[data-category] .page-hero {
+  position: relative;
+  padding-bottom: 112px;
   background: url("assets/orvello-channel-hero.jpeg") center 38% / cover;
 }
 
 body[data-category] .page-hero .hero-section-jump {
+  position: absolute;
+  left: clamp(18px, 5vw, 72px);
+  bottom: 38px;
   min-height: 44px;
-  margin-top: 24px;
   padding: 0 18px;
   gap: 10px;
   border-color: rgba(255, 255, 255, 0.48);
@@ -4555,6 +4559,15 @@ body[data-category] .page-hero .hero-section-jump span {
 }
 
 @media (max-width: 560px) {
+  body[data-category] .page-hero {
+    padding-bottom: 88px;
+  }
+
+  body[data-category] .page-hero .hero-section-jump {
+    left: 16px;
+    bottom: 22px;
+  }
+
   .announcement-bar {
     height: 30px;
     font-size: 0.62rem;
