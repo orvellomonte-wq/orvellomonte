@@ -4051,6 +4051,14 @@ body.product-features-open {
     0 0 18px rgba(0, 0, 0, 0.72);
 }
 
+:root[data-theme="dark"] .home-page .category-card .kicker,
+:root[data-theme="dark"] .home-page .category-card h3,
+:root[data-theme="dark"] .home-page .category-cta {
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.92),
+    0 0 18px rgba(0, 0, 0, 0.72);
+}
+
 :root[data-theme="light"] .home-page .category-cta {
   border-bottom-color: #fff;
 }
