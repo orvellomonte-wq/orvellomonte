@@ -599,7 +599,7 @@ button:disabled {
 
 .category-card.men {
   --garment: #101010;
-  background: url("assets/orvello-women-category-urban.jpeg") center 42% / cover;
+  background: url("assets/orvello-men-category-urban.jpeg") center 44% / cover;
   box-shadow: none;
 }
 
