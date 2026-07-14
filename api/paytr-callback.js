@@ -216,6 +216,11 @@ const deductPaidOrderStock = async (db, orderRef, merchantOid, paidAmount, rawSt
 module.exports = async (req, res) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
 
+  if (req.method === "GET") {
+    sendText(res, 200, "OK");
+    return;
+  }
+
   if (req.method !== "POST") {
     sendText(res, 405, "");
     return;
