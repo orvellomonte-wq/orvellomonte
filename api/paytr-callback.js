@@ -70,6 +70,28 @@ const sendText = (res, status, text) => {
   res.status(status).send(text);
 };
 
+const sendJson = (res, status, payload) => {
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+  res.status(status).json(payload);
+};
+
+const getRequestMetadata = (req) => ({
+  sourceIp: String(req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "")
+    .split(",")[0]
+    .trim()
+    .slice(0, 64),
+  userAgent: String(req.headers["user-agent"] || "").slice(0, 300)
+});
+
+const safeEqual = (left, right) => {
+  const leftBuffer = Buffer.from(String(left || ""));
+  const rightBuffer = Buffer.from(String(right || ""));
+
+  return leftBuffer.length === rightBuffer.length
+    && crypto.timingSafeEqual(leftBuffer, rightBuffer);
+};
+
 const getStockDeductions = (items) => {
   const deductions = new Map();
 
@@ -214,7 +236,7 @@ const deductPaidOrderStock = async (db, orderRef, merchantOid, paidAmount, rawSt
   });
 };
 
-const processVerifiedNotification = async ({ merchantOid, status, totalAmount, post }) => {
+const processVerifiedNotification = async ({ merchantOid, status, totalAmount, post, requestMetadata }) => {
   getFirebaseApp();
   const db = admin.firestore();
   const orderRef = db.collection("orders").doc(merchantOid);
@@ -223,6 +245,13 @@ const processVerifiedNotification = async ({ merchantOid, status, totalAmount, p
   if (!orderSnapshot.exists) {
     return;
   }
+
+  await orderRef.update({
+    "payment.callbackReceiptCount": admin.firestore.FieldValue.increment(1),
+    "payment.lastCallbackReceivedAt": admin.firestore.FieldValue.serverTimestamp(),
+    "payment.lastCallbackSourceIp": requestMetadata.sourceIp,
+    "payment.lastCallbackUserAgent": requestMetadata.userAgent
+  });
 
   const orderData = orderSnapshot.data() || {};
   const currentPaymentStatus = orderData.payment?.status;
@@ -276,6 +305,49 @@ module.exports = async (req, res) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
 
   if (req.method === "GET") {
+    const merchantOid = String(req.query?.merchant_oid || "").trim();
+
+    if (merchantOid) {
+      try {
+        const merchantKey = process.env.PAYTR_MERCHANT_KEY;
+        const diagnosticToken = String(req.headers["x-paytr-diagnostic-token"] || "");
+        const expectedToken = crypto
+          .createHmac("sha256", merchantKey || "")
+          .update(`diagnostic:${merchantOid}`)
+          .digest("base64");
+
+        if (!merchantKey || !safeEqual(diagnosticToken, expectedToken)) {
+          sendText(res, 403, "Forbidden");
+          return;
+        }
+
+        getFirebaseApp();
+        const orderSnapshot = await admin.firestore().collection("orders").doc(merchantOid).get();
+
+        if (!orderSnapshot.exists) {
+          sendJson(res, 404, { exists: false });
+          return;
+        }
+
+        const payment = orderSnapshot.data()?.payment || {};
+        const receivedAt = payment.lastCallbackReceivedAt?.toDate?.();
+
+        sendJson(res, 200, {
+          exists: true,
+          callbackReceiptCount: Number(payment.callbackReceiptCount || 0),
+          lastCallbackReceivedAt: receivedAt ? receivedAt.toISOString() : null,
+          lastCallbackSourceIp: payment.lastCallbackSourceIp || "",
+          lastCallbackUserAgent: payment.lastCallbackUserAgent || "",
+          paymentStatus: payment.status || ""
+        });
+      } catch (error) {
+        console.error("[paytr-callback-diagnostic]", error);
+        sendText(res, 500, "Diagnostic failed");
+      }
+
+      return;
+    }
+
     sendText(res, 200, "OK");
     return;
   }
@@ -318,7 +390,8 @@ module.exports = async (req, res) => {
       merchantOid,
       status,
       totalAmount,
-      post
+      post,
+      requestMetadata: getRequestMetadata(req)
     }).catch((error) => {
       console.error("[paytr-callback-processing]", error);
     });
