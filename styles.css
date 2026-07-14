@@ -1373,7 +1373,17 @@ body.product-features-open {
 }
 
 body[data-category] .page-hero {
-  background: url("assets/orvello-channel-hero.jpeg") center 38% / cover;
+  background: var(--category-page-hero, url("assets/orvello-channel-hero.jpeg")) var(--category-page-hero-position, center 38%) / cover;
+}
+
+body[data-category="women"] {
+  --category-page-hero: url("assets/orvello-women-page-hero.jpeg");
+  --category-page-hero-position: center 45%;
+}
+
+body[data-category="men"] {
+  --category-page-hero: url("assets/orvello-men-page-hero.jpeg");
+  --category-page-hero-position: center 42%;
 }
 
 .page-hero-content {
@@ -3995,7 +4005,7 @@ body[data-category] .page-hero {
 }
 
 :root[data-theme="light"] body[data-category] .page-hero {
-  background: url("assets/orvello-channel-hero.jpeg") center 38% / cover;
+  background: var(--category-page-hero, url("assets/orvello-channel-hero.jpeg")) var(--category-page-hero-position, center 38%) / cover;
 }
 
 :root[data-theme="light"] .page-hero p,
