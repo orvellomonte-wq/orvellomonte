@@ -15,7 +15,7 @@ if (process.env.VERCEL_URL) {
 
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 18;
-const FREE_SHIPPING_THRESHOLD = 2000;
+const FREE_SHIPPING_THRESHOLD = 3000;
 const STANDARD_SHIPPING_FEE = 149;
 const rateLimitBuckets = globalThis.__orvelloPaytrRateLimitBuckets || new Map();
 globalThis.__orvelloPaytrRateLimitBuckets = rateLimitBuckets;

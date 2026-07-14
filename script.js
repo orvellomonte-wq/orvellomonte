@@ -148,9 +148,9 @@ let newsletterSubscribers = [];
 let announcementUnsubscribe = null;
 let pendingProductSectionHash = ["#tops", "#shorts"].includes(window.location.hash) ? window.location.hash : "";
 
-const FREE_SHIPPING_THRESHOLD = 2000;
+const FREE_SHIPPING_THRESHOLD = 3000;
 const STANDARD_SHIPPING_FEE = 149;
-const DEFAULT_ANNOUNCEMENT = "2.000 TL ÜZERİ KARGO ÜCRETSİZ";
+const DEFAULT_ANNOUNCEMENT = "3.000 TL ÜZERİ KARGO ÜCRETSİZ";
 
 const formatPrice = (amount) =>
   new Intl.NumberFormat("tr-TR", {
@@ -660,7 +660,7 @@ const renderCart = () => {
         <strong>${formatPrice(total)}</strong>
       </div>
       <small>${shippingAmount === 0
-        ? "2.000 TL üzeri alışverişlerde kargo ücretsiz."
+        ? "3.000 TL üzeri alışverişlerde kargo ücretsiz."
         : `${formatPrice(remainingForFreeShipping)} daha ekle, kargo ücretsiz olsun.`}</small>
     `;
   }
@@ -2560,7 +2560,7 @@ const setAdminAnnouncementMessage = (message, isError = false) => {
 
 const renderAnnouncement = (value) => {
   const savedText = String(value || "").trim();
-  const isLegacyShippingText = /^3(?:\.|\s)?000\s*TL\s*ÜZERİ\s*KARGO\s*ÜCRETSİZ$/iu.test(savedText);
+  const isLegacyShippingText = /^2(?:\.|\s)?000\s*TL\s*ÜZERİ\s*KARGO\s*ÜCRETSİZ$/iu.test(savedText);
   const text = isLegacyShippingText ? DEFAULT_ANNOUNCEMENT : savedText || DEFAULT_ANNOUNCEMENT;
 
   announcementTexts.forEach((element) => {
