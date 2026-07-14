@@ -158,9 +158,9 @@ const formatPrice = (amount) =>
 
 const getSavedTheme = () => {
   try {
-    return localStorage.getItem("orvello-theme") === "light" ? "light" : "dark";
+    return localStorage.getItem("orvello-theme") === "dark" ? "dark" : "light";
   } catch {
-    return "dark";
+    return "light";
   }
 };
 
