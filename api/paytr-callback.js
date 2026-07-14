@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const admin = require("firebase-admin");
+const { waitUntil } = require("@vercel/functions");
 
 const FIREBASE_PROJECT_ID = "orvellomonte-392cf";
 
@@ -213,6 +214,64 @@ const deductPaidOrderStock = async (db, orderRef, merchantOid, paidAmount, rawSt
   });
 };
 
+const processVerifiedNotification = async ({ merchantOid, status, totalAmount, post }) => {
+  getFirebaseApp();
+  const db = admin.firestore();
+  const orderRef = db.collection("orders").doc(merchantOid);
+  const orderSnapshot = await orderRef.get();
+
+  if (!orderSnapshot.exists) {
+    return;
+  }
+
+  const orderData = orderSnapshot.data() || {};
+  const currentPaymentStatus = orderData.payment?.status;
+
+  if (
+    ["failed", "amount_mismatch"].includes(currentPaymentStatus)
+    || (currentPaymentStatus === "paid" && (orderData.payment?.stockDeducted === true || status !== "success"))
+  ) {
+    return;
+  }
+
+  if (status === "success") {
+    await deductPaidOrderStock(db, orderRef, merchantOid, Number(totalAmount), status);
+    return;
+  }
+
+  await orderRef.update({
+    "payment.status": "failed",
+    "payment.provider": "paytr",
+    "payment.merchantOid": merchantOid,
+    "payment.totalAmount": Number(totalAmount),
+    "payment.failedReasonCode": String(post.failed_reason_code || ""),
+    "payment.failedReasonMessage": String(post.failed_reason_msg || ""),
+    "payment.failedAt": admin.firestore.FieldValue.serverTimestamp(),
+    "payment.rawStatus": status,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+};
+
+const processVerifiedNotificationWithRetry = async (payload) => {
+  let lastError;
+
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      await processVerifiedNotification(payload);
+      return;
+    } catch (error) {
+      lastError = error;
+      console.error(`[paytr-callback-processing-attempt-${attempt}]`, error);
+
+      if (attempt < 3) {
+        await new Promise((resolve) => setTimeout(resolve, attempt * 500));
+      }
+    }
+  }
+
+  throw lastError;
+};
+
 module.exports = async (req, res) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
 
@@ -255,43 +314,16 @@ module.exports = async (req, res) => {
       return;
     }
 
-    getFirebaseApp();
-    const orderRef = admin.firestore().collection("orders").doc(merchantOid);
-    const orderSnapshot = await orderRef.get();
+    const processingPromise = processVerifiedNotificationWithRetry({
+      merchantOid,
+      status,
+      totalAmount,
+      post
+    }).catch((error) => {
+      console.error("[paytr-callback-processing]", error);
+    });
 
-    if (!orderSnapshot.exists) {
-      sendText(res, 200, "OK");
-      return;
-    }
-
-    const orderData = orderSnapshot.data() || {};
-    const currentPaymentStatus = orderData.payment?.status;
-
-    if (
-      ["failed", "amount_mismatch"].includes(currentPaymentStatus)
-      || (currentPaymentStatus === "paid" && (orderData.payment?.stockDeducted === true || status !== "success"))
-    ) {
-      sendText(res, 200, "OK");
-      return;
-    }
-
-    if (status === "success") {
-      const paidAmount = Number(totalAmount);
-
-      await deductPaidOrderStock(admin.firestore(), orderRef, merchantOid, paidAmount, status);
-    } else {
-      await orderRef.update({
-        "payment.status": "failed",
-        "payment.provider": "paytr",
-        "payment.merchantOid": merchantOid,
-        "payment.totalAmount": Number(totalAmount),
-        "payment.failedReasonCode": String(post.failed_reason_code || ""),
-        "payment.failedReasonMessage": String(post.failed_reason_msg || ""),
-        "payment.failedAt": admin.firestore.FieldValue.serverTimestamp(),
-        "payment.rawStatus": status,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-    }
+    waitUntil(processingPromise);
 
     sendText(res, 200, "OK");
   } catch (error) {
