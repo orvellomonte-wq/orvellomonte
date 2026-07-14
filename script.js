@@ -65,6 +65,7 @@ const cartItems = document.querySelector(".cart-items");
 const cartEmpty = document.querySelector(".cart-empty");
 const cartSummary = document.querySelector(".cart-summary");
 const cartSubtotal = document.querySelector(".cart-subtotal");
+const cartSummaryNote = document.querySelector(".cart-summary-note");
 const clearCartButton = document.querySelector(".clear-cart-button");
 const checkoutButton = document.querySelector(".checkout-button");
 const checkoutModal = document.querySelector(".checkout-modal");
@@ -147,7 +148,9 @@ let newsletterSubscribers = [];
 let announcementUnsubscribe = null;
 let pendingProductSectionHash = ["#tops", "#shorts"].includes(window.location.hash) ? window.location.hash : "";
 
-const DEFAULT_ANNOUNCEMENT = "3000 TL ÜZERİ KARGO ÜCRETSİZ";
+const FREE_SHIPPING_THRESHOLD = 2000;
+const STANDARD_SHIPPING_FEE = 149;
+const DEFAULT_ANNOUNCEMENT = "2.000 TL ÜZERİ KARGO ÜCRETSİZ";
 
 const formatPrice = (amount) =>
   new Intl.NumberFormat("tr-TR", {
@@ -218,7 +221,14 @@ const getDiscountAmount = () => {
   return percent > 0 ? Math.round((subtotal * percent) / 100) : 0;
 };
 
-const getCartTotal = () => Math.max(0, getCartSubtotal() - getDiscountAmount());
+const getShippingAmount = (subtotal = getCartSubtotal()) => (
+  subtotal > 0 && subtotal < FREE_SHIPPING_THRESHOLD ? STANDARD_SHIPPING_FEE : 0
+);
+
+const getCartTotal = () => {
+  const subtotal = getCartSubtotal();
+  return Math.max(0, subtotal - getDiscountAmount()) + getShippingAmount(subtotal);
+};
 
 const getProductTone = (id) => {
   const tones = {
@@ -627,13 +637,33 @@ const prepareProductImages = async (files, onStatus) => {
 
 const renderCart = () => {
   const itemCount = getCartCount();
+  const subtotal = getCartSubtotal();
+  const shippingAmount = getShippingAmount(subtotal);
+  const total = getCartTotal();
   cartCounter.textContent = itemCount;
   cartButton.setAttribute("aria-label", `Sepeti aç, ${itemCount} ürün`);
 
   cartEmpty.hidden = cart.length > 0;
   cartItems.hidden = cart.length === 0;
   cartSummary.hidden = cart.length === 0;
-  cartSubtotal.textContent = formatPrice(getCartSubtotal());
+  cartSubtotal.textContent = formatPrice(subtotal);
+
+  if (cartSummaryNote) {
+    const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+    cartSummaryNote.innerHTML = `
+      <div class="cart-cost-line">
+        <span>Kargo</span>
+        <strong class="${shippingAmount === 0 ? "is-free" : ""}">${shippingAmount === 0 ? "Ücretsiz" : formatPrice(shippingAmount)}</strong>
+      </div>
+      <div class="cart-cost-line cart-total-line">
+        <span>Toplam</span>
+        <strong>${formatPrice(total)}</strong>
+      </div>
+      <small>${shippingAmount === 0
+        ? "2.000 TL üzeri alışverişlerde kargo ücretsiz."
+        : `${formatPrice(remainingForFreeShipping)} daha ekle, kargo ücretsiz olsun.`}</small>
+    `;
+  }
 
   cartItems.innerHTML = cart
     .map((item) => `
@@ -699,6 +729,7 @@ const renderCheckoutSummary = () => {
 
   const subtotal = getCartSubtotal();
   const discountAmount = getDiscountAmount();
+  const shippingAmount = getShippingAmount(subtotal);
   const total = getCartTotal();
 
   checkoutOrderSummary.innerHTML = `
@@ -722,6 +753,10 @@ const renderCheckoutSummary = () => {
           <strong>-${formatPrice(discountAmount)}</strong>
         </div>
       ` : ""}
+      <div class="shipping-line">
+        <span>Kargo</span>
+        <strong class="${shippingAmount === 0 ? "is-free" : ""}">${shippingAmount === 0 ? "Ücretsiz" : formatPrice(shippingAmount)}</strong>
+      </div>
       <div class="checkout-grand-total"><span>Toplam</span><strong>${formatPrice(total)}</strong></div>
     </div>
   `;
@@ -1389,6 +1424,7 @@ checkoutForm?.addEventListener("submit", async (event) => {
   try {
     const subtotal = getCartSubtotal();
     const discountAmount = getDiscountAmount();
+    const shippingAmount = getShippingAmount(subtotal);
     const total = getCartTotal();
 
     const response = await fetch("/api/paytr-token", {
@@ -1411,6 +1447,11 @@ checkoutForm?.addEventListener("submit", async (event) => {
           percent: Number(activeDiscount.percent || 0),
           amount: discountAmount
         } : null,
+        shipping: {
+          amount: shippingAmount,
+          free: shippingAmount === 0,
+          threshold: FREE_SHIPPING_THRESHOLD
+        },
         total,
         source: pageCategory || "site"
       })
@@ -1425,7 +1466,7 @@ checkoutForm?.addEventListener("submit", async (event) => {
     openPaytrPaymentPage({
       iframeUrl: result.iframeUrl,
       merchantOid: result.merchantOid,
-      amount: total
+      amount: Number(result.amount || total)
     });
   } catch (error) {
     resetPaytrFrame();
@@ -2518,7 +2559,9 @@ const setAdminAnnouncementMessage = (message, isError = false) => {
 };
 
 const renderAnnouncement = (value) => {
-  const text = String(value || "").trim() || DEFAULT_ANNOUNCEMENT;
+  const savedText = String(value || "").trim();
+  const isLegacyShippingText = /^3(?:\.|\s)?000\s*TL\s*ÜZERİ\s*KARGO\s*ÜCRETSİZ$/iu.test(savedText);
+  const text = isLegacyShippingText ? DEFAULT_ANNOUNCEMENT : savedText || DEFAULT_ANNOUNCEMENT;
 
   announcementTexts.forEach((element) => {
     element.textContent = text;

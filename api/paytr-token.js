@@ -15,6 +15,8 @@ if (process.env.VERCEL_URL) {
 
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 18;
+const FREE_SHIPPING_THRESHOLD = 2000;
+const STANDARD_SHIPPING_FEE = 149;
 const rateLimitBuckets = globalThis.__orvelloPaytrRateLimitBuckets || new Map();
 globalThis.__orvelloPaytrRateLimitBuckets = rateLimitBuckets;
 
@@ -201,7 +203,8 @@ const buildOrder = async (db, body) => {
   const discountAmount = activeDiscount
     ? normalizeMoney((subtotal * activeDiscount.percent) / 100)
     : 0;
-  const total = Math.max(1, normalizeMoney(subtotal - discountAmount));
+  const shippingAmount = subtotal < FREE_SHIPPING_THRESHOLD ? STANDARD_SHIPPING_FEE : 0;
+  const total = Math.max(1, normalizeMoney(subtotal - discountAmount + shippingAmount));
   const merchantOid = `OM${Date.now()}${crypto.randomBytes(5).toString("hex").toUpperCase()}`;
 
   return {
@@ -215,6 +218,11 @@ const buildOrder = async (db, body) => {
       percent: activeDiscount.percent,
       amount: discountAmount
     } : null,
+    shipping: {
+      amount: shippingAmount,
+      free: shippingAmount === 0,
+      threshold: FREE_SHIPPING_THRESHOLD
+    },
     total,
     paymentAmount: Math.round(total * 100),
     source: cleanText(body.source || "site", 32)
@@ -264,12 +272,18 @@ module.exports = async (req, res) => {
     const testMode = String(process.env.PAYTR_TEST_MODE ?? "0");
     const noInstallment = String(process.env.PAYTR_NO_INSTALLMENT ?? "0");
     const maxInstallment = String(process.env.PAYTR_MAX_INSTALLMENT ?? "0");
-    const userBasket = Buffer
-      .from(JSON.stringify(order.items.map((item) => [
+    const basketItems = order.items.map((item) => [
         item.name,
         item.price.toFixed(2),
         item.quantity
-      ])))
+      ]);
+
+    if (order.shipping.amount > 0) {
+      basketItems.push(["Kargo", order.shipping.amount.toFixed(2), 1]);
+    }
+
+    const userBasket = Buffer
+      .from(JSON.stringify(basketItems))
       .toString("base64");
 
     const hashString = [
@@ -295,6 +309,7 @@ module.exports = async (req, res) => {
       items: order.items,
       subtotal: order.subtotal,
       discount: order.discount,
+      shipping: order.shipping,
       total: order.total,
       status: "new",
       source: order.source,
@@ -355,6 +370,7 @@ module.exports = async (req, res) => {
     sendJson(res, 200, {
       token: result.token,
       merchantOid: order.merchantOid,
+      amount: order.total,
       iframeUrl: `https://www.paytr.com/odeme/guvenli/${result.token}`
     });
   } catch (error) {

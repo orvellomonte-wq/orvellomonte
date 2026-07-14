@@ -74,7 +74,7 @@ textarea {
   overflow: hidden;
   border-bottom: 1px solid rgba(255, 255, 255, 0.14);
   color: #fff;
-  background: #111;
+  background: #c62020;
   font-size: 0.7rem;
   font-weight: 900;
   letter-spacing: 0;
@@ -3536,9 +3536,43 @@ body[data-category] .page-hero {
 }
 
 .cart-summary-note {
+  display: grid;
+  gap: 8px;
   color: var(--muted);
   font-size: 0.86rem;
   line-height: 1.5;
+}
+
+.cart-cost-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--ink);
+}
+
+.cart-cost-line strong,
+.shipping-line strong {
+  color: var(--ink);
+}
+
+.cart-cost-line strong.is-free,
+.shipping-line strong.is-free {
+  color: #80c777;
+}
+
+.cart-total-line {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+  font-size: 1rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.cart-summary-note small {
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.45;
 }
 
 .checkout-button,
