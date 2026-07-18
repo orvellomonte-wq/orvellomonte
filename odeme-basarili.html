@@ -3,24 +3,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Odeme Basarili | Orvello Monte</title>
+  <meta name="robots" content="noindex,nofollow">
+  <title>Sipariş Onayı | Orvello Monte</title>
   <script src="theme-init.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script src="payment-success.js" defer></script>
 </head>
 <body class="payment-result-page">
-  <main class="payment-result">
-    <p class="kicker">PayTR</p>
-    <h1>Odeme Alindi</h1>
-    <p>Odemen basariyla tamamlandi. Siparisin admin paneline odeme onayli olarak dusecek.</p>
-    <a class="button" href="index.html">Ana Sayfaya Don</a>
+  <header class="payment-result-header">
+    <a href="index.html" aria-label="Orvello Monte ana sayfa">ORVELLO MONTE</a>
+    <span>GÜVENLİ ÖDEME</span>
+  </header>
+
+  <main class="payment-result" data-payment-result>
+    <section class="payment-result-copy" aria-live="polite">
+      <div class="payment-status-icon" data-payment-icon aria-hidden="true">
+        <span></span>
+      </div>
+      <p class="kicker" data-payment-kicker>SİPARİŞ DOĞRULANIYOR</p>
+      <h1 data-payment-title>Ödemeniz kontrol ediliyor.</h1>
+      <p class="payment-result-lead" data-payment-message>PayTR ödeme onayını güvenli biçimde kontrol ediyoruz. Bu işlem genellikle birkaç saniye sürer.</p>
+
+      <dl class="payment-order-meta" data-order-meta hidden>
+        <div>
+          <dt>Sipariş No</dt>
+          <dd data-order-number></dd>
+        </div>
+        <div>
+          <dt>Bilgilendirme E-postası</dt>
+          <dd data-order-email></dd>
+        </div>
+        <div>
+          <dt>Ödenen Tutar</dt>
+          <dd data-order-total></dd>
+        </div>
+      </dl>
+
+      <div class="payment-result-actions">
+        <a class="button" href="index.html">Ana Sayfaya Dön</a>
+        <a class="button secondary" href="kadın.html">Alışverişe Devam Et</a>
+      </div>
+    </section>
+
+    <aside class="payment-next-steps" aria-label="Sipariş süreci">
+      <p class="kicker">BUNDAN SONRA</p>
+      <ol>
+        <li data-payment-step="paid">
+          <span>01</span>
+          <div><strong>Ödeme onayı</strong><small>PayTR sonucu siparişinizle eşleştirilir.</small></div>
+        </li>
+        <li data-payment-step="preparing">
+          <span>02</span>
+          <div><strong>Sipariş hazırlanır</strong><small>Ürünleriniz ekibimizin hazırlık listesine düşer.</small></div>
+        </li>
+        <li data-payment-step="email">
+          <span>03</span>
+          <div><strong>Fatura e-postası</strong><small>Sipariş özetiniz şimdi, resmî e-Arşiv faturanız aynı adrese ayrıca gönderilir.</small></div>
+        </li>
+      </ol>
+      <div class="payment-exchange-note">
+        <strong>Değişim mi gerekiyor?</strong>
+        <p>Değişim talebiniz için Instagram üzerinden bizimle iletişime geçebilirsiniz.</p>
+        <a href="https://www.instagram.com/orvellomonte/" target="_blank" rel="noopener">@orvellomonte</a>
+      </div>
+    </aside>
   </main>
-  <script>
-    Object.keys(localStorage)
-      .filter((key) => key.startsWith("orvello-cart"))
-      .forEach((key) => localStorage.removeItem(key));
-  </script>
 </body>
 </html>

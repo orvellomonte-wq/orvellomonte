@@ -167,34 +167,78 @@ const buildOrder = async (db, body) => {
   const fullName = cleanText(customer.fullName, 60);
   const phone = cleanText(customer.phone, 20);
   const address = cleanText(customer.address, 400);
-  const email = cleanText(customer.email, 100).toLowerCase() || "musteri@orvellomonte.com";
+  const email = cleanText(customer.email, 100).toLowerCase();
   const items = Array.isArray(body.items) ? body.items : [];
 
-  if (!fullName || !phone || !address) {
-    throw new Error("Ad soyad, telefon ve adres zorunlu.");
+  if (!fullName || !phone || !address || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new Error("Ad soyad, e-posta, telefon ve adres zorunlu.");
   }
 
   if (!items.length || items.length > 20) {
     throw new Error("Sepet bos veya cok fazla urun var.");
   }
 
-  const orderItems = items.map((item) => {
-    const quantity = Math.max(1, Math.min(20, Number.parseInt(item.quantity, 10) || 1));
-    const price = normalizeMoney(item.price);
-    const name = cleanText(item.name, 120);
+  const requestedItems = new Map();
 
-    if (!name || price <= 0) {
+  for (const item of items) {
+    const productId = cleanText(item.productId, 160);
+    const size = cleanText(item.size || "Standart", 40) || "Standart";
+    const quantity = Math.max(1, Math.min(20, Number.parseInt(item.quantity, 10) || 1));
+
+    if (!productId) {
       throw new Error("Sepette gecersiz urun var.");
     }
 
+    const key = `${productId}\u0000${size}`;
+    const current = requestedItems.get(key) || { productId, size, quantity: 0 };
+    current.quantity += quantity;
+
+    if (current.quantity > 20) {
+      throw new Error("Bir urunden en fazla 20 adet satin alinabilir.");
+    }
+
+    requestedItems.set(key, current);
+  }
+
+  const requestedList = [...requestedItems.values()];
+  const uniqueProductIds = [...new Set(requestedList.map((item) => item.productId))];
+  const productRefs = uniqueProductIds.map((productId) => db.collection("products").doc(productId));
+  const productSnapshots = await db.getAll(...productRefs);
+  const productsById = new Map(productSnapshots.map((snapshot) => [snapshot.id, snapshot]));
+
+  const orderItems = requestedList.map((item) => {
+    const productSnapshot = productsById.get(item.productId);
+
+    if (!productSnapshot?.exists) {
+      throw new Error("Sepetteki urunlerden biri artik yayinda degil.");
+    }
+
+    const product = productSnapshot.data() || {};
+    const name = cleanText(product.name, 120);
+    const price = normalizeMoney(product.price);
+    const totalStock = Number(product.stock || 0);
+    const sizeStocks = product.sizeStocks && typeof product.sizeStocks === "object"
+      ? product.sizeStocks
+      : {};
+    const sizeStock = Number(sizeStocks[item.size] ?? totalStock);
+    const imageUrl = normalizeImageUrl(product.imageUrls?.[0] || product.images?.[0] || "");
+
+    if (!name || price <= 0 || product.active === false) {
+      throw new Error("Sepetteki urunlerden biri satin almaya uygun degil.");
+    }
+
+    if (totalStock < item.quantity || sizeStock < item.quantity) {
+      throw new Error(`${name} icin secilen bedende yeterli stok yok.`);
+    }
+
     return {
-      cartItemId: cleanText(item.cartItemId || item.id, 160),
-      productId: cleanText(item.productId, 160),
+      cartItemId: `${item.productId}-${item.size}`.slice(0, 160),
+      productId: item.productId,
       name,
-      size: cleanText(item.size || "Standart", 40),
-      imageUrl: normalizeImageUrl(item.imageUrl),
+      size: item.size,
+      imageUrl,
       price,
-      quantity
+      quantity: item.quantity
     };
   });
 
@@ -206,9 +250,13 @@ const buildOrder = async (db, body) => {
   const shippingAmount = subtotal < FREE_SHIPPING_THRESHOLD ? STANDARD_SHIPPING_FEE : 0;
   const total = Math.max(1, normalizeMoney(subtotal - discountAmount + shippingAmount));
   const merchantOid = `OM${Date.now()}${crypto.randomBytes(5).toString("hex").toUpperCase()}`;
+  const statusToken = crypto.randomBytes(24).toString("base64url");
+  const statusTokenHash = crypto.createHash("sha256").update(statusToken).digest("hex");
 
   return {
     merchantOid,
+    statusToken,
+    statusTokenHash,
     customer: { fullName, phone, address, email },
     userId: cleanText(body.userId, 128),
     items: orderItems,
@@ -317,6 +365,7 @@ module.exports = async (req, res) => {
         provider: "paytr",
         status: "pending",
         merchantOid: order.merchantOid,
+        statusTokenHash: order.statusTokenHash,
         requestedAmount: order.paymentAmount,
         currency,
         testMode: testMode === "1"
@@ -339,7 +388,7 @@ module.exports = async (req, res) => {
       user_name: order.customer.fullName,
       user_address: order.customer.address,
       user_phone: order.customer.phone,
-      merchant_ok_url: `${baseUrl}/odeme-basarili.html`,
+      merchant_ok_url: `${baseUrl}/odeme-basarili.html?merchant_oid=${encodeURIComponent(order.merchantOid)}&status_token=${encodeURIComponent(order.statusToken)}`,
       merchant_fail_url: `${baseUrl}/odeme-hata.html`,
       timeout_limit: String(process.env.PAYTR_TIMEOUT_LIMIT ?? "30"),
       currency,

@@ -1,6 +1,9 @@
 const crypto = require("crypto");
 const admin = require("firebase-admin");
 const { waitUntil } = require("@vercel/functions");
+const { isValidEmail, sendTransactionalEmail } = require("../lib/mail");
+const { buildPaidOrderEmail } = require("../lib/order-email");
+const { buildPaidOrderReceiptPdf } = require("../lib/order-receipt");
 
 const FIREBASE_PROJECT_ID = "orvellomonte-392cf";
 
@@ -236,6 +239,95 @@ const deductPaidOrderStock = async (db, orderRef, merchantOid, paidAmount, rawSt
   });
 };
 
+const sendPaidOrderEmailOnce = async (db, orderRef, merchantOid) => {
+  const claim = await db.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(orderRef);
+
+    if (!snapshot.exists) {
+      return null;
+    }
+
+    const order = snapshot.data() || {};
+    if (order.payment?.status !== "paid") {
+      return null;
+    }
+
+    const recipient = String(order.customer?.email || "").trim().toLowerCase();
+    if (!isValidEmail(recipient) || recipient === "musteri@orvellomonte.com") {
+      transaction.update(orderRef, {
+        "payment.confirmationEmail": {
+          status: "skipped",
+          reason: "missing_customer_email",
+          updatedAt: admin.firestore.Timestamp.now()
+        }
+      });
+      return null;
+    }
+
+    const emailState = order.payment?.confirmationEmail || {};
+    if (emailState.status === "sent") {
+      return null;
+    }
+
+    const claimedAtMs = emailState.claimedAt?.toMillis?.() || 0;
+    if (emailState.status === "sending" && Date.now() - claimedAtMs < 5 * 60 * 1000) {
+      return null;
+    }
+
+    transaction.update(orderRef, {
+      "payment.confirmationEmail": {
+        status: "sending",
+        recipient,
+        claimedAt: admin.firestore.Timestamp.now()
+      }
+    });
+
+    return { order, recipient };
+  });
+
+  if (!claim) {
+    return;
+  }
+
+  try {
+    const email = buildPaidOrderEmail(merchantOid, claim.order);
+    const receiptPdf = buildPaidOrderReceiptPdf(merchantOid, claim.order);
+    const delivery = await sendTransactionalEmail({
+      to: claim.recipient,
+      subject: email.subject,
+      text: email.text,
+      html: email.html,
+      attachments: [{
+        filename: `orvello-monte-siparis-${merchantOid}.pdf`,
+        content: receiptPdf,
+        contentType: "application/pdf"
+      }]
+    });
+
+    await orderRef.update({
+      "payment.confirmationEmail": {
+        status: "sent",
+        recipient: claim.recipient,
+        provider: delivery.provider,
+        messageId: delivery.messageId,
+        sentAt: admin.firestore.FieldValue.serverTimestamp()
+      },
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (error) {
+    await orderRef.update({
+      "payment.confirmationEmail": {
+        status: "failed",
+        recipient: claim.recipient,
+        error: String(error.message || "Email could not be sent.").slice(0, 300),
+        failedAt: admin.firestore.FieldValue.serverTimestamp()
+      },
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    throw error;
+  }
+};
+
 const processVerifiedNotification = async ({ merchantOid, status, totalAmount, post, requestMetadata }) => {
   getFirebaseApp();
   const db = admin.firestore();
@@ -256,15 +348,17 @@ const processVerifiedNotification = async ({ merchantOid, status, totalAmount, p
   const orderData = orderSnapshot.data() || {};
   const currentPaymentStatus = orderData.payment?.status;
 
-  if (
-    ["failed", "amount_mismatch"].includes(currentPaymentStatus)
-    || (currentPaymentStatus === "paid" && (orderData.payment?.stockDeducted === true || status !== "success"))
-  ) {
+  if (status === "success") {
+    if (["failed", "amount_mismatch"].includes(currentPaymentStatus)) {
+      return;
+    }
+
+    await deductPaidOrderStock(db, orderRef, merchantOid, Number(totalAmount), status);
+    await sendPaidOrderEmailOnce(db, orderRef, merchantOid);
     return;
   }
 
-  if (status === "success") {
-    await deductPaidOrderStock(db, orderRef, merchantOid, Number(totalAmount), status);
+  if (["paid", "failed", "amount_mismatch"].includes(currentPaymentStatus)) {
     return;
   }
 

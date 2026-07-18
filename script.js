@@ -774,6 +774,9 @@ const openCheckout = () => {
   renderCheckoutSummary();
   resetPaytrFrame();
   setCheckoutMessage("");
+  if (currentUser?.email && checkoutForm.elements.email && !checkoutForm.elements.email.value) {
+    checkoutForm.elements.email.value = currentUser.email;
+  }
   document.body.classList.add("checkout-open");
   checkoutModal.setAttribute("aria-hidden", "false");
   window.setTimeout(() => checkoutForm.elements.fullName?.focus(), 50);
@@ -1405,11 +1408,12 @@ checkoutForm?.addEventListener("submit", async (event) => {
 
   const formData = new FormData(checkoutForm);
   const fullName = formData.get("fullName").trim();
+  const email = String(formData.get("email") || "").trim().toLowerCase();
   const phone = formData.get("phone").trim();
   const address = formData.get("address").trim();
 
-  if (!fullName || !phone || !address) {
-    setCheckoutMessage("Ad soyad, telefon ve adres alanlarını doldur.", true);
+  if (!fullName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !phone || !address) {
+    setCheckoutMessage("Ad soyad, e-posta, telefon ve adres alanlarını doğru doldur.", true);
     return;
   }
 
@@ -1437,7 +1441,7 @@ checkoutForm?.addEventListener("submit", async (event) => {
           fullName,
           phone,
           address,
-          email: currentUser?.email || ""
+          email
         },
         userId: currentUser?.uid || "",
         items: buildOrderItems(),
