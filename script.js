@@ -2795,7 +2795,7 @@ const setupInvoiceTestButton = () => {
         throw new Error(result.error || "Test faturası gönderilemedi.");
       }
 
-      setAdminSubscriberMessage(`Test faturası ${result.recipient} adresine gönderildi.`);
+      setAdminSubscriberMessage(`Test faturası ${result.recipient} adresine ${String(result.provider || "e-posta servisi").toUpperCase()} ile gönderildi.`);
     } catch (error) {
       setAdminSubscriberMessage(error.message || "Test faturası gönderilemedi.", true);
     } finally {
