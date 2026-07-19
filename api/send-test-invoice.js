@@ -41,7 +41,7 @@ const sendJson = (res, status, payload) => {
   res.status(status).json(payload);
 };
 
-const getLatestBrevoTestEvent = async (subjectNeedle = "[TEST") => {
+const getLatestBrevoTestEvent = async (messageId = "") => {
   if (!process.env.BREVO_API_KEY) {
     return null;
   }
@@ -52,6 +52,9 @@ const getLatestBrevoTestEvent = async (subjectNeedle = "[TEST") => {
     limit: "30",
     sort: "desc"
   });
+  if (messageId) {
+    params.set("messageId", messageId);
+  }
   const response = await fetch(`https://api.brevo.com/v3/smtp/statistics/events?${params}`, {
     headers: {
       Accept: "application/json",
@@ -65,7 +68,7 @@ const getLatestBrevoTestEvent = async (subjectNeedle = "[TEST") => {
   }
 
   const events = Array.isArray(result.events) ? result.events : [];
-  const testEvent = events.find((event) => String(event.subject || "").includes(subjectNeedle));
+  const testEvent = events[0];
   if (!testEvent) {
     return { event: "not_found", reason: "Son 24 saatte olay bulunamadi." };
   }
@@ -138,7 +141,7 @@ module.exports = async (req, res) => {
 
       for (let attempt = 0; attempt < 10; attempt += 1) {
         await new Promise((resolve) => setTimeout(resolve, 1500));
-        deliveryEvent = await getLatestBrevoTestEvent(merchantOid).catch(() => null);
+        deliveryEvent = await getLatestBrevoTestEvent(delivery.messageId).catch(() => null);
 
         if (deliveryEvent && terminalEvents.has(deliveryEvent.event)) {
           break;
