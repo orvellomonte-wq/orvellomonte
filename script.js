@@ -126,7 +126,6 @@ const signupMessage = document.querySelector(".signup-message");
 const adminSubscriberForm = document.querySelector(".admin-subscriber-form");
 const adminSubscriberMessage = document.querySelector(".admin-subscriber-message");
 const adminSubscriberList = document.querySelector("[data-admin-subscribers]");
-const adminInvoiceTestButton = document.querySelector("[data-send-test-invoice]");
 const policySections = document.querySelectorAll("[data-policy-section]");
 const policyMessage = document.querySelector(".policy-edit-message");
 
@@ -2276,13 +2275,26 @@ const renderAdminOrders = (orders) => {
     const address = customer.address || "Adres yok";
     const paymentStatus = order.payment?.status || "manual";
     const paymentLabel = {
-      paid: "Odendi",
-      pending: "Odeme Bekliyor",
-      failed: "Odeme Basarisiz",
-      amount_mismatch: "Tutar Uyusmadi",
-      token_failed: "Odeme Acilamadi",
-      manual: "Manuel Siparis"
-    }[paymentStatus] || "Odeme Bekliyor";
+      paid: "Ödendi",
+      pending: "Ödeme Bekliyor",
+      failed: "Ödeme Başarısız",
+      amount_mismatch: "Tutar Uyuşmadı",
+      token_failed: "Ödeme Açılamadı",
+      manual: "Manuel Sipariş"
+    }[paymentStatus] || "Ödeme Bekliyor";
+    const emailStatus = order.payment?.confirmationEmail?.status || "pending";
+    const emailLabel = {
+      sent: "E-posta Gönderildi",
+      sending: "E-posta Gönderiliyor",
+      failed: "E-posta Gönderilemedi",
+      skipped: "Müşteri E-postası Yok",
+      pending: "E-posta Bekliyor"
+    }[emailStatus] || "E-posta Bekliyor";
+    const emailBadgeState = emailStatus === "sent"
+      ? "paid"
+      : emailStatus === "failed" || emailStatus === "skipped"
+        ? "failed"
+        : "pending";
 
     const isDone = order.status === "done";
 
@@ -2300,6 +2312,7 @@ const renderAdminOrders = (orders) => {
             <div class="order-badge-row">
               <span class="order-badge">Paket</span>
               <span class="order-payment-badge is-${escapeHtml(paymentStatus)}">${escapeHtml(paymentLabel)}</span>
+              ${paymentStatus === "paid" ? `<span class="order-payment-badge is-${emailBadgeState}">${escapeHtml(emailLabel)}</span>` : ""}
             </div>
             <h4>${escapeHtml(customerName)}</h4>
             <p>${escapeHtml(formatOrderDate(order.createdAt))}</p>
@@ -2769,44 +2782,6 @@ const setupSubscriberMessagePanel = () => {
   });
 };
 
-const setupInvoiceTestButton = () => {
-  if (!adminInvoiceTestButton) {
-    return;
-  }
-
-  adminInvoiceTestButton.addEventListener("click", async () => {
-    if (!isAdminUser(currentUser)) {
-      setAdminSubscriberMessage("Bu işlem için admin hesabı gerekir.", true);
-      return;
-    }
-
-    adminInvoiceTestButton.disabled = true;
-    setAdminSubscriberMessage("PDF ekli test faturası gönderiliyor...");
-
-    try {
-      const token = await getIdToken(currentUser, true);
-      const response = await fetch("/api/send-test-invoice", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const result = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(result.error || "Test faturası gönderilemedi.");
-      }
-
-      const deliveryStatus = result.deliveryEvent?.event
-        ? ` Teslimat durumu: ${result.deliveryEvent.event}${result.deliveryEvent.reason ? ` (${result.deliveryEvent.reason})` : ""}.`
-        : "";
-      setAdminSubscriberMessage(`Test faturası ${result.recipient} adresine ${String(result.provider || "e-posta servisi").toUpperCase()} ile gönderildi.${deliveryStatus}`);
-    } catch (error) {
-      setAdminSubscriberMessage(error.message || "Test faturası gönderilemedi.", true);
-    } finally {
-      adminInvoiceTestButton.disabled = false;
-    }
-  });
-};
-
 const editProduct = (productId) => {
   if (!isAdminUser(currentUser)) {
     setAdminMessage("Bu işlem için admin hesabıyla giriş yapmalısın.", true);
@@ -3214,7 +3189,6 @@ setupAdminPanel();
 setupAnnouncementPanel();
 setupDiscountPanel();
 setupSubscriberMessagePanel();
-setupInvoiceTestButton();
 setupProductMarqueeDrag();
 loadAnnouncement();
 loadPolicyContent();
