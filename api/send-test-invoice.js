@@ -92,7 +92,8 @@ module.exports = async (req, res) => {
         filename: `TEST-orvello-monte-siparis-${merchantOid}.pdf`,
         content: buildPaidOrderReceiptPdf(merchantOid, order),
         contentType: "application/pdf"
-      }]
+      }],
+      allowFallback: false
     });
 
     sendJson(res, 200, {
@@ -104,6 +105,8 @@ module.exports = async (req, res) => {
     });
   } catch (error) {
     console.error("[send-test-invoice]", error);
-    sendJson(res, 500, { error: "Test faturasi gonderilemedi." });
+    sendJson(res, 500, {
+      error: `SMTP test faturasi gonderilemedi: ${String(error.message || "Bilinmeyen hata").slice(0, 240)}`
+    });
   }
 };
