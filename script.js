@@ -126,6 +126,7 @@ const signupMessage = document.querySelector(".signup-message");
 const adminSubscriberForm = document.querySelector(".admin-subscriber-form");
 const adminSubscriberMessage = document.querySelector(".admin-subscriber-message");
 const adminSubscriberList = document.querySelector("[data-admin-subscribers]");
+const adminInvoiceTestButton = document.querySelector("[data-send-test-invoice]");
 const policySections = document.querySelectorAll("[data-policy-section]");
 const policyMessage = document.querySelector(".policy-edit-message");
 
@@ -2768,6 +2769,41 @@ const setupSubscriberMessagePanel = () => {
   });
 };
 
+const setupInvoiceTestButton = () => {
+  if (!adminInvoiceTestButton) {
+    return;
+  }
+
+  adminInvoiceTestButton.addEventListener("click", async () => {
+    if (!isAdminUser(currentUser)) {
+      setAdminSubscriberMessage("Bu işlem için admin hesabı gerekir.", true);
+      return;
+    }
+
+    adminInvoiceTestButton.disabled = true;
+    setAdminSubscriberMessage("PDF ekli test faturası gönderiliyor...");
+
+    try {
+      const token = await getIdToken(currentUser, true);
+      const response = await fetch("/api/send-test-invoice", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result.error || "Test faturası gönderilemedi.");
+      }
+
+      setAdminSubscriberMessage(`Test faturası ${result.recipient} adresine gönderildi.`);
+    } catch (error) {
+      setAdminSubscriberMessage(error.message || "Test faturası gönderilemedi.", true);
+    } finally {
+      adminInvoiceTestButton.disabled = false;
+    }
+  });
+};
+
 const editProduct = (productId) => {
   if (!isAdminUser(currentUser)) {
     setAdminMessage("Bu işlem için admin hesabıyla giriş yapmalısın.", true);
@@ -3175,6 +3211,7 @@ setupAdminPanel();
 setupAnnouncementPanel();
 setupDiscountPanel();
 setupSubscriberMessagePanel();
+setupInvoiceTestButton();
 setupProductMarqueeDrag();
 loadAnnouncement();
 loadPolicyContent();
