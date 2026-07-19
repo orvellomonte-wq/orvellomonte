@@ -136,8 +136,8 @@ module.exports = async (req, res) => {
     if (delivery.provider === "brevo") {
       const terminalEvents = new Set(["delivered", "blocked", "hard_bounce", "soft_bounce", "deferred", "invalid"]);
 
-      for (let attempt = 0; attempt < 4; attempt += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 1200));
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
         deliveryEvent = await getLatestBrevoTestEvent(merchantOid).catch(() => null);
 
         if (deliveryEvent && terminalEvents.has(deliveryEvent.event)) {
