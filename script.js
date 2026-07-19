@@ -2795,7 +2795,10 @@ const setupInvoiceTestButton = () => {
         throw new Error(result.error || "Test faturası gönderilemedi.");
       }
 
-      setAdminSubscriberMessage(`Test faturası ${result.recipient} adresine ${String(result.provider || "e-posta servisi").toUpperCase()} ile gönderildi.`);
+      const deliveryStatus = result.deliveryEvent?.event
+        ? ` Teslimat durumu: ${result.deliveryEvent.event}${result.deliveryEvent.reason ? ` (${result.deliveryEvent.reason})` : ""}.`
+        : "";
+      setAdminSubscriberMessage(`Test faturası ${result.recipient} adresine ${String(result.provider || "e-posta servisi").toUpperCase()} ile gönderildi.${deliveryStatus}`);
     } catch (error) {
       setAdminSubscriberMessage(error.message || "Test faturası gönderilemedi.", true);
     } finally {
