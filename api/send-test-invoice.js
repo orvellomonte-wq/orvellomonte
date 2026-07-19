@@ -122,15 +122,14 @@ module.exports = async (req, res) => {
     const testBanner = '<div style="padding:14px;background:#b32020;color:#fff;text-align:center;font-family:Arial,sans-serif;font-weight:900">TEST E-POSTASI - GERCEK SIPARIS DEGILDIR</div>';
     const delivery = await sendTransactionalEmail({
       to: ADMIN_EMAIL,
-      subject: `[TEST SMTP] Orvello Monte siparis ve fatura ozeti - ${merchantOid}`,
+      subject: `[TEST FATURA] Orvello Monte siparis ve fatura ozeti - ${merchantOid}`,
       text: `TEST E-POSTASI - GERCEK SIPARIS DEGILDIR\n\n${email.text}`,
       html: email.html.replace('<div style="max-width:680px', `${testBanner}<div style="max-width:680px`),
       attachments: [{
         filename: `TEST-orvello-monte-siparis-${merchantOid}.pdf`,
         content: buildPaidOrderReceiptPdf(merchantOid, order),
         contentType: "application/pdf"
-      }],
-      allowFallback: false
+      }]
     });
 
     sendJson(res, 200, {
@@ -147,7 +146,7 @@ module.exports = async (req, res) => {
       ? ` | Brevo son durum: ${brevoEvent.event}${brevoEvent.reason ? ` (${brevoEvent.reason})` : ""}`
       : "";
     sendJson(res, 500, {
-      error: `SMTP test faturasi gonderilemedi: ${String(error.message || "Bilinmeyen hata").slice(0, 180)}${brevoStatus}`.slice(0, 420)
+      error: `Test faturasi gonderilemedi: ${String(error.message || "Bilinmeyen hata").slice(0, 180)}${brevoStatus}`.slice(0, 420)
     });
   }
 };

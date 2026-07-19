@@ -30,7 +30,7 @@ const isValidEmail = (email) =>
 const getSenderEmail = () => {
   const candidates = [
     process.env.SMTP_FROM,
-    process.env.SMTP_USER,
+    process.env.BREVO_SENDER_EMAIL,
     ADMIN_EMAIL
   ];
 
