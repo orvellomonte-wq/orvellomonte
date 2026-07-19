@@ -41,6 +41,43 @@ const sendJson = (res, status, payload) => {
   res.status(status).json(payload);
 };
 
+const getLatestBrevoTestEvent = async () => {
+  if (!process.env.BREVO_API_KEY) {
+    return null;
+  }
+
+  const params = new URLSearchParams({
+    email: ADMIN_EMAIL,
+    days: "1",
+    limit: "30",
+    sort: "desc"
+  });
+  const response = await fetch(`https://api.brevo.com/v3/smtp/statistics/events?${params}`, {
+    headers: {
+      Accept: "application/json",
+      "api-key": process.env.BREVO_API_KEY
+    }
+  });
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    return { event: "query_failed", reason: String(result.message || response.status) };
+  }
+
+  const events = Array.isArray(result.events) ? result.events : [];
+  const testEvent = events.find((event) => String(event.subject || "").includes("[TEST")) || events[0];
+  if (!testEvent) {
+    return { event: "not_found", reason: "Son 24 saatte olay bulunamadi." };
+  }
+
+  return {
+    event: String(testEvent.event || "unknown"),
+    reason: String(testEvent.reason || ""),
+    date: String(testEvent.date || ""),
+    subject: String(testEvent.subject || "")
+  };
+};
+
 module.exports = async (req, res) => {
   const origin = String(req.headers.origin || "");
   if (origin && !ALLOWED_ORIGINS.has(origin)) {
@@ -105,8 +142,12 @@ module.exports = async (req, res) => {
     });
   } catch (error) {
     console.error("[send-test-invoice]", error);
+    const brevoEvent = await getLatestBrevoTestEvent().catch(() => null);
+    const brevoStatus = brevoEvent
+      ? ` | Brevo son durum: ${brevoEvent.event}${brevoEvent.reason ? ` (${brevoEvent.reason})` : ""}`
+      : "";
     sendJson(res, 500, {
-      error: `SMTP test faturasi gonderilemedi: ${String(error.message || "Bilinmeyen hata").slice(0, 240)}`
+      error: `SMTP test faturasi gonderilemedi: ${String(error.message || "Bilinmeyen hata").slice(0, 180)}${brevoStatus}`.slice(0, 420)
     });
   }
 };
