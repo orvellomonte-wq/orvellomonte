@@ -369,6 +369,14 @@ body.menu-open {
   padding: 118px clamp(18px, 5vw, 72px) 48px;
 }
 
+.home-page #categories,
+.home-page .product-marquee-section,
+.home-page .lookbook,
+body[data-category] main > .section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 760px;
+}
+
 .hero-image {
   position: absolute;
   inset: 0;

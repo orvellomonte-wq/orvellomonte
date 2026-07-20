@@ -6,6 +6,7 @@
   <title>Orvello Monte | Streetwear</title>
   <meta name="description" content="Orvello Monte streetwear ürünleri: hoodie, cargo, tee, şort ve aksesuarlar.">
   <script src="theme-init.js"></script>
+  <link rel="preload" as="image" href="assets/hero-slider/orvello-campaign-01-900.webp" imagesrcset="assets/hero-slider/orvello-campaign-01-900.webp 900w, assets/hero-slider/orvello-campaign-01-1600.webp 1600w" imagesizes="100vw" fetchpriority="high">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -17,93 +18,97 @@
     .hero {
       position: relative;
       overflow: hidden;
+      touch-action: pan-y;
     }
 
-    .hero-video {
+    .hero-slides,
+    .hero-slide {
       position: absolute;
       inset: 0;
+    }
+
+    .hero-slide {
+      margin: 0;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.55s ease, visibility 0.55s ease;
+    }
+
+    .hero-slide.is-active {
+      z-index: 1;
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .hero-slide img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       object-position: center;
       display: block;
-      opacity: 0;
-      transition: opacity 0.45s ease;
-      animation: hero-video-failsafe 0s 3.2s forwards;
+      background: #111;
     }
 
-    .hero-video.is-ready {
-      opacity: 1;
-      animation: none;
-    }
-
-    .site-intro {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      display: grid;
-      place-items: center;
-      color: #f7f1e8;
-      background: #0c0c0c;
-      opacity: 1;
-      visibility: visible;
-      transition: opacity 0.45s ease, visibility 0.45s ease;
-      animation: site-intro-failsafe 0s 3.2s forwards;
-    }
-
-    .site-intro span {
-      position: relative;
-      padding-bottom: 16px;
-      font-family: "Anton", Impact, sans-serif;
-      font-size: clamp(1.35rem, 4vw, 2.4rem);
-      letter-spacing: 0.08em;
-    }
-
-    .site-intro span::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      width: 100%;
-      height: 2px;
-      background: #d94f32;
-      transform: scaleX(0);
-      transform-origin: left;
-      animation: site-intro-progress 2.5s ease-out forwards;
-    }
-
-    .site-intro.is-hidden {
-      opacity: 0;
+    .hero-slide img:not([src]) {
       visibility: hidden;
-      pointer-events: none;
-      animation: none;
     }
 
-    @keyframes site-intro-progress {
-      to { transform: scaleX(1); }
+    .hero-slider-controls {
+      position: absolute;
+      z-index: 3;
+      right: clamp(14px, 3vw, 34px);
+      bottom: clamp(16px, 3vw, 30px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    @keyframes site-intro-failsafe {
-      to {
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-      }
+    .hero-slider-button {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      border-radius: 50%;
+      color: #fff;
+      background: rgba(8, 8, 8, 0.48);
+      cursor: pointer;
+      font-size: 1.15rem;
+      backdrop-filter: blur(8px);
+      transition: background 180ms ease, transform 180ms ease;
     }
 
-    @keyframes hero-video-failsafe {
-      to { opacity: 1; }
+    .hero-slider-button:hover {
+      transform: translateY(-1px);
+      background: rgba(8, 8, 8, 0.78);
+    }
+
+    .hero-slider-dots {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .hero-slider-dot {
+      width: 6px;
+      height: 6px;
+      border: 0;
+      border-radius: 50%;
+      padding: 0;
+      background: rgba(255, 255, 255, 0.48);
+      cursor: pointer;
+      transition: width 180ms ease, border-radius 180ms ease, background 180ms ease;
+    }
+
+    .hero-slider-dot.is-active {
+      width: 22px;
+      border-radius: 999px;
+      background: #fff;
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .hero-video,
-      .site-intro {
+      .hero-slide {
         transition: none;
-      }
-
-      .site-intro span::after {
-        animation: none;
-        transform: scaleX(1);
       }
     }
 
@@ -197,10 +202,35 @@
         padding-bottom: 12px !important;
       }
 
-      .hero-video,
+      .hero-slide img,
       .hero-image {
         min-height: 410px;
         object-position: center 24%;
+      }
+
+      .hero-slider-controls {
+        right: 12px;
+        bottom: 12px;
+        gap: 7px;
+      }
+
+      .hero-slider-button {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+      }
+
+      .hero-slider-dots {
+        gap: 4px;
+      }
+
+      .hero-slider-dot {
+        width: 5px;
+        height: 5px;
+      }
+
+      .hero-slider-dot.is-active {
+        width: 16px;
       }
 
       .hero-content {
@@ -261,7 +291,7 @@
       }
 
       .hero,
-      .hero-video,
+      .hero-slide img,
       .hero-image {
         min-height: 390px;
       }
@@ -616,10 +646,6 @@
   </style>
 </head>
 <body class="home-page">
-  <div class="site-intro" data-site-intro aria-hidden="true">
-    <span>ORVELLO MONTE</span>
-  </div>
-
   <header class="site-header">
     <button class="menu-toggle" type="button" aria-label="Menüyü aç" aria-controls="side-menu" aria-expanded="false">
       <span></span>
@@ -655,11 +681,50 @@
   </aside>
 
   <main id="top">
-    <section class="hero" aria-label="Orvello Monte streetwear seçkisi">
-      <video class="hero-video" autoplay muted loop playsinline preload="metadata" poster="assets/orvello-home-campaign.jpeg" aria-hidden="true">
-        <source src="assets/orvello-home-reel.mp4" type="video/mp4">
-      </video>
-      <div class="hero-overlay"></div>
+    <section class="hero hero-slider" data-hero-slider aria-roledescription="carousel" aria-label="Orvello Monte kampanya fotoğrafları">
+      <div class="hero-slides">
+        <figure class="hero-slide is-active" data-hero-slide aria-hidden="false">
+          <img src="assets/hero-slider/orvello-campaign-01-900.webp" srcset="assets/hero-slider/orvello-campaign-01-900.webp 900w, assets/hero-slider/orvello-campaign-01-1600.webp 1600w" sizes="100vw" width="1600" height="1066" alt="Orvello Monte beyaz tişört sokak çekimi" fetchpriority="high" decoding="async">
+        </figure>
+        <figure class="hero-slide" data-hero-slide aria-hidden="true">
+          <img data-src="assets/hero-slider/orvello-campaign-02-900.webp" data-srcset="assets/hero-slider/orvello-campaign-02-900.webp 900w, assets/hero-slider/orvello-campaign-02-1600.webp 1600w" sizes="100vw" width="1600" height="1066" alt="Orvello Monte beyaz tişört grafiti çekimi" decoding="async">
+        </figure>
+        <figure class="hero-slide" data-hero-slide aria-hidden="true">
+          <img data-src="assets/hero-slider/orvello-campaign-03-900.webp" data-srcset="assets/hero-slider/orvello-campaign-03-900.webp 900w, assets/hero-slider/orvello-campaign-03-1600.webp 1600w" sizes="100vw" width="1600" height="1066" alt="Orvello Monte hardal tişört nakış detayı" decoding="async">
+        </figure>
+        <figure class="hero-slide" data-hero-slide aria-hidden="true">
+          <img data-src="assets/hero-slider/orvello-campaign-04-900.webp" data-srcset="assets/hero-slider/orvello-campaign-04-900.webp 900w, assets/hero-slider/orvello-campaign-04-1600.webp 1600w" sizes="100vw" width="1600" height="1066" alt="Orvello Monte siyah ve beyaz tişört kombinleri" decoding="async">
+        </figure>
+        <figure class="hero-slide" data-hero-slide aria-hidden="true">
+          <img data-src="assets/hero-slider/orvello-campaign-05-900.webp" data-srcset="assets/hero-slider/orvello-campaign-05-900.webp 900w, assets/hero-slider/orvello-campaign-05-1600.webp 1600w" sizes="100vw" width="1600" height="1066" alt="Orvello Monte sokak stili kampanya çekimi" decoding="async">
+        </figure>
+        <figure class="hero-slide" data-hero-slide aria-hidden="true">
+          <img data-src="assets/hero-slider/orvello-campaign-06-900.webp" data-srcset="assets/hero-slider/orvello-campaign-06-900.webp 900w, assets/hero-slider/orvello-campaign-06-1600.webp 1600w" sizes="100vw" width="1066" height="1600" alt="Orvello Monte gül kurusu tişört ve şort kombini" decoding="async">
+        </figure>
+        <figure class="hero-slide" data-hero-slide aria-hidden="true">
+          <img data-src="assets/hero-slider/orvello-campaign-07-900.webp" data-srcset="assets/hero-slider/orvello-campaign-07-900.webp 900w, assets/hero-slider/orvello-campaign-07-1600.webp 1600w" sizes="100vw" width="1600" height="1066" alt="Orvello Monte taş rengi tişört şehir çekimi" decoding="async">
+        </figure>
+        <figure class="hero-slide" data-hero-slide aria-hidden="true">
+          <img data-src="assets/hero-slider/orvello-campaign-08-900.webp" data-srcset="assets/hero-slider/orvello-campaign-08-900.webp 900w, assets/hero-slider/orvello-campaign-08-1600.webp 1600w" sizes="100vw" width="1066" height="1600" alt="Orvello Monte taş rengi tişört ve füme şort" decoding="async">
+        </figure>
+        <figure class="hero-slide" data-hero-slide aria-hidden="true">
+          <img data-src="assets/hero-slider/orvello-campaign-09-900.webp" data-srcset="assets/hero-slider/orvello-campaign-09-900.webp 900w, assets/hero-slider/orvello-campaign-09-1600.webp 1600w" sizes="100vw" width="1600" height="1066" alt="Orvello Monte hardal tişört dış çekimi" decoding="async">
+        </figure>
+        <figure class="hero-slide" data-hero-slide aria-hidden="true">
+          <img data-src="assets/hero-slider/orvello-campaign-10-900.webp" data-srcset="assets/hero-slider/orvello-campaign-10-900.webp 900w, assets/hero-slider/orvello-campaign-10-1600.webp 1600w" sizes="100vw" width="1600" height="1066" alt="Orvello Monte hardal ve mavi tişört kombini" decoding="async">
+        </figure>
+        <figure class="hero-slide" data-hero-slide aria-hidden="true">
+          <img data-src="assets/hero-slider/orvello-campaign-11-900.webp" data-srcset="assets/hero-slider/orvello-campaign-11-900.webp 900w, assets/hero-slider/orvello-campaign-11-1600.webp 1600w" sizes="100vw" width="1600" height="1066" alt="Orvello Monte kadın streetwear kampanya çekimi" decoding="async">
+        </figure>
+        <figure class="hero-slide" data-hero-slide aria-hidden="true">
+          <img data-src="assets/hero-slider/orvello-campaign-12-900.webp" data-srcset="assets/hero-slider/orvello-campaign-12-900.webp 900w, assets/hero-slider/orvello-campaign-12-1600.webp 1600w" sizes="100vw" width="1600" height="1066" alt="Orvello Monte kadın koleksiyonu şehir çekimi" decoding="async">
+        </figure>
+      </div>
+      <div class="hero-slider-controls">
+        <button class="hero-slider-button" type="button" data-hero-previous aria-label="Önceki fotoğraf" title="Önceki fotoğraf">&#8592;</button>
+        <div class="hero-slider-dots" data-hero-dots aria-label="Kampanya fotoğrafı seçimi"></div>
+        <button class="hero-slider-button" type="button" data-hero-next aria-label="Sonraki fotoğraf" title="Sonraki fotoğraf">&#8594;</button>
+      </div>
     </section>
 
     <section class="ticker" aria-label="Ürün öne çıkanları">
@@ -870,36 +935,80 @@
 
   <script>
     (() => {
-      const intro = document.querySelector('[data-site-intro]');
-      const heroVideo = document.querySelector('.hero-video');
+      const slider = document.querySelector('[data-hero-slider]');
 
-      if (intro && heroVideo) {
-        const startedAt = Date.now();
-        const minimumDelay = 900;
-        const maximumDelay = 2500;
-        let revealScheduled = false;
+      if (slider) {
+        const slides = [...slider.querySelectorAll('[data-hero-slide]')];
+        const dotsRoot = slider.querySelector('[data-hero-dots]');
+        const previousButton = slider.querySelector('[data-hero-previous]');
+        const nextButton = slider.querySelector('[data-hero-next]');
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let activeIndex = 0;
+        let autoTimer = null;
+        let pointerStartX = null;
 
-        const revealSite = () => {
-          if (revealScheduled) return;
-          revealScheduled = true;
-
-          const remainingDelay = Math.max(0, minimumDelay - (Date.now() - startedAt));
-          window.setTimeout(() => {
-            heroVideo.classList.add('is-ready');
-            intro.classList.add('is-hidden');
-            window.setTimeout(() => intro.remove(), 500);
-          }, remainingDelay);
+        const loadSlide = (index) => {
+          const image = slides[index]?.querySelector('img');
+          if (!image || image.src) return;
+          if (image.dataset.srcset) image.srcset = image.dataset.srcset;
+          image.src = image.dataset.src;
+          image.removeAttribute('data-src');
+          image.removeAttribute('data-srcset');
         };
 
-        if (heroVideo.readyState >= 3) {
-          revealSite();
-        } else {
-          heroVideo.addEventListener('canplay', revealSite, { once: true });
-          heroVideo.addEventListener('error', revealSite, { once: true });
-        }
+        const dots = slides.map((_, index) => {
+          const dot = document.createElement('button');
+          dot.className = `hero-slider-dot${index === 0 ? ' is-active' : ''}`;
+          dot.type = 'button';
+          dot.setAttribute('aria-label', `${index + 1}. fotoğrafı göster`);
+          dot.setAttribute('aria-current', index === 0 ? 'true' : 'false');
+          dot.addEventListener('click', () => showSlide(index, true));
+          dotsRoot?.appendChild(dot);
+          return dot;
+        });
 
-        window.setTimeout(revealSite, maximumDelay);
-        heroVideo.play().catch(() => {});
+        const restartAuto = () => {
+          window.clearInterval(autoTimer);
+          if (!reduceMotion && !document.hidden) {
+            autoTimer = window.setInterval(() => showSlide(activeIndex + 1), 5200);
+          }
+        };
+
+        const showSlide = (requestedIndex, userInitiated = false) => {
+          const nextIndex = (requestedIndex + slides.length) % slides.length;
+          loadSlide(nextIndex);
+          slides.forEach((slide, index) => {
+            const isActive = index === nextIndex;
+            slide.classList.toggle('is-active', isActive);
+            slide.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+            dots[index]?.classList.toggle('is-active', isActive);
+            dots[index]?.setAttribute('aria-current', isActive ? 'true' : 'false');
+          });
+          activeIndex = nextIndex;
+          window.setTimeout(() => loadSlide((activeIndex + 1) % slides.length), 700);
+          if (userInitiated) restartAuto();
+        };
+
+        previousButton?.addEventListener('click', () => showSlide(activeIndex - 1, true));
+        nextButton?.addEventListener('click', () => showSlide(activeIndex + 1, true));
+        slider.addEventListener('pointerdown', (event) => {
+          pointerStartX = event.clientX;
+        }, { passive: true });
+        slider.addEventListener('pointerup', (event) => {
+          if (pointerStartX === null) return;
+          const distance = event.clientX - pointerStartX;
+          pointerStartX = null;
+          if (Math.abs(distance) > 45) showSlide(activeIndex + (distance < 0 ? 1 : -1), true);
+        }, { passive: true });
+        slider.addEventListener('pointercancel', () => {
+          pointerStartX = null;
+        }, { passive: true });
+        slider.addEventListener('mouseenter', () => window.clearInterval(autoTimer));
+        slider.addEventListener('mouseleave', restartAuto);
+        document.addEventListener('visibilitychange', restartAuto);
+
+        window.setTimeout(() => loadSlide(1), 900);
+        restartAuto();
       }
 
       const body = document.body;

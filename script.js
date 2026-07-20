@@ -47,7 +47,11 @@ const isAdminPage = document.body.dataset.adminPage === "true";
 
 const canUseAnalytics = window.location.protocol === "https:" && !window.location.hostname.includes("localhost");
 
-if (canUseAnalytics) {
+const initializeAnalytics = () => {
+  if (!canUseAnalytics) {
+    return;
+  }
+
   import("https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js")
     .then(({ getAnalytics, isSupported }) => isSupported().then((supported) => {
       if (supported) {
@@ -55,6 +59,12 @@ if (canUseAnalytics) {
       }
     }))
     .catch(() => {});
+};
+
+if ("requestIdleCallback" in window) {
+  window.requestIdleCallback(initializeAnalytics, { timeout: 4000 });
+} else {
+  window.addEventListener("load", () => window.setTimeout(initializeAnalytics, 1200), { once: true });
 }
 
 const cartCounter = document.querySelector(".cart-link span");
@@ -142,7 +152,6 @@ let ordersUnsubscribe = null;
 let discountsUnsubscribe = null;
 let activeDiscount = null;
 let policiesUnsubscribe = null;
-let productGalleryTimer = null;
 let subscribersUnsubscribe = null;
 let newsletterSubscribers = [];
 let announcementUnsubscribe = null;
@@ -391,33 +400,6 @@ const refreshListingImageRatios = (root = document) => {
     .forEach(applyListingImageRatio);
 };
 
-const startProductGalleryRotation = () => {
-  if (productGalleryTimer) {
-    window.clearInterval(productGalleryTimer);
-    productGalleryTimer = null;
-  }
-
-  const galleries = document.querySelectorAll(".product-gallery");
-
-  if (!galleries.length) {
-    return;
-  }
-
-  productGalleryTimer = window.setInterval(() => {
-    document.querySelectorAll(".product-gallery").forEach((gallery) => {
-      const buttons = Array.from(gallery.querySelectorAll("[data-gallery-image]"));
-
-      if (buttons.length < 2) {
-        return;
-      }
-
-      const activeIndex = Math.max(0, buttons.findIndex((button) => button.classList.contains("active")));
-      const nextButton = buttons[(activeIndex + 1) % buttons.length];
-      setProductGalleryImage(nextButton);
-    });
-  }, 5000);
-};
-
 const slugify = (value) =>
   value
     .toLowerCase()
@@ -618,8 +600,8 @@ const fileToDataUrl = (file) =>
 
 const prepareProductImages = async (files, onStatus) => {
   const imageUrls = [];
-  const totalTargetBytes = 940000;
-  const targetPerImage = Math.max(90000, Math.floor(totalTargetBytes / Math.max(files.length, 1)));
+  const totalTargetBytes = 560000;
+  const targetPerImage = Math.max(60000, Math.floor(totalTargetBytes / Math.max(files.length, 1)));
 
   for (let index = 0; index < files.length; index += 1) {
     onStatus(`Görsel ${index + 1}/${files.length} sıkıştırılıyor...`);
@@ -1901,7 +1883,7 @@ const syncAdminProductType = () => {
   picker?.classList.toggle("is-disabled", isAccessory);
 };
 
-const renderFirebaseProduct = (product) => {
+const renderFirebaseProduct = (product, index = 0) => {
   const imageUrl = getProductImage(product);
   const imageUrls = product.imageUrls || product.images || [];
   const displayImageUrls = imageUrls.slice(0, 4);
@@ -1916,13 +1898,13 @@ const renderFirebaseProduct = (product) => {
       </div>
     ` : ""}
     <div class="product-visual ${imageUrl ? "product-photo" : escapeHtml(product.tone)}">
-      ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}">` : ""}
+      ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}" loading="${index < 2 ? "eager" : "lazy"}" decoding="async" ${index === 0 ? 'fetchpriority="high"' : ""}>` : ""}
     </div>
     <div class="product-info product-info-simple">
       <h3>${escapeHtml(product.name)}</h3>
       ${displayImageUrls.length > 1 ? `
         <div class="product-gallery" aria-label="${escapeHtml(product.name)} gorselleri">
-          ${displayImageUrls.map((url, index) => `<button class="${index === 0 ? "active" : ""}" type="button" aria-label="Gorsel ${index + 1}" data-gallery-image="${escapeHtml(url)}"><img src="${escapeHtml(url)}" alt=""></button>`).join("")}
+          ${displayImageUrls.map((url, imageIndex) => `<button class="${imageIndex === 0 ? "active" : ""}" type="button" aria-label="Gorsel ${imageIndex + 1}" data-gallery-image="${escapeHtml(url)}"><img src="${escapeHtml(url)}" alt="" loading="lazy" decoding="async"></button>`).join("")}
         </div>
       ` : ""}
       <div class="product-row">
@@ -1945,7 +1927,7 @@ const renderFirestoreProducts = (products) => {
 
     grid.querySelectorAll("[data-firestore-product]").forEach((card) => card.remove());
     grid.querySelector(".empty-products")?.toggleAttribute("hidden", visibleProducts.length > 0);
-    grid.insertAdjacentHTML("beforeend", visibleProducts.map(renderFirebaseProduct).join(""));
+    grid.insertAdjacentHTML("beforeend", visibleProducts.map((product, index) => renderFirebaseProduct(product, index)).join(""));
     refreshListingImageRatios(grid);
   });
 
@@ -1964,7 +1946,6 @@ const renderFirestoreProducts = (products) => {
       window.requestAnimationFrame(() => targetSection?.scrollIntoView({ block: "start" }));
     });
   }
-  startProductGalleryRotation();
 };
 
 const renderProductDetail = (products) => {
@@ -2021,11 +2002,11 @@ const renderProductDetail = (products) => {
     <article class="product-detail product-card" data-firestore-product="${escapeHtml(product.id)}">
       <div class="product-detail-media">
         <div class="product-detail-main-image product-photo">
-          ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}">` : ""}
+          ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}" fetchpriority="high" decoding="async">` : ""}
         </div>
         ${imageUrls.length > 1 ? `
           <div class="product-gallery product-detail-gallery" aria-label="${escapeHtml(product.name)} görselleri">
-            ${imageUrls.map((url, index) => `<button class="${index === 0 ? "active" : ""}" type="button" aria-label="Görsel ${index + 1}" data-gallery-image="${escapeHtml(url)}"><img src="${escapeHtml(url)}" alt=""></button>`).join("")}
+            ${imageUrls.map((url, index) => `<button class="${index === 0 ? "active" : ""}" type="button" aria-label="Görsel ${index + 1}" data-gallery-image="${escapeHtml(url)}"><img src="${escapeHtml(url)}" alt="" loading="lazy" decoding="async"></button>`).join("")}
           </div>
         ` : ""}
       </div>
@@ -2108,7 +2089,7 @@ const renderProductMarquee = (products) => {
     return `
       <a class="promo-product-card" href="${escapeHtml(getProductDetailUrl(product.id))}" data-product-detail-link="${escapeHtml(getProductDetailUrl(product.id))}">
         <div class="promo-product-visual ${imageUrl ? "has-image" : ""}">
-          ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}" loading="${index < 4 ? "eager" : "lazy"}" decoding="async" ${index < 2 ? 'fetchpriority="high"' : ""}>` : ""}
+          ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}" loading="${index === 0 ? "eager" : "lazy"}" decoding="async" ${index === 0 ? 'fetchpriority="high"' : ""}>` : ""}
         </div>
         <div class="promo-product-info">
           <span>${escapeHtml(categoryMeta.name)}</span>
@@ -2211,8 +2192,16 @@ const loadFirestoreProducts = () => {
     return;
   }
 
+  const productId = productDetail ? new URLSearchParams(window.location.search).get("id") : "";
+  if (productDetail && !productId) {
+    renderProductDetail([]);
+    return;
+  }
+
   const isFeaturedOnlyPage = Boolean(productMarquee && !productGrid && !productDetail && !pageCategory && !isAdminPage);
-  const productQuery = pageCategory
+  const productQuery = productId
+    ? doc(db, "products", productId)
+    : pageCategory
     ? query(collection(db, "products"), where("category", "==", pageCategory))
     : isFeaturedOnlyPage
       ? query(collection(db, "products"), where("homeFeatured", "==", true))
@@ -2221,8 +2210,9 @@ const loadFirestoreProducts = () => {
   onSnapshot(
     productQuery,
     (snapshot) => {
-      const products = snapshot.docs
-        .map((doc) => ({ id: doc.id, ...doc.data() }))
+      const snapshots = "docs" in snapshot ? snapshot.docs : snapshot.exists() ? [snapshot] : [];
+      const products = snapshots
+        .map((productSnapshot) => ({ id: productSnapshot.id, ...productSnapshot.data() }))
         .filter((product) => isAdminPage || product.active !== false)
         .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
