@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const admin = require("firebase-admin");
+const { calculateBuyTwoGetOne } = require("../lib/campaign");
 
 const FIREBASE_PROJECT_ID = "orvellomonte-392cf";
 const PAYTR_TOKEN_URL = "https://www.paytr.com/odeme/api/get-token";
@@ -162,6 +163,25 @@ const getActiveDiscount = async (db, discount) => {
   return { code: data.code || code, percent };
 };
 
+const getActiveCampaign = async (db) => {
+  const snapshot = await db.collection("site_content").doc("buy_two_get_one").get();
+
+  if (!snapshot.exists) {
+    return null;
+  }
+
+  const data = snapshot.data() || {};
+
+  if (data.active !== true || (data.type && data.type !== "buy_2_get_1")) {
+    return null;
+  }
+
+  return {
+    type: "buy_2_get_1",
+    announcementText: cleanText(data.announcementText || "2 AL 1 HEDIYE", 140)
+  };
+};
+
 const buildOrder = async (db, body) => {
   const customer = body.customer || {};
   const fullName = cleanText(customer.fullName, 60);
@@ -243,12 +263,16 @@ const buildOrder = async (db, body) => {
   });
 
   const subtotal = normalizeMoney(orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0));
+  const activeCampaign = await getActiveCampaign(db);
+  const campaignPricing = calculateBuyTwoGetOne(orderItems, Boolean(activeCampaign));
+  const campaignAmount = campaignPricing.amount;
   const activeDiscount = await getActiveDiscount(db, body.discount);
+  const discountableSubtotal = Math.max(0, subtotal - campaignAmount);
   const discountAmount = activeDiscount
-    ? normalizeMoney((subtotal * activeDiscount.percent) / 100)
+    ? normalizeMoney((discountableSubtotal * activeDiscount.percent) / 100)
     : 0;
   const shippingAmount = subtotal < FREE_SHIPPING_THRESHOLD ? STANDARD_SHIPPING_FEE : 0;
-  const total = Math.max(1, normalizeMoney(subtotal - discountAmount + shippingAmount));
+  const total = Math.max(1, normalizeMoney(subtotal - campaignAmount - discountAmount + shippingAmount));
   const merchantOid = `OM${Date.now()}${crypto.randomBytes(5).toString("hex").toUpperCase()}`;
   const statusToken = crypto.randomBytes(24).toString("base64url");
   const statusTokenHash = crypto.createHash("sha256").update(statusToken).digest("hex");
@@ -261,6 +285,11 @@ const buildOrder = async (db, body) => {
     userId: cleanText(body.userId, 128),
     items: orderItems,
     subtotal,
+    campaign: campaignAmount > 0 ? {
+      type: activeCampaign.type,
+      amount: campaignAmount,
+      freeItemCount: campaignPricing.freeItemCount
+    } : null,
     discount: activeDiscount ? {
       code: activeDiscount.code,
       percent: activeDiscount.percent,
@@ -356,6 +385,7 @@ module.exports = async (req, res) => {
       userId: order.userId,
       items: order.items,
       subtotal: order.subtotal,
+      campaign: order.campaign,
       discount: order.discount,
       shipping: order.shipping,
       total: order.total,

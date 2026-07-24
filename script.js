@@ -127,6 +127,8 @@ const adminDiscountMessage = document.querySelector(".admin-discount-message");
 const adminDiscountList = document.querySelector("[data-admin-discounts]");
 const adminAnnouncementForm = document.querySelector("[data-admin-announcement-form]");
 const adminAnnouncementMessage = document.querySelector(".admin-announcement-message");
+const adminCampaignForm = document.querySelector("[data-admin-campaign-form]");
+const adminCampaignMessage = document.querySelector(".admin-campaign-message");
 const announcementTexts = document.querySelectorAll("[data-announcement-text]");
 const adminImagePreview = document.querySelector(".admin-image-preview");
 const adminSizeStocks = document.querySelector(".admin-size-stocks");
@@ -155,11 +157,15 @@ let policiesUnsubscribe = null;
 let subscribersUnsubscribe = null;
 let newsletterSubscribers = [];
 let announcementUnsubscribe = null;
+let campaignUnsubscribe = null;
+let activeCampaign = null;
+let savedAnnouncementText = "";
 let pendingProductSectionHash = ["#tops", "#shorts"].includes(window.location.hash) ? window.location.hash : "";
 
 const FREE_SHIPPING_THRESHOLD = 3000;
 const STANDARD_SHIPPING_FEE = 149;
 const DEFAULT_ANNOUNCEMENT = "3.000 TL ÜZERİ KARGO ÜCRETSİZ";
+const DEFAULT_CAMPAIGN_ANNOUNCEMENT = "2 AL 1 HEDİYE";
 
 const formatPrice = (amount) =>
   new Intl.NumberFormat("tr-TR", {
@@ -224,10 +230,43 @@ const getCartSubtotal = () => cart.reduce((total, item) => total + item.price * 
 
 const normalizeDiscountCode = (value) => String(value || "").trim().toUpperCase().replace(/\s+/g, "");
 
+const getCampaignPricing = (items = cart) => {
+  const unitPrices = [];
+
+  items.forEach((item) => {
+    const price = Number(item.price || 0);
+    const quantity = Math.max(0, Number.parseInt(item.quantity, 10) || 0);
+
+    if (price <= 0 || quantity <= 0) {
+      return;
+    }
+
+    for (let index = 0; index < quantity; index += 1) {
+      unitPrices.push(price);
+    }
+  });
+
+  const totalItems = unitPrices.length;
+  const freeItemCount = activeCampaign?.active ? Math.floor(totalItems / 3) : 0;
+  const giftAmount = freeItemCount > 0
+    ? unitPrices.sort((a, b) => a - b).slice(0, freeItemCount).reduce((sum, price) => sum + price, 0)
+    : 0;
+
+  return {
+    active: Boolean(activeCampaign?.active),
+    totalItems,
+    freeItemCount,
+    giftAmount: Math.round(giftAmount * 100) / 100,
+    nextGiftIn: totalItems > 0 ? 3 - (totalItems % 3) : 3
+  };
+};
+
 const getDiscountAmount = () => {
   const subtotal = getCartSubtotal();
+  const campaignAmount = getCampaignPricing().giftAmount;
+  const discountableSubtotal = Math.max(0, subtotal - campaignAmount);
   const percent = Number(activeDiscount?.percent || 0);
-  return percent > 0 ? Math.round((subtotal * percent) / 100) : 0;
+  return percent > 0 ? Math.round(discountableSubtotal * percent) / 100 : 0;
 };
 
 const getShippingAmount = (subtotal = getCartSubtotal()) => (
@@ -236,7 +275,8 @@ const getShippingAmount = (subtotal = getCartSubtotal()) => (
 
 const getCartTotal = () => {
   const subtotal = getCartSubtotal();
-  return Math.max(0, subtotal - getDiscountAmount()) + getShippingAmount(subtotal);
+  const campaignAmount = getCampaignPricing().giftAmount;
+  return Math.max(0, subtotal - campaignAmount - getDiscountAmount()) + getShippingAmount(subtotal);
 };
 
 const getProductTone = (id) => {
@@ -620,6 +660,7 @@ const prepareProductImages = async (files, onStatus) => {
 const renderCart = () => {
   const itemCount = getCartCount();
   const subtotal = getCartSubtotal();
+  const campaignPricing = getCampaignPricing();
   const shippingAmount = getShippingAmount(subtotal);
   const total = getCartTotal();
   cartCounter.textContent = itemCount;
@@ -632,7 +673,18 @@ const renderCart = () => {
 
   if (cartSummaryNote) {
     const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+    const campaignProgress = campaignPricing.active
+      ? campaignPricing.freeItemCount > 0
+        ? `${campaignPricing.freeItemCount} ürün kampanya hediyesi olarak ücretsiz. ${campaignPricing.nextGiftIn} ürün daha ekle, bir hediye daha kazan.`
+        : `${campaignPricing.nextGiftIn} ürün daha ekle, en ucuz ürün hediyen olsun.`
+      : "";
     cartSummaryNote.innerHTML = `
+      ${campaignPricing.giftAmount > 0 ? `
+        <div class="cart-cost-line campaign-line">
+          <span>2 Al 1 Hediye</span>
+          <strong>-${formatPrice(campaignPricing.giftAmount)}</strong>
+        </div>
+      ` : ""}
       <div class="cart-cost-line">
         <span>Kargo</span>
         <strong class="${shippingAmount === 0 ? "is-free" : ""}">${shippingAmount === 0 ? "Ücretsiz" : formatPrice(shippingAmount)}</strong>
@@ -644,6 +696,7 @@ const renderCart = () => {
       <small>${shippingAmount === 0
         ? "3.000 TL üzeri alışverişlerde kargo ücretsiz."
         : `${formatPrice(remainingForFreeShipping)} daha ekle, kargo ücretsiz olsun.`}</small>
+      ${campaignProgress ? `<small class="campaign-progress">${escapeHtml(campaignProgress)}</small>` : ""}
     `;
   }
 
@@ -710,6 +763,7 @@ const renderCheckoutSummary = () => {
   }
 
   const subtotal = getCartSubtotal();
+  const campaignPricing = getCampaignPricing();
   const discountAmount = getDiscountAmount();
   const shippingAmount = getShippingAmount(subtotal);
   const total = getCartTotal();
@@ -729,6 +783,12 @@ const renderCheckoutSummary = () => {
     </div>
     <div class="checkout-total-lines">
       <div><span>Ara toplam</span><strong>${formatPrice(subtotal)}</strong></div>
+      ${campaignPricing.giftAmount > 0 ? `
+        <div class="campaign-line">
+          <span>2 Al 1 Hediye (${campaignPricing.freeItemCount} ürün)</span>
+          <strong>-${formatPrice(campaignPricing.giftAmount)}</strong>
+        </div>
+      ` : ""}
       ${activeDiscount ? `
         <div class="discount-line">
           <span>${escapeHtml(activeDiscount.code)} kodu (%${Number(activeDiscount.percent || 0)})</span>
@@ -2312,6 +2372,7 @@ const renderAdminOrders = (orders) => {
         <div class="order-customer">
           <span>Telefon: ${escapeHtml(phone)}</span>
           ${customer.email ? `<span>E-posta: ${escapeHtml(customer.email)}</span>` : ""}
+          ${order.campaign?.amount ? `<span>Kampanya: 2 Al 1 Hediye / -${formatPrice(Number(order.campaign.amount || 0))}</span>` : ""}
           ${order.discount?.code ? `<span>Indirim: ${escapeHtml(order.discount.code)} / -${formatPrice(Number(order.discount.amount || 0))}</span>` : ""}
           <p>${escapeHtml(address)}</p>
         </div>
@@ -2566,19 +2627,61 @@ const setAdminAnnouncementMessage = (message, isError = false) => {
   adminAnnouncementMessage.classList.toggle("error", isError);
 };
 
+const setAdminCampaignMessage = (message, isError = false) => {
+  if (!adminCampaignMessage) {
+    return;
+  }
+
+  adminCampaignMessage.textContent = message;
+  adminCampaignMessage.classList.toggle("error", isError);
+};
+
+const updateAnnouncementBar = () => {
+  const text = activeCampaign?.active
+    ? activeCampaign.announcementText || DEFAULT_CAMPAIGN_ANNOUNCEMENT
+    : savedAnnouncementText || DEFAULT_ANNOUNCEMENT;
+
+  announcementTexts.forEach((element) => {
+    element.textContent = text;
+  });
+};
+
 const renderAnnouncement = (value) => {
   const savedText = String(value || "").trim();
   const isLegacyShippingText = /^2(?:\.|\s)?000\s*TL\s*ÜZERİ\s*KARGO\s*ÜCRETSİZ$/iu.test(savedText);
   const text = isLegacyShippingText ? DEFAULT_ANNOUNCEMENT : savedText || DEFAULT_ANNOUNCEMENT;
 
-  announcementTexts.forEach((element) => {
-    element.textContent = text;
-  });
+  savedAnnouncementText = text;
+  updateAnnouncementBar();
 
   const input = adminAnnouncementForm?.elements.announcementText;
   if (input && document.activeElement !== input) {
     input.value = text;
   }
+};
+
+const renderCampaign = (value = {}) => {
+  const announcementText = String(value.announcementText || "").trim() || DEFAULT_CAMPAIGN_ANNOUNCEMENT;
+  activeCampaign = {
+    active: value.active === true,
+    announcementText
+  };
+
+  if (adminCampaignForm) {
+    const activeInput = adminCampaignForm.elements.active;
+    const announcementInput = adminCampaignForm.elements.campaignAnnouncementText;
+
+    if (activeInput && document.activeElement !== activeInput) {
+      activeInput.checked = activeCampaign.active;
+    }
+
+    if (announcementInput && document.activeElement !== announcementInput) {
+      announcementInput.value = announcementText;
+    }
+  }
+
+  updateAnnouncementBar();
+  renderCart();
 };
 
 const loadAnnouncement = () => {
@@ -2601,6 +2704,29 @@ const loadAnnouncement = () => {
       setAdminAnnouncementMessage(error.code === "permission-denied"
         ? "Duyuru okunamadı: Firestore Rules içinde site_content okuma iznini yayınla."
         : "Duyuru okunamadı. Firebase bağlantısını kontrol et.", true);
+    }
+  );
+};
+
+const loadCampaign = () => {
+  if (campaignUnsubscribe) {
+    campaignUnsubscribe();
+    campaignUnsubscribe = null;
+  }
+
+  renderCampaign({ active: false, announcementText: DEFAULT_CAMPAIGN_ANNOUNCEMENT });
+  campaignUnsubscribe = onSnapshot(
+    doc(db, "site_content", "buy_two_get_one"),
+    (snapshot) => {
+      renderCampaign(snapshot.exists() ? snapshot.data() : {
+        active: false,
+        announcementText: DEFAULT_CAMPAIGN_ANNOUNCEMENT
+      });
+    },
+    (error) => {
+      setAdminCampaignMessage(error.code === "permission-denied"
+        ? "Kampanya okunamadi: Firestore Rules icinde site_content okuma iznini yayinla."
+        : "Kampanya okunamadi. Firebase baglantisini kontrol et.", true);
     }
   );
 };
@@ -2639,6 +2765,55 @@ const setupAnnouncementPanel = () => {
       setAdminAnnouncementMessage(error.code === "permission-denied"
         ? "Duyuru kaydedilemedi: Firestore Rules içinde site_content admin yazma iznini yayınla."
         : error.message || "Duyuru kaydedilemedi. Firebase bağlantısını kontrol et.", true);
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+};
+
+const setupCampaignPanel = () => {
+  if (!adminCampaignForm) {
+    return;
+  }
+
+  adminCampaignForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!isAdminUser(currentUser)) {
+      setAdminCampaignMessage("Bu islem icin admin hesabiyla giris yapmalisin.", true);
+      return;
+    }
+
+    const formData = new FormData(adminCampaignForm);
+    const active = formData.get("active") === "on";
+    const announcementText = String(formData.get("campaignAnnouncementText") || "").trim();
+
+    if (announcementText.length < 3 || announcementText.length > 140) {
+      setAdminCampaignMessage("Kampanya duyurusu 3 ile 140 karakter arasinda olmali.", true);
+      return;
+    }
+
+    const submitButton = adminCampaignForm.querySelector("button[type='submit']");
+    submitButton.disabled = true;
+    setAdminCampaignMessage("Kampanya kaydediliyor...");
+
+    try {
+      await setDoc(doc(db, "site_content", "buy_two_get_one"), {
+        active,
+        announcementText,
+        type: "buy_2_get_1",
+        buyQuantity: 2,
+        freeQuantity: 1,
+        updatedAt: serverTimestamp(),
+        updatedBy: currentUser.email || ADMIN_EMAIL
+      }, { merge: true });
+      setAdminCampaignMessage(active
+        ? "2 Al 1 Hediye kampanyasi aktif edildi."
+        : "Kampanya pasif duruma alindi.");
+    } catch (error) {
+      setAdminCampaignMessage(error.code === "permission-denied"
+        ? "Kampanya kaydedilemedi: Firestore Rules icinde site_content admin yazma iznini yayinla."
+        : error.message || "Kampanya kaydedilemedi. Firebase baglantisini kontrol et.", true);
     } finally {
       submitButton.disabled = false;
     }
@@ -3177,9 +3352,11 @@ document.addEventListener("keydown", (event) => {
 renderCart();
 setupAdminPanel();
 setupAnnouncementPanel();
+setupCampaignPanel();
 setupDiscountPanel();
 setupSubscriberMessagePanel();
 setupProductMarqueeDrag();
 loadAnnouncement();
+loadCampaign();
 loadPolicyContent();
 loadFirestoreProducts();

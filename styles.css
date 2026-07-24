@@ -1975,6 +1975,131 @@ body[data-category="men"] {
   color: #ff9b89;
 }
 
+.admin-campaign-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(220px, 0.8fr) minmax(260px, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+  margin-top: 16px;
+  border: 1px solid rgba(128, 199, 119, 0.32);
+  border-radius: 8px;
+  padding: 18px;
+  background:
+    linear-gradient(135deg, rgba(128, 199, 119, 0.11), transparent 42%),
+    rgba(247, 241, 232, 0.045);
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.24);
+}
+
+.admin-campaign-copy {
+  align-self: center;
+}
+
+.admin-campaign-copy h3,
+.admin-campaign-copy p {
+  margin: 0;
+}
+
+.admin-campaign-copy h3 {
+  margin-top: 4px;
+  font-family: "Anton", Impact, sans-serif;
+  font-size: 1.55rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.admin-campaign-copy > p:last-child {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.admin-campaign-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.admin-campaign-form input[type="text"] {
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 12px;
+  color: var(--ink);
+  outline: 0;
+  background: rgba(247, 241, 232, 0.08);
+}
+
+.admin-campaign-form input[type="text"]:focus {
+  border-color: rgba(128, 199, 119, 0.8);
+  box-shadow: 0 0 0 3px rgba(128, 199, 119, 0.12);
+}
+
+.admin-campaign-active {
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  min-height: 58px;
+  border: 1px solid rgba(128, 199, 119, 0.3);
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: rgba(128, 199, 119, 0.08);
+}
+
+.admin-campaign-active input {
+  width: 20px;
+  height: 20px;
+  accent-color: #80c777;
+}
+
+.admin-campaign-active span {
+  display: grid;
+  gap: 3px;
+}
+
+.admin-campaign-active strong {
+  color: var(--ink);
+}
+
+.admin-campaign-active small {
+  color: var(--muted);
+  font-size: 0.66rem;
+  line-height: 1.35;
+}
+
+.admin-campaign-form button {
+  min-height: 46px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 18px;
+  color: #0c0c0c;
+  cursor: pointer;
+  background: #80c777;
+  font-weight: 900;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-campaign-form button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.admin-campaign-message {
+  grid-column: 1 / -1;
+  min-height: 20px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.admin-campaign-message.error {
+  color: #ff9b89;
+}
+
 .admin-toggle-button,
 .admin-discount-toggle-button {
   min-height: 46px;
@@ -3581,6 +3706,12 @@ body[data-category="men"] {
   color: #80c777;
 }
 
+.campaign-line span,
+.campaign-line strong,
+.campaign-progress {
+  color: #80c777 !important;
+}
+
 .cart-total-line {
   border-top: 1px solid var(--line);
   padding-top: 8px;
@@ -4032,6 +4163,7 @@ body[data-category="men"] {
 :root[data-theme="light"] .admin-product-form button[type="submit"],
 :root[data-theme="light"] .admin-discount-form button[type="submit"],
 :root[data-theme="light"] .admin-announcement-form button,
+:root[data-theme="light"] .admin-campaign-form button,
 :root[data-theme="light"] .admin-subscriber-form button,
 :root[data-theme="light"] .admin-size-entry button {
   color: #fff;
@@ -4047,6 +4179,7 @@ body[data-category="men"] {
 :root[data-theme="light"] .admin-product-form button[type="submit"]:hover,
 :root[data-theme="light"] .admin-discount-form button[type="submit"]:hover,
 :root[data-theme="light"] .admin-announcement-form button:hover,
+:root[data-theme="light"] .admin-campaign-form button:hover,
 :root[data-theme="light"] .admin-subscriber-form button:hover,
 :root[data-theme="light"] .admin-size-entry button:hover {
   background: #2a2a2a;
@@ -4205,6 +4338,7 @@ body[data-category="men"] {
 :root[data-theme="light"] .admin-product-form textarea,
 :root[data-theme="light"] .admin-discount-form input,
 :root[data-theme="light"] .admin-announcement-form input,
+:root[data-theme="light"] .admin-campaign-form input[type="text"],
 :root[data-theme="light"] .admin-subscriber-form input,
 :root[data-theme="light"] .admin-subscriber-form textarea {
   border-color: rgba(12, 12, 12, 0.15);
@@ -4223,6 +4357,7 @@ body[data-category="men"] {
 :root[data-theme="light"] .admin-product-form textarea:focus,
 :root[data-theme="light"] .admin-discount-form input:focus,
 :root[data-theme="light"] .admin-announcement-form input:focus,
+:root[data-theme="light"] .admin-campaign-form input[type="text"]:focus,
 :root[data-theme="light"] .admin-subscriber-form input:focus,
 :root[data-theme="light"] .admin-subscriber-form textarea:focus {
   border-color: #111;
@@ -4245,6 +4380,7 @@ body[data-category="men"] {
 :root[data-theme="light"] .admin-product-panel .section-heading,
 :root[data-theme="light"] .admin-discount-form,
 :root[data-theme="light"] .admin-announcement-form,
+:root[data-theme="light"] .admin-campaign-form,
 :root[data-theme="light"] .admin-category-picker,
 :root[data-theme="light"] .admin-size-builder,
 :root[data-theme="light"] .admin-images-field {
@@ -4916,7 +5052,13 @@ body[data-category="men"] {
     align-items: stretch;
   }
 
-  .admin-announcement-form button {
+  .admin-campaign-form {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .admin-announcement-form button,
+  .admin-campaign-form button {
     width: 100%;
   }
 
